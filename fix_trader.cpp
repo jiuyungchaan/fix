@@ -36,7 +36,7 @@ void FixTrader::fromApp(const FIX::Message& message,
   /// new version quickfix demo
   /// what crack does?
   crack(message, sessionID);
-  cout << "IN: " << message << endl;
+  cout << "FROM APP: " << message << endl;
 }
 
 void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
@@ -67,47 +67,59 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
       }
     } catch (FIX::FieldNotFound&) {}
 
-    cout << "OUT: " << message << endl;
+    cout << "TO APP: " << message << endl;
+}
+
+void FixTrader::fromAdmin(FIX::Message& message,
+                          const FIX::SessionID& sessionID) 
+    throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
+          FIX::IncorrectTagValue, FIX::RejectLogon) {
+  crack(message, sessionID);
+  cout << "FROM ADMIN: " << message << endl;
 }
 
 void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
   if (msg_type == FIX::MsgType_Logon) {
+    ReqUserLogon(message);
+  }
+  if (msg_type == FIX::MsgType_Logout) {
+    ReqUserLogout(message);
+  }
+
+  cout << "TO ADMIN: " << message << endl;
+}
+
+void FixTrader::ReqUserLogon(const FIX::Message& message) {
     char sz_user_name[32] = "testuser";
     char sz_password[32] = "testpassword";
     char sz_input_type[32] = "testinputtype";
-    char sz_reset_seq_num_flag[5] = "A";
+    char sz_reset_seq_num_flag[5] = "N";
 
-    // char sz_user_name[32] = {0};
-    // char sz_password[32] = {0};
-    // char sz_input_type[32] = {0};
-    // char sz_reset_seq_num_flag[5] = {0};
-
-    // GetPrivateProfileString("testdata", "UserName", "", sz_user_name, 
-    //                         sizeof(sz_user_name) - 1, gConfigFileName);
-    // GetPrivateProfileString("testdata", "Password", "", sz_password, 
-    //                         sizeof(sz_password) - 1, gConfigFileName);
-    // GetPrivateProfileString("testdata", "InputType", "", sz_input_type, 
-    //                         sizeof(sz_input_type) - 1, gConfigFileName);
-    // GetPrivateProfileString("testdata", "ResetSeqNumFlag", "Y",
-    //                         sz_reset_seq_num_flag,
-    //                         sizeof(sz_reset_seq_num_flag) - 1,
-    //                         gConfigFileName);
-
-    char sz_value[1024] = {0};
-    snprintf(sz_value, sizeof(sz_value), "%s:%s:%s:", sz_input_type,
-             sz_user_name, sz_password);
-    message.setField(FIX::FIELD::RawData, sz_value);
+    char raw_data[1024] = {0};
+    char raw_data_len[16] = {0};
+    char system_name[32] = "CME_CFI";
+    char system_version[32] = "1.0";
+    char system_vendor[32] = "Cash Algo";
+    snprintf(raw_data, sizeof(raw_data), "%s", sz_password);
+    // snrpintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
+    int raw_data_len = strlen(raw_data);
+    message.setField(FIX::FIELD::RawData, raw_data);
+    message.setField(FIX::FIELD::RawDataLength, raw_data_len);
     message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
-    message.setField(FIX::FIELD::EncryptMethod, "0");
+    // message.setField(FIX::FIELD::EncryptMethod, "0");
+    message.setField(FIX::FIELD::EncryptMethod, 0);  // string or int? type-safety?
+    message.setField(1603, system_name);  // customed fields
+    message.setField(1604, system_version);
+    message.setField(1605, system_vendor);
     string message_string = message.toString();
     cout << "Send Logon Message:\n" << message_string << endl;
-  }
-  if (msg_type == FIX::MsgType_Logout) {
+}
+
+void FixTrader::ReqUserLogout(const FIX::Message& message) {
     string message_string = message.toString();
     cout << "Send Logout Message:\n" << message_string << endl;
-  }
 }
 
 CME_FIX_NAMESPACE::NewOrderSingle FixTrader::queryNewOrderSingle() {

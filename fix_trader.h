@@ -68,6 +68,9 @@
 class FixTrader : public FIX::Application, public FIX::MessageCracker {
  public:
   void Run();
+  void ReqUserLogon(const FIX::Message& message);
+  void ReqUserLogout(const FIX::Message& message);
+  void ReqOrderInput(const FIX::Message& message, );
 
  private:
   void onCreate(const FIX::SessionID&) {}
@@ -77,7 +80,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void toApp(FIX::Message&, const FIX::SessionID&) throw(FIX::DoNotSend);
   void fromAdmin(const FIX::Message&, const FIX::SessionID&)
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
-          FIX::IncorrectTagValue, FIX::RejectLogon) {}
+          FIX::IncorrectTagValue, FIX::RejectLogon);
   void fromApp(const FIX::Message& message, const FIX::SessionID& sessionID)
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
           FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
@@ -87,8 +90,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void onMessage(const CME_FIX_NAMESPACE::OrderCancelReject&,
                  const FIX::SessionID&);
 
-  CME_FIX_NAMESPACE::NewOrderSingle queryNewOrderSingle();
-  CME_FIX_NAMESPACE::OrderCancelRequest queryOrderCancelRequest();
+  CME_FIX_NAMESPACE::NewOrderSingle queryNewOrderSingle(Order &order);
+  CME_FIX_NAMESPACE::OrderCancelRequest queryOrderCancelRequest(Order &order);
   CME_FIX_NAMESPACE::OrderCancelReplaceRequest queryCancelReplaceRequest();
   /// QUERY MARKET DATA REQUEST FOR FIX43 FIX44 FIX50
   /// 
