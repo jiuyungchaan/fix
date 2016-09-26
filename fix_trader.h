@@ -99,7 +99,14 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   // CME_FIX_NAMESPACE::OrderCancelReplaceRequest queryCancelReplaceRequest();
   /// 
   void queryHeader(FIX::Header& header);
+
+  virtual void OnFrontConnected();
+  virtual void OnFrontDisconnected(int nReason);
+  virtual void OnRspOrderInsert();
+  virtual void OnRtnOrder();
+  virtual void OnRtnTrade();
   
+  FIX::SessionID session_id_;
   OrderPool order_pool_;
 };
 

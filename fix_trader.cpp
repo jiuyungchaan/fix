@@ -11,12 +11,19 @@ using namespace std;
 
 char *gConfigFileName = const_cast<char*>("./test.cfg");
 
+void FixTrader::onCreate(FIX::SessionID& sessionID) {
+  cout << "Session created : " << session_id_ << endl;
+  session_id_ = sessionID;
+}
+
 void FixTrader::onLogon(const FIX::SessionID& sessionID) {
   cout << endl << "Logon - " << sessionID << endl;
+  OnFrontConnected();
 }
 
 void FixTrader::onLogout(const FIX::SessionID& sessionID) {
   cout << endl << "Logout - " << sessionID << endl;
+  onFrontDisconnected();
 }
 
 void FixTrader::fromApp(const FIX::Message& message, 
@@ -90,6 +97,14 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   }
 
   cout << "TO ADMIN: " << message << endl;
+}
+
+void FixTrader::OnFrontConnectedl() {
+  cout << "Front Connected" << endl;
+}
+
+void FixTrader::OnFrontDisconnected() {
+  cout << "Front Disconnected" << endl;
 }
 
 void FixTrader::ReqUserLogon(const FIX::Message& message) {
@@ -224,7 +239,12 @@ void FixTrader::ReqOrderAction(Order *order) {
   cancel_order.setField(FIX::SecurityType, "FUT");
 
   // 9717-CorrelationClOrdID
-  cancel_order.setField(9717, cl_order_id_str);
+  // This tag should contain the same value as the tag-11 ClOrdID 
+  // of the original New Order message and is used to correlate iLink
+  // messages associated with a single order chain
+  // ClOrdID or OrigClOrdID ?
+  // cancel_order.setField(9717, cl_order_id_str);
+  cancel_order.setField(9717, orig_order_id_str);
 
   cout << "ReqOrderAction:" << orig_order_id_str << endl;
   FIX::Session::sendToTarget(cancel_order);
