@@ -1,5 +1,6 @@
 
 #include "fix_trader.h"
+#include "utils.h"
 
 #include <quickfix/Session.h>
 
@@ -122,8 +123,115 @@ void FixTrader::ReqUserLogout(const FIX::Message& message) {
     cout << "Send Logout Message:\n" << message_string << endl;
 }
 
-CME_FIX_NAMESPACE::NewOrderSingle FixTrader::queryNewOrderSingle() {
-  FIX::OrdType ord_type;
-  CME_FIX_NAMESPACE::NewOrderSingle new_order_single()
+void FixTrader::ReqOrderInsert(Order *order) {
+  order->order_id = order_pool_.add(order);
+  char cl_order_id_str[16];
+  snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
+  FIX::OrdType order_type = FIX::OrdType_LIMIT;
+  FIX::HandlInst handl_inst('1');
+  FIX::ClOrdID cl_order_id(cl_order_id_str);
+  FIX::Symbol symbol(order->instrument_id);
+  FIX::Side side;
+  if (order->direction == kDirectionBuy) {
+    side = FIX::Side_BUY;
+  } else {
+    side = FIX::Side_SELL;
+  }
+  FIX::TransactTime transact_time(time_now());
+  CME_FIX_NAMESPACE::NewOrderSingle new_order(cl_order_id, symbol, side,
+                                              transact_time, order_type);
+  FIX::Price price(order->limit_price);
+  FIX::Account account(order->account);
+  FIX::OrderQty order_qty(order->volume);
+  FIX::TimeInForce time_in_force = FIX::TimeInForce_DAY;
+  new_order.set(price);
+  new_order.set(account);
+  new_order.set(order_qty);
+  new_order.set(time_in_force);
+
+  // 1028-ManualOrderIndicator : Y=manual N=antomated
+  new_order.setField(1028, 'N');
+
+  // SecurityDesc : Future Example: GEZ8
+  //                Option Example: CEZ9 C9375
+  // Is SecurityDesc a type? 
+  // FIX::SecurityDesc security_desc("GEZ8");
+  // new_order.set(security_desc);
+  new_order.setField(FIX::SecurityDesc, "GEZ8");
+
+  // SecurityType : FUT=Future
+  //                OPT=Option
+  // FIX::SecurityType security_type("FUT");
+  // new_order.set(security_type);
+  new_order.setField(FIX::SecurityType, "FUT");
+
+  // CustomerOrFirm : 0=Customer
+  //                  1=Firm
+  // FIX::CustomerOrFirm customer_or_firm = FIX::CustomerOrFirm_FIRM;
+  // new_order.set(customer_or_firm);
+  new_order.setField(FIX::CustomerOrFirm, 1);
+
+  // 9702-CtiCode : 1=CTI1 2=CTI2 3=CTI3 4=CTI4
+  new_order.setField(9702, '2');
+
+  cout << "ReqOrderInsert:%d" << order->order_id << endl;
+  FIX::Session::sendToTarget(new_order);
 }
+
+void FixTrader::ReqOrderAction(Order *order) {
+  order->order_id = order_pool_.add(order);
+  Order *orig_order = order_pool_.get(order->orig_order_id);
+  char cl_order_id_str[16], orig_order_id_str[16];
+  snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
+  snprintf(orig_order_id_str, sizeof(orig_order_id_str), "%d",
+           order->orig_order_id);
+  FIX::ClOrdID cl_order_id(cl_order_id_str);
+  FIX::OrigClOrdID orig_cl_ordder_id(orig_order_id_str);
+  FIX::Side side;
+  if (orig_order->direction == kDirectionBuy) {
+    side = FIX::Side_BUY;
+  } else {
+    side = FIX::Side_SELL;
+  }
+  FIX::Symbol symbol(orig_order->instrument_id);
+  FIX::TransactTime transact_time(time_now());
+
+  CME_FIX_NAMESPACE::OrderCancelRequest cancel_order(orig_cl_order_id,
+                                                     cl_order_id,
+                                                     symbol,
+                                                     side,
+                                                     transact_time);
+
+  FIX::Account account(order->account);
+  FIX::OrderID order_id(order->sys_order_id);
+  cancel_order.set(account);
+  cancel_order.set(order_id);
+
+  // 1028-ManualOrderIndicator : Y=manual N=antomated
+  cancel_order.setField(1028, 'N');
+
+  // SecurityDesc : Future Example: GEZ8
+  //                Option Example: CEZ9 C9375
+  // Is SecurityDesc a type? 
+  // FIX::SecurityDesc security_desc("GEZ8");
+  // new_order.set(security_desc);
+  cancel_order.setField(FIX::SecurityDesc, "GEZ8");
+
+  // SecurityType : FUT=Future
+  //                OPT=Option
+  // FIX::SecurityType security_type("FUT");
+  // new_order.set(security_type);
+  cancel_order.setField(FIX::SecurityType, "FUT");
+
+  // 9717-CorrelationClOrdID
+  cancel_order.setField(9717, cl_order_id_str);
+
+  cout << "ReqOrderAction:" << orig_order_id_str << endl;
+  FIX::Session::sendToTarget(cancel_order);
+}
+
+// CME_FIX_NAMESPACE::NewOrderSingle FixTrader::queryNewOrderSingle() {
+//   FIX::OrdType ord_type;
+//   CME_FIX_NAMESPACE::NewOrderSingle new_order_single();
+// }
 

@@ -49,6 +49,8 @@
 
 #include <queue>
 
+#include "order.h"
+
 #ifdef CME_FIX_40
 #define CME_FIX_NAMESPACE FIX40
 #elif defined CME_FIX_41
@@ -70,33 +72,35 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void Run();
   void ReqUserLogon(const FIX::Message& message);
   void ReqUserLogout(const FIX::Message& message);
-  void ReqOrderInput(const FIX::Message& message, );
+  void ReqOrderInsert(Order *order);
+  void ReqOrderAction(Order *order);
 
  private:
-  void onCreate(const FIX::SessionID&) {}
+  void onCreate(const FIX::SessionID& sessionID);
   void onLogon(const FIX::SessionID& sessionID);
   void onLogout(const FIX::SessionID& sessionID);
-  void toAdmin(FIX::Message&, const FIX::SessionID&);
-  void toApp(FIX::Message&, const FIX::SessionID&) throw(FIX::DoNotSend);
-  void fromAdmin(const FIX::Message&, const FIX::SessionID&)
+  void toAdmin(FIX::Message& message, const FIX::SessionID& sessionID);
+  void toApp(FIX::Message& message, const FIX::SessionID& sessionID)
+    throw(FIX::DoNotSend);
+  void fromAdmin(const FIX::Message& message, const FIX::SessionID& sessionID)
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
           FIX::IncorrectTagValue, FIX::RejectLogon);
   void fromApp(const FIX::Message& message, const FIX::SessionID& sessionID)
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
           FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
 
-  void onMessage(const CME_FIX_NAMESPACE::ExecutionReport&, 
-                 const FIX::SessionID&);
-  void onMessage(const CME_FIX_NAMESPACE::OrderCancelReject&,
-                 const FIX::SessionID&);
+  void onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 
+                 const FIX::SessionID& sessionID);
+  void onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
+                 const FIX::SessionID& sessionID);
 
-  CME_FIX_NAMESPACE::NewOrderSingle queryNewOrderSingle(Order &order);
-  CME_FIX_NAMESPACE::OrderCancelRequest queryOrderCancelRequest(Order &order);
-  CME_FIX_NAMESPACE::OrderCancelReplaceRequest queryCancelReplaceRequest();
-  /// QUERY MARKET DATA REQUEST FOR FIX43 FIX44 FIX50
+  // CME_FIX_NAMESPACE::NewOrderSingle queryNewOrderSingle(Order &order);
+  // CME_FIX_NAMESPACE::OrderCancelRequest queryOrderCancelRequest(Order &order);
+  // CME_FIX_NAMESPACE::OrderCancelReplaceRequest queryCancelReplaceRequest();
   /// 
   void queryHeader(FIX::Header& header);
   
+  OrderPool order_pool_;
 };
 
 #endif  // __FIX_TRADER_H__
