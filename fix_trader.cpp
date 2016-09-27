@@ -11,7 +11,7 @@ using namespace std;
 
 char *gConfigFileName = const_cast<char*>("./test.cfg");
 
-void FixTrader::onCreate(FIX::SessionID& sessionID) {
+void FixTrader::onCreate(const FIX::SessionID& sessionID) {
   cout << "Session created : " << session_id_ << endl;
   session_id_ = sessionID;
 }
@@ -23,7 +23,7 @@ void FixTrader::onLogon(const FIX::SessionID& sessionID) {
 
 void FixTrader::onLogout(const FIX::SessionID& sessionID) {
   cout << endl << "Logout - " << sessionID << endl;
-  onFrontDisconnected();
+  OnFrontDisconnected(0);
 }
 
 void FixTrader::fromApp(const FIX::Message& message, 
@@ -78,7 +78,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     cout << "TO APP: " << message << endl;
 }
 
-void FixTrader::fromAdmin(FIX::Message& message,
+void FixTrader::fromAdmin(const FIX::Message& message,
                           const FIX::SessionID& sessionID) 
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
           FIX::IncorrectTagValue, FIX::RejectLogon) {
@@ -99,18 +99,31 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   cout << "TO ADMIN: " << message << endl;
 }
 
-void FixTrader::OnFrontConnectedl() {
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 
+                          const FIX::SessionID& sessionID) {
+  FIX::OrdStatus ord_status;
+  report.getField(ord_status);
+  cout << "onMessage<ExecutionReport>- " << ord_status << endl;
+
+}
+
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
+                          const FIX::SessionID& sessionID) {
+  FIX::OrdStatus ord_status;
+  report.getField(ord_status);
+  cout << "onMessage<OrderCancelReject>- " << ord_status << endl;
+}
+
+void FixTrader::OnFrontConnected() {
   cout << "Front Connected" << endl;
 }
 
-void FixTrader::OnFrontDisconnected() {
-  cout << "Front Disconnected" << endl;
+void FixTrader::OnFrontDisconnected(int nReason) {
+  cout << "Front Disconnected" << nReason << endl;
 }
 
-void FixTrader::ReqUserLogon(const FIX::Message& message) {
-    char sz_user_name[32] = "testuser";
-    char sz_password[32] = "testpassword";
-    char sz_input_type[32] = "testinputtype";
+void FixTrader::ReqUserLogon(FIX::Message& message) {
+    char sz_password[32] = "4PVSK";
     char sz_reset_seq_num_flag[5] = "N";
 
     char raw_data[1024] = {0};
@@ -119,13 +132,13 @@ void FixTrader::ReqUserLogon(const FIX::Message& message) {
     char system_version[32] = "1.0";
     char system_vendor[32] = "Cash Algo";
     snprintf(raw_data, sizeof(raw_data), "%s", sz_password);
-    // snrpintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
-    int raw_data_len = strlen(raw_data);
+    snprintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
+    // int raw_data_len = strlen(raw_data);
     message.setField(FIX::FIELD::RawData, raw_data);
     message.setField(FIX::FIELD::RawDataLength, raw_data_len);
     message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
     // message.setField(FIX::FIELD::EncryptMethod, "0");
-    message.setField(FIX::FIELD::EncryptMethod, 0);  // string or int? type-safety?
+    message.setField(FIX::FIELD::EncryptMethod, "0");  // string or int? type-safety?
     message.setField(1603, system_name);  // customed fields
     message.setField(1604, system_version);
     message.setField(1605, system_vendor);
@@ -133,7 +146,7 @@ void FixTrader::ReqUserLogon(const FIX::Message& message) {
     cout << "Send Logon Message:\n" << message_string << endl;
 }
 
-void FixTrader::ReqUserLogout(const FIX::Message& message) {
+void FixTrader::ReqUserLogout(FIX::Message& message) {
     string message_string = message.toString();
     cout << "Send Logout Message:\n" << message_string << endl;
 }
@@ -153,8 +166,8 @@ void FixTrader::ReqOrderInsert(Order *order) {
     side = FIX::Side_SELL;
   }
   FIX::TransactTime transact_time(time_now());
-  CME_FIX_NAMESPACE::NewOrderSingle new_order(cl_order_id, symbol, side,
-                                              transact_time, order_type);
+  CME_FIX_NAMESPACE::NewOrderSingle new_order(cl_order_id, handl_inst, symbol,
+                                            side, transact_time, order_type);
   FIX::Price price(order->limit_price);
   FIX::Account account(order->account);
   FIX::OrderQty order_qty(order->volume);
@@ -165,29 +178,29 @@ void FixTrader::ReqOrderInsert(Order *order) {
   new_order.set(time_in_force);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  new_order.setField(1028, 'N');
+  new_order.setField(1028, "N");
 
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
   // Is SecurityDesc a type? 
   // FIX::SecurityDesc security_desc("GEZ8");
   // new_order.set(security_desc);
-  new_order.setField(FIX::SecurityDesc, "GEZ8");
+  new_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
 
   // SecurityType : FUT=Future
   //                OPT=Option
   // FIX::SecurityType security_type("FUT");
   // new_order.set(security_type);
-  new_order.setField(FIX::SecurityType, "FUT");
+  new_order.setField(FIX::FIELD::SecurityType, "FUT");
 
   // CustomerOrFirm : 0=Customer
   //                  1=Firm
   // FIX::CustomerOrFirm customer_or_firm = FIX::CustomerOrFirm_FIRM;
   // new_order.set(customer_or_firm);
-  new_order.setField(FIX::CustomerOrFirm, 1);
+  new_order.setField(FIX::FIELD::CustomerOrFirm, "1");
 
   // 9702-CtiCode : 1=CTI1 2=CTI2 3=CTI3 4=CTI4
-  new_order.setField(9702, '2');
+  new_order.setField(9702, "2");
 
   cout << "ReqOrderInsert:%d" << order->order_id << endl;
   FIX::Session::sendToTarget(new_order);
@@ -201,7 +214,7 @@ void FixTrader::ReqOrderAction(Order *order) {
   snprintf(orig_order_id_str, sizeof(orig_order_id_str), "%d",
            order->orig_order_id);
   FIX::ClOrdID cl_order_id(cl_order_id_str);
-  FIX::OrigClOrdID orig_cl_ordder_id(orig_order_id_str);
+  FIX::OrigClOrdID orig_cl_order_id(orig_order_id_str);
   FIX::Side side;
   if (orig_order->direction == kDirectionBuy) {
     side = FIX::Side_BUY;
@@ -223,20 +236,20 @@ void FixTrader::ReqOrderAction(Order *order) {
   cancel_order.set(order_id);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  cancel_order.setField(1028, 'N');
+  cancel_order.setField(1028, "N");
 
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
   // Is SecurityDesc a type? 
   // FIX::SecurityDesc security_desc("GEZ8");
   // new_order.set(security_desc);
-  cancel_order.setField(FIX::SecurityDesc, "GEZ8");
+  cancel_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
 
   // SecurityType : FUT=Future
   //                OPT=Option
   // FIX::SecurityType security_type("FUT");
   // new_order.set(security_type);
-  cancel_order.setField(FIX::SecurityType, "FUT");
+  cancel_order.setField(FIX::FIELD::SecurityType, "FUT");
 
   // 9717-CorrelationClOrdID
   // This tag should contain the same value as the tag-11 ClOrdID 
@@ -248,6 +261,11 @@ void FixTrader::ReqOrderAction(Order *order) {
 
   cout << "ReqOrderAction:" << orig_order_id_str << endl;
   FIX::Session::sendToTarget(cancel_order);
+}
+
+void FixTrader::run() {
+  // TODO
+  cout << "run" << endl;
 }
 
 // CME_FIX_NAMESPACE::NewOrderSingle FixTrader::queryNewOrderSingle() {

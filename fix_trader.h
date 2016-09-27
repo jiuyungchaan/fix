@@ -69,9 +69,9 @@
 
 class FixTrader : public FIX::Application, public FIX::MessageCracker {
  public:
-  void Run();
-  void ReqUserLogon(const FIX::Message& message);
-  void ReqUserLogout(const FIX::Message& message);
+  void run();
+  void ReqUserLogon(FIX::Message& message);
+  void ReqUserLogout(FIX::Message& message);
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
 
@@ -102,9 +102,9 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
 
   virtual void OnFrontConnected();
   virtual void OnFrontDisconnected(int nReason);
-  virtual void OnRspOrderInsert();
-  virtual void OnRtnOrder();
-  virtual void OnRtnTrade();
+  // virtual void OnRspOrderInsert();
+  // virtual void OnRtnOrder();
+  // virtual void OnRtnTrade();
   
   FIX::SessionID session_id_;
   OrderPool order_pool_;
