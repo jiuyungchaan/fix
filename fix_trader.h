@@ -76,6 +76,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void ReqOrderAction(Order *order);
 
  private:
+  // virtual functions inherited from FIX::Application
   void onCreate(const FIX::SessionID& sessionID);
   void onLogon(const FIX::SessionID& sessionID);
   void onLogout(const FIX::SessionID& sessionID);
@@ -89,23 +90,24 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
           FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
 
+  // virtual functions inherited from FIX::MessageCracker
   void onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
                  const FIX::SessionID& sessionID);
-
-  // CME_FIX_NAMESPACE::NewOrderSingle queryNewOrderSingle(Order &order);
-  // CME_FIX_NAMESPACE::OrderCancelRequest queryOrderCancelRequest(Order &order);
-  // CME_FIX_NAMESPACE::OrderCancelReplaceRequest queryCancelReplaceRequest();
-  /// 
   void queryHeader(FIX::Header& header);
 
+  // virtual functions for Trader
   virtual void OnFrontConnected();
   virtual void OnFrontDisconnected(int nReason);
-  // virtual void OnRspOrderInsert();
-  // virtual void OnRtnOrder();
-  // virtual void OnRtnTrade();
+  virtual void OnRspOrderInsert(OrderAck *order_ack);
+  virtual void OnRtnOrder(OrderAck *order_ack);
+  virtual void OnRtnTrade(Deal *deal);
   
+  // utilities functions
+  OrderAck ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report);
+  Deal ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report);
+
   FIX::SessionID session_id_;
   OrderPool order_pool_;
 };

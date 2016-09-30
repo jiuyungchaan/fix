@@ -101,10 +101,42 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
 
 void FixTrader::onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 
                           const FIX::SessionID& sessionID) {
-  FIX::OrdStatus ord_status;
-  report.getField(ord_status);
-  cout << "onMessage<ExecutionReport>- " << ord_status << endl;
-
+  FIX::ExecType exec_type;
+  report.getField(exec_type);
+  cout << "onMessage<ExecutionReport>- " << exec_type << endl;
+  switch (exec_type) {
+    case FIX::ExecType_NEW: {
+      OrderAck order_ack = ToOrderAck(report);
+      OnRspOrderInsert(&order_ack);  // OnRspOrderInsert
+    }
+    break;
+    case  FIX::ExecType_PARTIAL_FILL: {
+      Deal deal = ToDeal(report);
+      OnRtnTrade(&deal);   // OnRtnTrade
+    }
+    break;
+    case FIX::ExecType_FILL: {
+      Deal deal = ToDeal(report);
+      OrderAck order_ack = ToOrderAck(report);
+      OnRtnTrade(&deal);
+      OnRtnOrder(&order_ack);
+      // OnRtnOrder if necessary
+    }
+    break;
+    case FIX::ExecType_CANCELED: {
+      OrderAck order_ack = ToOrderAck(report);
+      OnRtnOrder(&order_ack);  // OnRtnOrder
+    }
+    break;
+    case FIX::ExecType_REPLACE:
+      // OnRtnOrder of modified
+      break;
+    case FIX::ExecType_REJECTED:
+      // OnError()
+      break;
+    default:
+      break;
+  }  // switch ord_status
 }
 
 void FixTrader::onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
@@ -112,6 +144,8 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
   FIX::OrdStatus ord_status;
   report.getField(ord_status);
   cout << "onMessage<OrderCancelReject>- " << ord_status << endl;
+  // OnError();
+  // OnRtnOrder();
 }
 
 void FixTrader::OnFrontConnected() {
@@ -268,8 +302,30 @@ void FixTrader::run() {
   cout << "run" << endl;
 }
 
-// CME_FIX_NAMESPACE::NewOrderSingle FixTrader::queryNewOrderSingle() {
-//   FIX::OrdType ord_type;
-//   CME_FIX_NAMESPACE::NewOrderSingle new_order_single();
-// }
+void FixTrader::OnRspOrderInsert(OrderAck *order_ack) {
+  cout << "OnRspOrderInsert" << endl;
+  // TODO
+}
+
+void FixTrader::OnRtnOrder(OrderAck *order_ack) {
+  cout << "OnRtnOrder" << endl;
+  // TODO
+}
+
+void FixTrader::OnRtnTrade(Deal *deal) {
+  cout << "OnRtnTrade" << endl;
+  // TODO
+}
+
+OrderAck FixTrader::ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report) {
+  OrderAck order_ack;
+
+  return order_ack;
+}
+
+Deal FixTrader::ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report) {
+  Deal deal;
+
+  return deal;
+}
 

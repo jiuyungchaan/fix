@@ -5,10 +5,27 @@
 #include <string.h>
 #include <stdlib.h>
 
-enum Direction {
-  kDirectionBuy = '0',
-  kDirectionSell = '1'
-};
+// enum Direction 
+#define kDirectionBuy '0'
+#define kDirectionSell '1'
+
+// enum Offset
+#define kOffsetOpen '0'
+#define kOffsetClose '1'
+#define kOffsetCloseToday '2'
+#define kOffsetCloseYesterday '3'
+#define kOffsetForceClse '4'
+
+// enum OrderStatus
+#define kOrderStatusNew '0'
+#define kOrderStatusPartiallyFilled '1'
+#define kOrderStatusFilled '2'
+// #define kOrderStatusDoneForDay '3'
+#define kOrderStatusCanceled '4'
+#define kOrderStatusModified '5'
+#define kOrderStatusRejected '8'
+#define kOrderStatusExpired 'C'
+#define kOrderStatusUndefined '?'
 
 class Order {
  public:
@@ -19,13 +36,45 @@ class Order {
   char offset;
   char order_type;
   char hedge_flag_type;
+  char order_status;
   int order_id;
   int orig_order_id;
-  int order_status;
   int volume;
   double limit_price;
   long ttl;
 
+  Order() : instrument_id{0}, account{0}, sys_order_id{0},
+            direction(kDirectionBuy), offset(kOffsetOpen),
+            order_type('0'), hedge_flag_type('0'), 
+            order_status(kOrderStatusUndefined), order_id(-1),
+            orig_order_id(-1), volume(0), limit_price(0.00),
+            ttl(0) {}
+
+  ~Order() {}
+};
+
+class OrderAck {
+ public:
+  char account[32];
+  char sys_order_id[32];
+  char order_status;
+  int order_id;
+
+  OrderAck() : account{0}, sys_order_id{0}, 
+               order_status(kOrderStatusUndefined), order_id(-1) {}
+};
+
+class Deal {
+ public:
+  char account[32];
+  char sys_order_id[32];
+  char deal_id[32];
+  char transact_time[32];
+  int volume;
+  double price;
+
+  Deal() : account{0}, sys_order_id{0}, deal_id{0}, transact_time{0},
+           volume(0), price(0.00) {}
 };
 
 class OrderPool {
