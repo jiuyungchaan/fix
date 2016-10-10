@@ -44,6 +44,7 @@ void FixTrader::fromApp(const FIX::Message& message,
   /// new version quickfix demo
   /// what crack does?
   crack(message, sessionID);
+  cout << "FROM APP XML: " << message.toXML() << endl;
   cout << "FROM APP: " << message << endl;
 }
 
@@ -75,6 +76,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
       }
     } catch (FIX::FieldNotFound&) {}
 
+    cout << "TO APP XML: " << message.toXML() << endl;
     cout << "TO APP: " << message << endl;
 }
 
@@ -83,6 +85,7 @@ void FixTrader::fromAdmin(const FIX::Message& message,
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
           FIX::IncorrectTagValue, FIX::RejectLogon) {
   crack(message, sessionID);
+  cout << "FROM ADMIN XML: " << message.toXML() << endl;
   cout << "FROM ADMIN: " << message << endl;
 }
 
@@ -96,6 +99,7 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
     ReqUserLogout(message);
   }
 
+  cout << "TO ADMIN XML: " << message.toXML() << endl;
   cout << "TO ADMIN: " << message << endl;
 }
 
@@ -236,6 +240,13 @@ void FixTrader::ReqOrderInsert(Order *order) {
   // 9702-CtiCode : 1=CTI1 2=CTI2 3=CTI3 4=CTI4
   new_order.setField(9702, "2");
 
+  // test the type of getValue()
+  double p = price.getValue();
+  string a = account.getValue();
+  int v = order_qty.getValue();
+  char h = handl_inst.getValue();
+  // string t = transact_time.getValue();
+
   cout << "ReqOrderInsert:%d" << order->order_id << endl;
   FIX::Session::sendToTarget(new_order);
 }
@@ -319,7 +330,13 @@ void FixTrader::OnRtnTrade(Deal *deal) {
 
 OrderAck FixTrader::ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report) {
   OrderAck order_ack;
-
+  FIX::ExecType exec_type;
+  report.getField(exec_type);
+  order_ack.order_status = exec_type;
+  FIX::Account account;
+  report.getField(account);
+  string acc = account.getValue();
+  // strcpy(order_ack.account, account);
   return order_ack;
 }
 
