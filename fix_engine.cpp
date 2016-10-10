@@ -28,13 +28,19 @@ int main(int argc, char **argv) {
   }
 
   FixTrader fix_trader;
+  cout << "initialize setting" << endl;
   FIX::SessionSettings settings(config_file_name);
+  cout << "initialize store factory" << endl;
   FIX::FileStoreFactory store_factory(settings);
+  cout << "initialize log factory" << endl;
   FIX::ScreenLogFactory log_factory(settings);
+  cout << "initialize initiator" << endl;
   FIX::SocketInitiator initiator(fix_trader, store_factory, settings, 
                                  log_factory);
 
+  cout << "initiator start" << endl;
   initiator.start();
+  cout << "initiator run" << endl;
   fix_trader.run();
   while(true) {
     sleep(1);
