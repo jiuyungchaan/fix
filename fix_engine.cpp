@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include <quickfix/FileStore.h>
 #include <quickfix/SocketInitiator.h>
@@ -34,6 +36,9 @@ int main(int argc, char **argv) {
 
   initiator.start();
   fix_trader.run();
+  while(true) {
+    sleep(1);
+  }
   initiator.stop();
 
   return 0;
