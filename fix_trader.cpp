@@ -161,6 +161,8 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 }
 
 void FixTrader::ReqUserLogon(FIX::Message& message) {
+    message.getHeader().setField(FIX::SenderSubID("Anything"));
+
     //char sz_password[32] = "4PVSK";
     char sz_password[32] = "JY8FR";
     char sz_reset_seq_num_flag[5] = "N";
