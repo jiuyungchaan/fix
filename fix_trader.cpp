@@ -232,7 +232,8 @@ void FixTrader::ReqOrderInsert(Order *order) {
   new_order.set(time_in_force);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  new_order.setField(1028, "N");
+  // new_order.setField(1028, "Y");
+  new_order.setField(1028, "y");
 
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
