@@ -262,8 +262,8 @@ void FixTrader::ReqOrderInsert(Order *order) {
   char h = handl_inst.getValue();
   // string t = transact_time.getValue();
 
-  cout << "ReqOrderInsert:%d" << order->order_id << endl;
-  FIX::Session::sendToTarget(new_order);
+  cout << "ReqOrderInsert:" << order->order_id << endl;
+  FIX::Session::sendToTarget(new_order, session_id_);
 }
 
 void FixTrader::ReqOrderAction(Order *order) {
