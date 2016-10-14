@@ -92,6 +92,7 @@ void FixTrader::fromAdmin(const FIX::Message& message,
 void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
+  FillHeader(message);
   if (msg_type == FIX::MsgType_Logon) {
     ReqUserLogon(message);
   } else if (msg_type == FIX::MsgType_Heartbeat) {
@@ -165,7 +166,7 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 }
 
 void FixTrader::ReqUserLogon(FIX::Message& message) {
-  FillHeader(message);
+  // FillHeader(message);
   //char sz_password[32] = "4PVSK";
   char sz_password[32] = "JY8FR";
   char sz_reset_seq_num_flag[5] = "N";
@@ -191,11 +192,11 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
 }
 
 void FixTrader::SendHeartbeat(FIX::Message& message) {
-  FillHeader(message);
+  // FillHeader(message);
 }
 
 void FixTrader::ReqUserResend(FIX::Message& message) {
-  FillHeader(message);
+  // FillHeader(message);
 }
 
 void FixTrader::ReqUserLogout(FIX::Message& message) {
