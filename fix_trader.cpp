@@ -167,6 +167,8 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 
 void FixTrader::ReqUserLogon(FIX::Message& message) {
     message.getHeader().setField(FIX::SenderSubID("Anything"));
+    message.getHeader().setField(FIX::SenderLocationID("HK"));
+    message.getHeader().setField(FIX::TargetSubID("G"));
 
     //char sz_password[32] = "4PVSK";
     char sz_password[32] = "JY8FR";
@@ -185,9 +187,9 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
     message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
     // message.setField(FIX::FIELD::EncryptMethod, "0");
     message.setField(FIX::FIELD::EncryptMethod, "0");  // string or int? type-safety?
-    message.setField(1603, system_name);  // customed fields
-    message.setField(1604, system_version);
-    message.setField(1605, system_vendor);
+    // message.setField(1603, system_name);  // customed fields
+    // message.setField(1604, system_version);
+    // message.setField(1605, system_vendor);
     string message_string = message.toString();
     cout << "Send Logon Message:\n" << message_string << endl;
 }
