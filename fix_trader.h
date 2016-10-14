@@ -108,6 +108,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   OrderAck ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report);
   Deal ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report);
 
+  void FillTagsToAdmin(FIX::Message& message);
+
   FIX::SessionID session_id_;
   OrderPool order_pool_;
 };

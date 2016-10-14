@@ -93,9 +93,14 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
   if (msg_type == FIX::MsgType_Logon) {
+    FillTagsToAdmin(message);
     ReqUserLogon(message);
+  } else if (msg_type == FIX::MsgType_Heartbeat) {
+    FillTagsToAdmin(message);
+  } else if (msg_type == FIX::MsgType_ResendRequest) {
+    FillTagsToAdmin(message);
   }
-  if (msg_type == FIX::MsgType_Logout) {
+  else if (msg_type == FIX::MsgType_Logout) {
     ReqUserLogout(message);
   }
 
