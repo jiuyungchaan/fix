@@ -76,6 +76,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
       }
     } catch (FIX::FieldNotFound&) {}
 
+    FillHeader(message);
     cout << "TO APP XML: " << message.toXML() << endl;
     // cout << "TO APP: " << message << endl;
 }
