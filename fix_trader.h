@@ -71,6 +71,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
  public:
   void run();
   void ReqUserLogon(FIX::Message& message);
+  void SendHeartbeat(FIX::Message& message);
+  void ReqUserResend(FIX::Message& message);
   void ReqUserLogout(FIX::Message& message);
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
@@ -108,7 +110,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   OrderAck ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report);
   Deal ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report);
 
-  void FillTagsToAdmin(FIX::Message& message);
+  void FillHeader(FIX::Message& message);
 
   FIX::SessionID session_id_;
   OrderPool order_pool_;

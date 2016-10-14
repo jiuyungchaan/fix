@@ -93,12 +93,11 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
   if (msg_type == FIX::MsgType_Logon) {
-    FillTagsToAdmin(message);
     ReqUserLogon(message);
   } else if (msg_type == FIX::MsgType_Heartbeat) {
-    FillTagsToAdmin(message);
+    SendHeartbeat(message);
   } else if (msg_type == FIX::MsgType_ResendRequest) {
-    FillTagsToAdmin(message);
+    ReqUserResend(message);
   }
   else if (msg_type == FIX::MsgType_Logout) {
     ReqUserLogout(message);
@@ -166,32 +165,37 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 }
 
 void FixTrader::ReqUserLogon(FIX::Message& message) {
-    message.getHeader().setField(FIX::SenderSubID("Anything"));
-    message.getHeader().setField(FIX::SenderLocationID("HK"));
-    message.getHeader().setField(FIX::TargetSubID("G"));
+  FillHeader(message);
+  //char sz_password[32] = "4PVSK";
+  char sz_password[32] = "JY8FR";
+  char sz_reset_seq_num_flag[5] = "N";
 
-    //char sz_password[32] = "4PVSK";
-    char sz_password[32] = "JY8FR";
-    char sz_reset_seq_num_flag[5] = "N";
+  char raw_data[1024] = {0};
+  char raw_data_len[16] = {0};
+  char system_name[32] = "CME_CFI";
+  char system_version[32] = "1.0";
+  char system_vendor[32] = "Cash Algo";
+  snprintf(raw_data, sizeof(raw_data), "%s", sz_password);
+  snprintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
+  // int raw_data_len = strlen(raw_data);
+  message.setField(FIX::FIELD::RawData, raw_data);
+  message.setField(FIX::FIELD::RawDataLength, raw_data_len);
+  message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
+  // message.setField(FIX::FIELD::EncryptMethod, "0");
+  message.setField(FIX::FIELD::EncryptMethod, "0");  // string or int? type-safety?
+  // message.setField(1603, system_name);  // customed fields
+  // message.setField(1604, system_version);
+  // message.setField(1605, system_vendor);
+  string message_string = message.toString();
+  cout << "Send Logon Message:\n" << message_string << endl;
+}
 
-    char raw_data[1024] = {0};
-    char raw_data_len[16] = {0};
-    char system_name[32] = "CME_CFI";
-    char system_version[32] = "1.0";
-    char system_vendor[32] = "Cash Algo";
-    snprintf(raw_data, sizeof(raw_data), "%s", sz_password);
-    snprintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
-    // int raw_data_len = strlen(raw_data);
-    message.setField(FIX::FIELD::RawData, raw_data);
-    message.setField(FIX::FIELD::RawDataLength, raw_data_len);
-    message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
-    // message.setField(FIX::FIELD::EncryptMethod, "0");
-    message.setField(FIX::FIELD::EncryptMethod, "0");  // string or int? type-safety?
-    // message.setField(1603, system_name);  // customed fields
-    // message.setField(1604, system_version);
-    // message.setField(1605, system_vendor);
-    string message_string = message.toString();
-    cout << "Send Logon Message:\n" << message_string << endl;
+void FixTrader::SendHeartbeat(FIX::Message& message) {
+  FillHeader(message);
+}
+
+void FixTrader::ReqUserResend(FIX::Message& message) {
+  FillHeader(message);
 }
 
 void FixTrader::ReqUserLogout(FIX::Message& message) {
@@ -354,5 +358,11 @@ Deal FixTrader::ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report) {
   Deal deal;
 
   return deal;
+}
+
+void FixTrader::FillHeader(FIX::Message& message) {
+  message.getHeader().setField(FIX::SenderSubID("ANYTHING"));
+  message.getHeader().setField(FIX::SenderLocationID("HK"));
+  message.getHeader().setField(FIX::TargetSubID("G"));
 }
 
