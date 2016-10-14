@@ -100,8 +100,9 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
     SendHeartbeat(message);
   } else if (msg_type == FIX::MsgType_ResendRequest) {
     ReqUserResend(message);
-  }
-  else if (msg_type == FIX::MsgType_Logout) {
+  } else if (msg_type == FIX::MsgType_Reject) {
+    cout << "Reject in toAdmin ?" << endl;
+  } else if (msg_type == FIX::MsgType_Logout) {
     ReqUserLogout(message);
   }
 
