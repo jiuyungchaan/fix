@@ -325,7 +325,19 @@ void FixTrader::ReqOrderAction(Order *order) {
 
 void FixTrader::run() {
   // TODO
+  int count = 1;
   cout << "run" << endl;
+  while(true) {
+    sleep(1);
+    if (count++ % 20 == 0) {
+      Order order;
+      snprintf(order.instrument_id, sizeof(order.instrument_id), "Eric Wu");
+      snprintf(order.account, sizeof(order.account), "W80004");
+      order.volume = 100;
+      order.limit_price = 1000.0;
+      ReqOrderInsert(&order);
+    }
+  }
 }
 
 void FixTrader::OnRspOrderInsert(OrderAck *order_ack) {
