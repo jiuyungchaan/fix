@@ -335,7 +335,7 @@ void FixTrader::run() {
       snprintf(order.instrument_id, sizeof(order.instrument_id), "Eric Wu");
       snprintf(order.account, sizeof(order.account), "W80004");
       order.volume = 100;
-      order.limit_price = 1000.0;
+      order.limit_price = 9900.0;
       ReqOrderInsert(&order);
     }
   }
