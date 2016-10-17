@@ -237,6 +237,7 @@
    <field name='ClearingAccount' required='N' />
    <field name='MultiLegReportingType' required='N' />
    <field name='RequestTime' required='N' />
+   <field name='RefMsgType' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />
