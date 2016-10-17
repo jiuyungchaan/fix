@@ -86,7 +86,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
 void FixTrader::fromAdmin(const FIX::Message& message,
                           const FIX::SessionID& sessionID)
   throw() {
-  
+
     // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
     //       FIX::IncorrectTagValue, FIX::RejectLogon) {
   crack(message, sessionID);
@@ -334,6 +334,7 @@ void FixTrader::run() {
   // TODO
   int count = 1;
   cout << "run" << endl;
+  double price = 9860.0;
   while(true) {
     sleep(1);
     if (count++ % 20 == 0) {
@@ -341,8 +342,9 @@ void FixTrader::run() {
       snprintf(order.instrument_id, sizeof(order.instrument_id), "Eric Wu");
       snprintf(order.account, sizeof(order.account), "W80004");
       order.volume = 100;
-      order.limit_price = 9860.0;
+      order.limit_price = price;
       ReqOrderInsert(&order);
+      price += 2.0;
     }
   }
 }
