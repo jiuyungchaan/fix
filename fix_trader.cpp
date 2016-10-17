@@ -342,7 +342,6 @@ void FixTrader::run() {
     if (count++ % 20 == 0) {
       Order order;
       snprintf(order.instrument_id, sizeof(order.instrument_id), "GEZ8");
-      snprintf(order.instrument_id, sizeof(order.instrument_id), "Eric Wu");
       snprintf(order.account, sizeof(order.account), "W80004");
       order.volume = 100;
       order.limit_price = price;
