@@ -217,7 +217,8 @@ void FixTrader::ReqOrderInsert(Order *order) {
   FIX::OrdType order_type = FIX::OrdType_LIMIT;
   FIX::HandlInst handl_inst('1');
   FIX::ClOrdID cl_order_id(cl_order_id_str);
-  FIX::Symbol symbol(order->instrument_id);
+  // FIX::Symbol symbol(order->instrument_id);
+  FIX::Symbol symbol("GE");
   FIX::Side side;
   if (order->direction == kDirectionBuy) {
     side = FIX::Side_BUY;
@@ -240,12 +241,13 @@ void FixTrader::ReqOrderInsert(Order *order) {
   // new_order.setField(1028, "Y");
   new_order.setField(1028, "y");
 
+  // SecurityDesc is the InstrumentID !!!!!
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
   // Is SecurityDesc a type? 
-  // FIX::SecurityDesc security_desc("GEZ8");
-  // new_order.set(security_desc);
-  new_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
+  FIX::SecurityDesc security_desc(order->instrument_id);
+  new_order.set(security_desc);
+  // new_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
 
   // SecurityType : FUT=Future
   //                OPT=Option
@@ -339,6 +341,7 @@ void FixTrader::run() {
     sleep(1);
     if (count++ % 20 == 0) {
       Order order;
+      snprintf(order.instrument_id, sizeof(order.instrument_id), "GEZ8");
       snprintf(order.instrument_id, sizeof(order.instrument_id), "Eric Wu");
       snprintf(order.account, sizeof(order.account), "W80004");
       order.volume = 100;
