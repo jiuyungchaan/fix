@@ -240,6 +240,8 @@
    <field name='ContraTrader' required='N' />
    <field name='ContraBroker' required='N' />
    <field name='ManualOrderIndicator' required='N' />
+   <field name='SecondaryExecID' required='N' />
+   <field name='AggressorIndicator' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />
