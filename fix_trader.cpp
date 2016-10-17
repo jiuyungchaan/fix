@@ -85,7 +85,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
 
 void FixTrader::fromAdmin(const FIX::Message& message,
                           const FIX::SessionID& sessionID)
-  throw () {
+  throw (FIX::FieldNotFound) {
     // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
     //       FIX::IncorrectTagValue, FIX::RejectLogon) {
   crack(message, sessionID);
