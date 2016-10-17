@@ -290,7 +290,8 @@ void FixTrader::ReqOrderAction(Order *order) {
   } else {
     side = FIX::Side_SELL;
   }
-  FIX::Symbol symbol(orig_order->instrument_id);
+  // FIX::Symbol symbol(orig_order->instrument_id);
+  FIX::Symbol symbol("GE");
   FIX::TransactTime transact_time(time_now());
 
   CME_FIX_NAMESPACE::OrderCancelRequest cancel_order(orig_cl_order_id,
@@ -310,9 +311,9 @@ void FixTrader::ReqOrderAction(Order *order) {
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
   // Is SecurityDesc a type? 
-  // FIX::SecurityDesc security_desc("GEZ8");
-  // new_order.set(security_desc);
-  cancel_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
+  FIX::SecurityDesc security_desc(orig_order->instrument_id);
+  cancel_order.set(security_desc);
+  // cancel_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
 
   // SecurityType : FUT=Future
   //                OPT=Option
@@ -336,7 +337,8 @@ void FixTrader::run() {
   // TODO
   int count = 1;
   cout << "run" << endl;
-  double price = 9870.0;
+  double price = 9860.0;
+  int order_id = 0;
   while(true) {
     sleep(1);
     if (count++ % 20 == 0) {
@@ -346,7 +348,12 @@ void FixTrader::run() {
       order.volume = 2;
       order.limit_price = price;
       ReqOrderInsert(&order);
+      sleep(3);
       price += 2.0;
+
+      Order cancel_order;
+      cancel_order.orig_order_id = order.order_id;
+      ReqOrderAction(&cancel_order);
     }
   }
 }
