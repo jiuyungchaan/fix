@@ -238,6 +238,7 @@
    <field name='MultiLegReportingType' required='N' />
    <field name='RequestTime' required='N' />
    <field name='ContraTrader' required='N' />
+   <field name='ContraBroker' required='N' />
    <field name='ManualOrderIndicator' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
