@@ -27,9 +27,9 @@ void FixTrader::onLogout(const FIX::SessionID& sessionID) {
 }
 
 void FixTrader::fromApp(const FIX::Message& message, 
-                        const FIX::SessionID& sessionID) 
-  throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
-         FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
+                        const FIX::SessionID& sessionID) {
+  // throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
+  //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
   // FIX::MsgType msg_type;
   // FIX::PosReqType pos_req_type;
   // message.getHeader().getField(msg_type);
@@ -48,8 +48,8 @@ void FixTrader::fromApp(const FIX::Message& message,
   // cout << "FROM APP: " << message << endl;
 }
 
-void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
-  throw (FIX::DoNotSend) {
+void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID) {
+  // throw (FIX::DoNotSend) {
     /// old version quickfix demo
     // FIX::MsgType msg_type;
     // message.getHeader().getField(msg_type);
@@ -82,9 +82,9 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
 }
 
 void FixTrader::fromAdmin(const FIX::Message& message,
-                          const FIX::SessionID& sessionID) 
-    throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
-          FIX::IncorrectTagValue, FIX::RejectLogon) {
+                          const FIX::SessionID& sessionID) { 
+    // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
+    //       FIX::IncorrectTagValue, FIX::RejectLogon) {
   crack(message, sessionID);
   cout << "FROM ADMIN XML: " << message.toXML() << endl;
   // cout << "FROM ADMIN: " << message << endl;
