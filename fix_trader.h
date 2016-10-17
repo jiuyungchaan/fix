@@ -84,14 +84,14 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void onLogout(const FIX::SessionID& sessionID);
   void toAdmin(FIX::Message& message, const FIX::SessionID& sessionID);
   void toApp(FIX::Message& message, const FIX::SessionID& sessionID)
-      throw ();
+      throw();
     // throw(FIX::DoNotSend);
   void fromAdmin(const FIX::Message& message, const FIX::SessionID& sessionID)
-      throw ();
+      throw();
     // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
-          // FIX::IncorrectTagValue, FIX::RejectLogon);
+    //       FIX::IncorrectTagValue, FIX::RejectLogon);
   void fromApp(const FIX::Message& message, const FIX::SessionID& sessionID)
-      throw ();
+      throw();
     // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
     //       FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
 
