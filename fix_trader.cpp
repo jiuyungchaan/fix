@@ -300,8 +300,8 @@ void FixTrader::ReqOrderAction(Order *order) {
                                                      side,
                                                      transact_time);
 
-  FIX::Account account(order->account);
-  FIX::OrderID order_id(order->sys_order_id);
+  FIX::Account account(orig_order->account);
+  FIX::OrderID order_id(orig_order->sys_order_id);
   cancel_order.set(account);
   cancel_order.set(order_id);
 
