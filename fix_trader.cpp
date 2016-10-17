@@ -359,6 +359,8 @@ void FixTrader::run() {
 }
 
 void FixTrader::OnRspOrderInsert(OrderAck *order_ack) {
+  Order *order = order_pool_.get(order_ack->order_id);
+  strcpy(order->sys_order_id, order_ack->sys_order_id);
   cout << "OnRspOrderInsert" << endl;
   // TODO
 }
@@ -382,6 +384,14 @@ OrderAck FixTrader::ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report)
   report.getField(account);
   string acc = account.getValue();
   // strcpy(order_ack.account, account);
+  FIX::ClOrdID cl_order_id;
+  report.getField(cl_order_id);
+  string cl_ord_id = cl_order_id.getValue();
+  order_ack.order_id = atol(cl_ord_id.c_str());
+  FIX::OrderID order_id;
+  report.getField(order_id);
+  string sys_order_id = order_id.getValue();
+  strcpy(order_ack.sys_order_id, sys_order_id.c_str());
   return order_ack;
 }
 
