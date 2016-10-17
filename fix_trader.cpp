@@ -334,7 +334,7 @@ void FixTrader::run() {
   // TODO
   int count = 1;
   cout << "run" << endl;
-  double price = 9860.0;
+  double price = 9870.0;
   while(true) {
     sleep(1);
     if (count++ % 20 == 0) {
