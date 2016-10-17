@@ -84,13 +84,16 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void onLogout(const FIX::SessionID& sessionID);
   void toAdmin(FIX::Message& message, const FIX::SessionID& sessionID);
   void toApp(FIX::Message& message, const FIX::SessionID& sessionID)
-    throw(FIX::DoNotSend);
+      throw ();
+    // throw(FIX::DoNotSend);
   void fromAdmin(const FIX::Message& message, const FIX::SessionID& sessionID)
-    throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
-          FIX::IncorrectTagValue, FIX::RejectLogon);
+      throw ();
+    // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
+          // FIX::IncorrectTagValue, FIX::RejectLogon);
   void fromApp(const FIX::Message& message, const FIX::SessionID& sessionID)
-    throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
-          FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
+      throw ();
+    // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
+    //       FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
 
   // virtual functions inherited from FIX::MessageCracker
   void onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 

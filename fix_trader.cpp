@@ -27,7 +27,8 @@ void FixTrader::onLogout(const FIX::SessionID& sessionID) {
 }
 
 void FixTrader::fromApp(const FIX::Message& message, 
-                        const FIX::SessionID& sessionID) {
+                        const FIX::SessionID& sessionID) 
+  throw () {
   // throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
   //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
   // FIX::MsgType msg_type;
@@ -48,7 +49,8 @@ void FixTrader::fromApp(const FIX::Message& message,
   // cout << "FROM APP: " << message << endl;
 }
 
-void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID) {
+void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
+  throw () {
   // throw (FIX::DoNotSend) {
     /// old version quickfix demo
     // FIX::MsgType msg_type;
@@ -82,7 +84,8 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID) {
 }
 
 void FixTrader::fromAdmin(const FIX::Message& message,
-                          const FIX::SessionID& sessionID) { 
+                          const FIX::SessionID& sessionID)
+  throw () {
     // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
     //       FIX::IncorrectTagValue, FIX::RejectLogon) {
   crack(message, sessionID);
