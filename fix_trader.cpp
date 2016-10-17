@@ -330,7 +330,7 @@ void FixTrader::ReqOrderAction(Order *order) {
   cancel_order.setField(9717, orig_order_id_str);
 
   cout << "ReqOrderAction:" << orig_order_id_str << endl;
-  FIX::Session::sendToTarget(cancel_order);
+  FIX::Session::sendToTarget(cancel_order, session_id_);
 }
 
 void FixTrader::run() {
