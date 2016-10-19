@@ -92,8 +92,10 @@ void FixTrader::fromAdmin(const FIX::Message& message,
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
   if (msg_type == "5") {
-    // FIX::LastMsgSeqNumProcessed last_msg_seq_num;
-    message.getHeader().getField(last_msg_seq_num_);
+    FIX::LastMsgSeqNumProcessed last_msg_seq_num;
+    message.getHeader().getField(last_msg_seq_num);
+    int start_seq_num = last_msg_seq_num.getValue() + 1;
+    last_msg_seq_num_ = FIX::LastMsgSeqNumProcessed(start_seq_num);
   }
   crack(message, sessionID);
   cout << "FROM ADMIN XML: " << message.toXML() << endl;
