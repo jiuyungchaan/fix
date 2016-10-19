@@ -95,9 +95,9 @@ void FixTrader::fromAdmin(const FIX::Message& message,
     FIX::LastMsgSeqNumProcessed last_msg_seq_num;
     message.getHeader().getField(last_msg_seq_num);
     int start_seq_num = last_msg_seq_num.getValue() + 1;
-    // last_msg_seq_num_ = FIX::LastMsgSeqNumProcessed(start_seq_num);
-    last_msg_seq_num_.setValue(start_seq_num);
-    // cout << start_seq_num << "::" << last_msg_seq_num_;
+    // last_msg_seq_num_.setValue(start_seq_num);
+    last_msg_seq_num_ = start_seq_num;
+    cout << start_seq_num << "::" << last_msg_seq_num_;
   }
   crack(message, sessionID);
   cout << "FROM ADMIN XML: " << message.toXML() << endl;
@@ -182,13 +182,14 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 }
 
 void FixTrader::ReqUserLogon(FIX::Message& message) {
-  // FillHeader(message);
+  cout << "ReqUserLogon" << endl;
   //char sz_password[32] = "4PVSK";
   // int last_msg_seq_num = last_msg_seq_num_.getValue();
   // cout << "last msg seq num: " << last_msg_seq_num << endl;
-  // if (last_msg_seq_num != 0) {
-  //   message.getHeader().setField(last_msg_seq_num_);
-  // }
+  if (last_msg_seq_num_ != 0) {
+    FIX::MsgSeqNum msg_seq_num(last_msg_seq_num_);
+    message.getHeader().setField(msg_seq_num);
+  }
   char sz_password[32] = "JY8FR";
   char sz_reset_seq_num_flag[5] = "N";
 
