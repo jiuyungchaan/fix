@@ -89,6 +89,12 @@ void FixTrader::fromAdmin(const FIX::Message& message,
 
     // throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, 
     //       FIX::IncorrectTagValue, FIX::RejectLogon) {
+  FIX::MsgType msg_type;
+  message.getHeader().getField(msg_type);
+  if (msg_type == "5") {
+    // FIX::LastMsgSeqNumProcessed last_msg_seq_num;
+    message.getHeader().getField(last_msg_seq_num_);
+  }
   crack(message, sessionID);
   cout << "FROM ADMIN XML: " << message.toXML() << endl;
   // cout << "FROM ADMIN: " << message << endl;
@@ -174,6 +180,7 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 void FixTrader::ReqUserLogon(FIX::Message& message) {
   // FillHeader(message);
   //char sz_password[32] = "4PVSK";
+  message.getHeader().setField(last_msg_seq_num_);
   char sz_password[32] = "JY8FR";
   char sz_reset_seq_num_flag[5] = "N";
 
