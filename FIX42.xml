@@ -56,6 +56,7 @@
    <field name='Text' required='N' />
    <field name='EncodedTextLen' required='N' />
    <field name='EncodedText' required='N' />
+   <field name='NextExpectedMsgSeqNum' required='N' />
   </message>
   <message name='IOI' msgcat='app' msgtype='6'>
    <field name='IOIid' required='Y' />
@@ -2750,6 +2751,7 @@
   <field number='445' name='EncodedListStatusTextLen' type='LENGTH' />
   <field number='446' name='EncodedListStatusText' type='DATA' />
   <field number='5979' name='RequestTime' type='INT' />
+  <field number='789' name='NextExpectedMsgSeqNum' type='INT' />
   <field number='527' name='SecondaryExecID' type='STRING' />
   <field number='9717' name='CorrelationClOrdID' type='STRING' />
   <field number='1028' name='ManualOrderIndicator' type='BOOLEAN'>
