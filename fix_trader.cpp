@@ -184,11 +184,11 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 void FixTrader::ReqUserLogon(FIX::Message& message) {
   // FillHeader(message);
   //char sz_password[32] = "4PVSK";
-  int last_msg_seq_num = last_msg_seq_num_.getValue();
-  cout << "last msg seq num: " << last_msg_seq_num << endl;
-  if (last_msg_seq_num != 0) {
-    message.getHeader().setField(last_msg_seq_num_);
-  }
+  // int last_msg_seq_num = last_msg_seq_num_.getValue();
+  // cout << "last msg seq num: " << last_msg_seq_num << endl;
+  // if (last_msg_seq_num != 0) {
+  //   message.getHeader().setField(last_msg_seq_num_);
+  // }
   char sz_password[32] = "JY8FR";
   char sz_reset_seq_num_flag[5] = "N";
 
