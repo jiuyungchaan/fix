@@ -115,7 +115,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
 
   void FillHeader(FIX::Message& message);
 
-  FIX::LastMsgSeqNumProcessed last_msg_seq_num_;
+  FIX::MsgSeqNum last_msg_seq_num_;
   FIX::SessionID session_id_;
   OrderPool order_pool_;
 };
