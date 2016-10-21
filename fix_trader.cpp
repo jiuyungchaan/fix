@@ -97,7 +97,7 @@ void FixTrader::fromAdmin(const FIX::Message& message,
     int start_seq_num = last_msg_seq_num.getValue() + 1;
     // last_msg_seq_num_.setValue(start_seq_num);
     last_msg_seq_num_ = start_seq_num;
-    cout << start_seq_num << "::" << last_msg_seq_num_;
+    // cout << start_seq_num << "::" << last_msg_seq_num_;
   }
   crack(message, sessionID);
   cout << "FROM ADMIN XML: " << message.toXML() << endl;
@@ -186,21 +186,23 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
   //char sz_password[32] = "4PVSK";
   // int last_msg_seq_num = last_msg_seq_num_.getValue();
   // cout << "last msg seq num: " << last_msg_seq_num << endl;
-  if (last_msg_seq_num_ != 0) {
-    FIX::MsgSeqNum msg_seq_num(last_msg_seq_num_);
-    message.getHeader().setField(msg_seq_num);
-  }
+  // if (last_msg_seq_num_ != 0) {
+  //   FIX::MsgSeqNum msg_seq_num(last_msg_seq_num_);
+  //   message.getHeader().setField(msg_seq_num);
+  // }
   char sz_password[32] = "JY8FR";
   char sz_reset_seq_num_flag[5] = "N";
 
-  char raw_data[1024] = {0};
-  char raw_data_len[16] = {0};
+  // char raw_data[1024] = {0};
+  // char raw_data_len[16] = {0};
   char system_name[32] = "CME_CFI";
   char system_version[32] = "1.0";
   char system_vendor[32] = "Cash Algo";
-  snprintf(raw_data, sizeof(raw_data), "%s", sz_password);
-  snprintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
+  // snprintf(raw_data, sizeof(raw_data), "%s", sz_password);
+  // snprintf(raw_data_len, sizeof(raw_data_len), "%d", strlen(raw_data));
   // int raw_data_len = strlen(raw_data);
+  
+  /*
   message.setField(FIX::FIELD::RawData, raw_data);
   message.setField(FIX::FIELD::RawDataLength, raw_data_len);
   message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
@@ -209,6 +211,17 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
   // message.setField(1603, system_name);  // customed fields
   // message.setField(1604, system_version);
   // message.setField(1605, system_vendor);
+  not type-safety */ 
+  FIX::RawData raw_data(sz_password);
+  FIX::RawDataLength raw_data_len(strlen(sz_password));
+  FIX::ResetSeqNumFlag reset_seq_num_flag("N");
+  FIX::EncryptMethod encrypt_method(0);
+
+  message.setField(raw_data);
+  message.setField(raw_data_len);
+  message.setField(reset_seq_num_flag);
+  message.setField(encrypt_method);
+
   string message_string = message.toString();
   cout << "Send Logon Message:\n" << message_string << endl;
 }
