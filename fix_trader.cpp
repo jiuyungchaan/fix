@@ -186,10 +186,10 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
   //char sz_password[32] = "4PVSK";
   // int last_msg_seq_num = last_msg_seq_num_.getValue();
   // cout << "last msg seq num: " << last_msg_seq_num << endl;
-  if (last_msg_seq_num_ != 0) {
-    FIX::MsgSeqNum msg_seq_num(last_msg_seq_num_);
-    message.getHeader().setField(msg_seq_num);
-  }
+  // if (last_msg_seq_num_ != 0) {
+  //   FIX::MsgSeqNum msg_seq_num(last_msg_seq_num_);
+  //   message.getHeader().setField(msg_seq_num);
+  // }
   char sz_password[32] = "JY8FR";
   char sz_reset_seq_num_flag[5] = "N";
 
@@ -214,7 +214,7 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
   not type-safety */ 
   FIX::RawData raw_data(sz_password);
   FIX::RawDataLength raw_data_len(strlen(sz_password));
-  FIX::ResetSeqNumFlag reset_seq_num_flag("N");
+  FIX::ResetSeqNumFlag reset_seq_num_flag(false);
   FIX::EncryptMethod encrypt_method(0);
 
   message.setField(raw_data);
