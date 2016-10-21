@@ -269,6 +269,9 @@
    <field name='RawData' required='N' />
    <field name='ResetSeqNumFlag' required='N' />
    <field name='MaxMessageSize' required='N' />
+   <field name='ApplicationSystemName' required='N' />
+   <field name='TradingSystemVersion' required='N' />
+   <field name='ApplicationSystemVendor' required='N' />
    <group name='NoMsgTypes' required='N'>
     <field name='RefMsgType' required='N' />
     <field name='MsgDirection' required='N' />
@@ -2754,6 +2757,9 @@
   <field number='789' name='NextExpectedMsgSeqNum' type='INT' />
   <field number='527' name='SecondaryExecID' type='STRING' />
   <field number='9717' name='CorrelationClOrdID' type='STRING' />
+  <field number='1603' name='ApplicationSystemName' type='STRING' />
+  <field number='1604' name='TradingSystemVersion' type='STRING' />
+  <field number='1605' name='ApplicationSystemVendor' type='STRING' />
   <field number='1028' name='ManualOrderIndicator' type='BOOLEAN'>
    <value enum='N' description='NO' />
    <value enum='Y' description='YES' />

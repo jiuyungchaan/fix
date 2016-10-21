@@ -208,10 +208,10 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
   message.setField(FIX::FIELD::ResetSeqNumFlag, sz_reset_seq_num_flag);
   // message.setField(FIX::FIELD::EncryptMethod, "0");
   message.setField(FIX::FIELD::EncryptMethod, "0");  // string or int? type-safety?
-  // message.setField(1603, system_name);  // customed fields
-  // message.setField(1604, system_version);
-  // message.setField(1605, system_vendor);
   not type-safety */ 
+  message.setField(1603, system_name);  // customed fields
+  message.setField(1604, system_version);
+  message.setField(1605, system_vendor);
   FIX::RawData raw_data(sz_password);
   FIX::RawDataLength raw_data_len(strlen(sz_password));
   FIX::ResetSeqNumFlag reset_seq_num_flag(false);
