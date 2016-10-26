@@ -1990,6 +1990,15 @@
    <value enum='1' description='UNKNOWN_ORDER' />
    <value enum='2' description='BROKER_OPTION' />
    <value enum='3' description='ORDER_ALREADY_IN_PENDING_CANCEL_OR_PENDING_REPLACE_STATUS' />
+   <value enum='4' description='UNABLE_PROCESS_ORDER_MASS_CANCEL' />
+   <value enum='5' description='ORIGORDMODTIME_NOT_MATCH_TRANSACT_TIME' />
+   <value enum='6' description='DUPLICATE_CL_ORD_ID' />
+   <value enum='7' description='PRICE_EXCEEDS_CURRENT_PRICE' />
+   <value enum='8' description='PRICE_EXCEEDS_CURRENT_PRICE_BAND' />
+   <value enum='18' description='INVALID_PRICE_INCREMENT' />
+   <value enum='99' description='OTHER' />
+   <value enum='2045' description='ORDER_NOT_IN_BOOK' />
+   <value enum='1003' description='NOT_BE_CANCELED_WHILE_MARKET_CLOSED' />
   </field>
   <field number='103' name='OrdRejReason' type='INT'>
    <value enum='0' description='BROKER_OPTION' />
