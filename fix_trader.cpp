@@ -49,7 +49,7 @@ void FixTrader::fromApp(const FIX::Message& message,
   /// new version quickfix demo
   /// what crack does?
   crack(message, sessionID);
-  log_file_ << "FROM APP XML: " << message.toXML() << endl;
+  log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
   // cout << "FROM APP: " << message << endl;
 }
 
@@ -83,7 +83,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     } catch (FIX::FieldNotFound&) {}
 
     FillHeader(message);
-    log_file_ << "TO APP XML: " << message.toXML() << endl;
+    log_file_ << "[" << time_now() << "]TO APP XML: " << message.toXML() << endl;
     // cout << "TO APP: " << message << endl;
 }
 
@@ -103,8 +103,8 @@ void FixTrader::fromAdmin(const FIX::Message& message,
     last_msg_seq_num_ = start_seq_num;
     // cout << start_seq_num << "::" << last_msg_seq_num_;
   }
+  log_file_ << "[" << time_now() << "]FROM ADMIN XML: " << message.toXML() << endl;
   crack(message, sessionID);
-  log_file_ << "FROM ADMIN XML: " << message.toXML() << endl;
   // cout << "FROM ADMIN: " << message << endl;
 }
 
@@ -124,7 +124,7 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
     ReqUserLogout(message);
   }
 
-  log_file_ << "TO ADMIN XML: " << message.toXML() << endl;
+  log_file_ << "[" << time_now() << "]TO ADMIN XML: " << message.toXML() << endl;
   // cout << "TO ADMIN: " << message << endl;
 }
 
