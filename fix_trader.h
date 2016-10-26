@@ -48,6 +48,7 @@
 #include <quickfix/fix50/MarketDataRequest.h>
 
 #include <queue>
+#include <fstream>
 
 #include "order.h"
 
@@ -69,7 +70,7 @@
 
 class FixTrader : public FIX::Application, public FIX::MessageCracker {
  public:
-  FixTrader() : last_msg_seq_num_(0) {}
+  FixTrader();// : last_msg_seq_num_(0) {}
   void run();
   void ReqUserLogon(FIX::Message& message);
   void SendHeartbeat(FIX::Message& message);
@@ -114,12 +115,18 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   OrderAck ToOrderAck(const CME_FIX_NAMESPACE::ExecutionReport& report);
   Deal ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report);
 
+  void PrintExecutionReport(const CME_FIX_NAMESPACE::ExecutionReport& report);
+  void PrintBasicExecutionReport(
+          const CME_FIX_NAMESPACE::ExecutionReport& report);
+
   void FillHeader(FIX::Message& message);
 
   // FIX::MsgSeqNum last_msg_seq_num_;
   int last_msg_seq_num_;
   FIX::SessionID session_id_;
   OrderPool order_pool_;
+
+  std::fstream log_file_;
 };
 
 #endif  // __FIX_TRADER_H__

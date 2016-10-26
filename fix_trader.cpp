@@ -11,8 +11,12 @@ using namespace std;
 
 char *gConfigFileName = const_cast<char*>("./test.cfg");
 
+FixTrader::FixTrader() : last_msg_seq_num_(0) {
+  log_file_.open("./fix.log", std::fstream::out | std::fstream::app);
+}
+
 void FixTrader::onCreate(const FIX::SessionID& sessionID) {
-  cout << "Session created : " << session_id_ << endl;
+  cout << "Session created : " << sessionID << endl;
   session_id_ = sessionID;
 }
 
@@ -45,7 +49,7 @@ void FixTrader::fromApp(const FIX::Message& message,
   /// new version quickfix demo
   /// what crack does?
   crack(message, sessionID);
-  cout << "FROM APP XML: " << message.toXML() << endl;
+  log_file_ << "FROM APP XML: " << message.toXML() << endl;
   // cout << "FROM APP: " << message << endl;
 }
 
@@ -79,7 +83,7 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     } catch (FIX::FieldNotFound&) {}
 
     FillHeader(message);
-    cout << "TO APP XML: " << message.toXML() << endl;
+    log_file_ << "TO APP XML: " << message.toXML() << endl;
     // cout << "TO APP: " << message << endl;
 }
 
@@ -100,7 +104,7 @@ void FixTrader::fromAdmin(const FIX::Message& message,
     // cout << start_seq_num << "::" << last_msg_seq_num_;
   }
   crack(message, sessionID);
-  cout << "FROM ADMIN XML: " << message.toXML() << endl;
+  log_file_ << "FROM ADMIN XML: " << message.toXML() << endl;
   // cout << "FROM ADMIN: " << message << endl;
 }
 
@@ -120,7 +124,7 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
     ReqUserLogout(message);
   }
 
-  cout << "TO ADMIN XML: " << message.toXML() << endl;
+  log_file_ << "TO ADMIN XML: " << message.toXML() << endl;
   // cout << "TO ADMIN: " << message << endl;
 }
 
@@ -162,6 +166,7 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report,
     default:
       break;
   }  // switch ord_status
+  PrintExecutionReport(report);
 }
 
 void FixTrader::onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
@@ -428,6 +433,197 @@ Deal FixTrader::ToDeal(const CME_FIX_NAMESPACE::ExecutionReport& report) {
   Deal deal;
 
   return deal;
+}
+
+void FixTrader::PrintExecutionReport(
+      const CME_FIX_NAMESPACE::ExecutionReport& report) {
+  FIX::OrdStatus ord_status;
+  report.getField(ord_status);
+  if (ord_status == FIX::OrdStatus_NEW) {
+    cout << "[Execution Report Acknowledgment]:" << endl;
+  } else if (ord_status == FIX::OrdStatus_PARTIALLY_FILLED) {
+    FIX::LastPx last_px;
+    FIX::LastQty last_qty;
+    report.getField(last_px);
+    report.getField(last_qty);
+    cout << "[Execution Report PartiallyFill]:" << endl;
+    cout << "LastPx:[" << last_px << "]" << endl;
+    cout << "LastQty:[" << last_qty << "]" << endl;
+  } else if (ord_status == FIX::OrdStatus_FILLED) {
+    FIX::LastPx last_px;
+    FIX::LastQty last_qty;
+    report.getField(last_px);
+    report.getField(last_qty);
+    cout << "[Execution Report AllFill]:" << endl;
+    cout << "LastPx:[" << last_px << "]" << endl;
+    cout << "LastQty:[" << last_qty << "]" << endl;
+  } else if (ord_status == FIX::OrdStatus_CANCELED) {
+    cout << "[Execution Report Cancellation]:" << endl;
+  } else if (ord_status == FIX::OrdStatus_REPLACED) {
+    cout << "[Execution Report Modification]:" << endl;
+  } else if (ord_status == FIX::OrdStatus_REJECTED) {
+    cout << "[Execution Report Reject]:" << endl;
+  } else if (ord_status == FIX::OrdStatus_EXPIRED) {
+    cout << "[Execution Report Elimination]:" << endl;
+  } else {
+    cout << "[Unknown Type Execution Report]:" << endl;
+  }
+  PrintBasicExecutionReport(report);
+}
+
+void FixTrader::PrintBasicExecutionReport(
+      const CME_FIX_NAMESPACE::ExecutionReport& report) {
+  FIX::Account account;
+  FIX::AvgPx avg_px;
+  FIX::ClOrdID cl_ord_id;
+  FIX::CumQty cum_qty;
+  FIX::ExecID exec_id;
+  FIX::OrderID order_id;
+  FIX::OrderQty order_qty;
+  FIX::OrdStatus ord_status;
+  FIX::OrdType ord_type;
+  FIX::OrigClOrdID orig_cl_order_id;
+  FIX::Price price;
+  FIX::SecurityID security_id;
+  FIX::Side side;
+  FIX::Symbol symbol;
+  FIX::TimeInForce time_in_force;
+  FIX::TransactTime transact_time;
+  FIX::SecurityDesc security_desc;
+  FIX::ExecType exec_type;
+  FIX::SecurityType security_type;
+  
+  report.getField(account);
+  report.getField(avg_px);
+  report.getField(cl_ord_id);
+  report.getField(cum_qty);
+  report.getField(exec_id);
+  report.getField(order_id);
+  report.getField(order_qty);
+  report.getField(ord_status);
+  report.getField(ord_type);
+  report.getField(orig_cl_order_id);
+  report.getField(price);
+  report.getField(security_id);
+  report.getField(side);
+  report.getField(symbol);
+  report.getField(time_in_force);
+  report.getField(transact_time);
+  report.getField(security_desc);
+  report.getField(exec_type);
+  report.getField(security_type);
+
+  char val_ord_status[8] = {0};
+  val_ord_status[0] = ord_status.getValue();
+  string str_ord_status = val_ord_status;
+  if (ord_status == FIX::OrdStatus_NEW) {
+    str_ord_status = "NEW";
+  } else if (ord_status == FIX::OrdStatus_PARTIALLY_FILLED) {
+    str_ord_status = "PARTIALLY_FILLED";
+  } else if (ord_status == FIX::OrdStatus_FILLED) {
+    str_ord_status = "FILLED";
+  } else if (ord_status == FIX::OrdStatus_DONE_FOR_DAY) {
+    str_ord_status = "DONE_FOR_DAY";
+  } else if (ord_status == FIX::OrdStatus_CANCELED) {
+    str_ord_status = "CANCELED";
+  } else if (ord_status == FIX::OrdStatus_REPLACED) {
+    str_ord_status = "REPLACED";
+  } else if (ord_status == FIX::OrdStatus_PENDING_CANCEL) {
+    str_ord_status = "PENGING_CANCEL";
+  } else if (ord_status == FIX::OrdStatus_STOPPED) {
+    str_ord_status = "STOPPED";
+  } else if (ord_status == FIX::OrdStatus_REJECTED) {
+    str_ord_status = "REJECTED";
+  } else if (ord_status == FIX::OrdStatus_EXPIRED) {
+    str_ord_status = "EXPIRED";
+  }
+
+  char val_ord_type[8] = {0};
+  val_ord_type[0] = ord_type.getValue();
+  string str_ord_type = val_ord_type;
+  if (ord_type == FIX::OrdType_LIMIT) {
+    str_ord_type = "LIMIT";
+  } else if (ord_type == FIX::OrdType_MARKET) {
+    str_ord_type = "MARKET";
+  } else if (ord_type == FIX::OrdType_STOP) {
+    str_ord_type = "STOP";
+  } else if (ord_type == FIX::OrdType_STOP_LIMIT) {
+    str_ord_type = "STOP_LIMIT";
+  } else if (ord_type == 'K') {
+    str_ord_type = "MARKET_LIMIT";
+  }
+
+  char val_side[8] = {0};
+  val_side[0] = side.getValue();
+  string str_side = val_side;
+  if (side == FIX::Side_BUY) {
+    str_side = "BUY";
+  } else if (side == FIX::Side_SELL) {
+    str_side = "SELL";
+  }
+
+  char val_time_in_force[8] = {0};
+  val_time_in_force[0] = time_in_force.getValue();
+  string str_time_in_force = val_time_in_force;
+  if (time_in_force == FIX::TimeInForce_DAY) {
+    str_time_in_force = "DAY";
+  } else if (time_in_force == FIX::TimeInForce_GOOD_TILL_CANCEL) {
+    str_time_in_force = "GTC";
+  } else if (time_in_force == FIX::TimeInForce_IMMEDIATE_OR_CANCEL) {
+    str_time_in_force = "FAK";
+  } else if (time_in_force == FIX::TimeInForce_FILL_OR_KILL) {
+    str_time_in_force = "FOK";
+  } else if (time_in_force == FIX::TimeInForce_GOOD_TILL_DATE) {
+    str_time_in_force = "GTD";
+  }
+
+  char val_exec_type[8] = {0};
+  val_exec_type[0] = exec_type.getValue();
+  string str_exec_type = val_exec_type;
+  if (exec_type == FIX::ExecType_NEW) {
+    str_exec_type = "NEW";
+  } else if (exec_type == FIX::ExecType_PARTIAL_FILL) {
+    str_exec_type = "PARTIAL_FILL";
+  } else if (exec_type == FIX::ExecType_FILL) {
+    str_exec_type = "FILL";
+  } else if (exec_type == FIX::ExecType_DONE_FOR_DAY) {
+    str_exec_type = "DONE_FOR_DAY";
+  } else if (exec_type == FIX::ExecType_CANCELED) {
+    str_exec_type = "CANCELED";
+  } else if (exec_type == FIX::ExecType_REPLACE) {
+    str_exec_type = "REPLACE";
+  } else if (exec_type == FIX::ExecType_PENDING_CANCEL) {
+    str_exec_type = "PENGING_CANCEL";
+  } else if (exec_type == FIX::ExecType_STOPPED) {
+    str_exec_type = "STOPPED";
+  } else if (exec_type == FIX::ExecType_REJECTED) {
+    str_exec_type = "REJECTED";
+  } else if (exec_type == FIX::ExecType_EXPIRED) {
+    str_exec_type = "ELIMINATION_ACK";
+  } else if (exec_type == 'H') {
+    str_exec_type = "TRADE_CANCEL_ACK";
+  }
+  
+  cout << "[ExecutionReport Basic Information]:" << endl;
+  cout << "Account:[" << account << "]" << endl;
+  cout << "AvgPx:[" << avg_px << "]" << endl;
+  cout << "ClOrdID:[" << cl_ord_id << "]" << endl;
+  cout << "CumQty:[" << cum_qty << "]" << endl;
+  cout << "ExecID:[" << exec_id << "]" << endl;
+  cout << "OrderID:[" << order_id << "]" << endl;
+  cout << "OrderQty:[" << order_qty << "]" << endl;
+  cout << "OrdStatus:[" << str_ord_status << "]" << endl;
+  cout << "OrdType:[" << str_ord_type << "]" << endl;
+  cout << "OrigClOrdID:[" << orig_cl_order_id << "]" << endl;
+  cout << "Price:[" << price << "]" << endl;
+  cout << "SecurityID:[" << security_id << "]" << endl;
+  cout << "Side:[" << str_side << "]" << endl;
+  cout << "Symbol:[" << symbol << "]" << endl;
+  cout << "TimeInForce:[" << str_time_in_force << "]" << endl;
+  cout << "TransactTime:[" << transact_time << "]" << endl;
+  cout << "SecurityDesc:[" << security_desc << "]" << endl;
+  cout << "ExecType:[" << str_exec_type << "]" << endl;
+  cout << "SecurityType:[" << security_type << "]" << endl;
 }
 
 void FixTrader::FillHeader(FIX::Message& message) {
