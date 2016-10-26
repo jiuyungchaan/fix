@@ -253,6 +253,7 @@
    <field name='OrdStatus' required='Y' />
    <field name='ClientID' required='N' />
    <field name='ExecBroker' required='N' />
+   <field name='ExecID' required='N' />
    <field name='ListID' required='N' />
    <field name='Account' required='N' />
    <field name='TransactTime' required='N' />
