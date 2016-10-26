@@ -47,6 +47,13 @@
    <field name='Text' required='N' />
    <field name='EncodedTextLen' required='N' />
    <field name='EncodedText' required='N' />
+   <field name='OrdStatus' required='N' />
+   <field name='OrigClOrdID' required='N' />
+   <field name='TransactTime' required='N' />
+   <field name='CxlRejReason' required='N' />
+   <field name='CxlRejResponseTo' required='N' />
+   <field name='RequestTime' required='N' />
+   <field name='CorrelationClOrdID' required='N' />
   </message>
   <message name='SequenceReset' msgcat='admin' msgtype='4'>
    <field name='GapFillFlag' required='N' />
