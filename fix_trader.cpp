@@ -48,8 +48,8 @@ void FixTrader::fromApp(const FIX::Message& message,
   
   /// new version quickfix demo
   /// what crack does?
-  crack(message, sessionID);
   log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
+  crack(message, sessionID);
   // cout << "FROM APP: " << message << endl;
 }
 
