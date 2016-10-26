@@ -394,7 +394,9 @@ void FixTrader::run() {
 
 void FixTrader::OnRspOrderInsert(OrderAck *order_ack) {
   Order *order = order_pool_.get(order_ack->order_id);
-  strcpy(order->sys_order_id, order_ack->sys_order_id);
+  if (order != NULL) {
+    strcpy(order->sys_order_id, order_ack->sys_order_id);
+  }
   cout << "OnRspOrderInsert" << endl;
   // TODO
 }
