@@ -145,6 +145,7 @@ int main(int argc, char **argv) {
         order.orig_order_id = atoi(order_id.c_str());
         fix_trader.ReqOrderAction(&order);
       }
+      sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {
       continue;
     } else if (cmd == 'Q' || cmd == 'q') {
