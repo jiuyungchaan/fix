@@ -100,16 +100,16 @@ int main(int argc, char **argv) {
     char line[512];
     cmd_file.getline(line, 512);
     if (line[0] == '#') {
-      cout << "\033[32mComment:[" << line << "\033[0m]" << endl;
+      cout << "\033[32mComment:[" << line << "]\033[0m" << endl;
       continue;
     } else if (strcmp(line, "") == 0) {
       cout << "Passing blank line..." << endl;
       continue;
     }
-    cout << "\033[31mCommand:[" << line << "\033[0m]" << endl;
+    cout << "\033[31mCommand:[" << line << "]\033[0m" << endl;
     char cmd;
     while(true) {
-      cout << "\033[31mInput command-[E-Execute P-Pass Q-Quit] :\033[0m";
+      cout << "\033[33mInput command-[E-Execute P-Pass Q-Quit] :\033[0m";
       scanf("%c", &cmd);
       getchar();
       if (cmd == 'E' || cmd == 'e' || cmd == 'P' || cmd == 'p' ||
@@ -141,9 +141,13 @@ int main(int argc, char **argv) {
       } else if (strcasecmp(request.c_str(), "cancel") == 0) {
         string order_id;
         line_stream >> order_id;
-        Order order;
-        order.orig_order_id = atoi(order_id.c_str());
-        fix_trader.ReqOrderAction(&order);
+        if (order_id == "-1") {
+
+        } else {
+          Order order;
+          order.orig_order_id = atoi(order_id.c_str());
+          fix_trader.ReqOrderAction(&order);
+        }
       }
       sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {

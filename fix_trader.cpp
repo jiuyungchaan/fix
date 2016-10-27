@@ -338,8 +338,8 @@ void FixTrader::ReqOrderAction(Order *order) {
   } else {
     side = FIX::Side_SELL;
   }
-  // FIX::Symbol symbol(orig_order->instrument_id);
-  FIX::Symbol symbol("GE");
+  FIX::Symbol symbol(orig_order->symbol);
+  // FIX::Symbol symbol("GE");
   FIX::TransactTime transact_time(time_now());
 
   CME_FIX_NAMESPACE::OrderCancelRequest cancel_order(orig_cl_order_id,
@@ -360,6 +360,7 @@ void FixTrader::ReqOrderAction(Order *order) {
   //                Option Example: CEZ9 C9375
   // Is SecurityDesc a type? 
   FIX::SecurityDesc security_desc(orig_order->instrument_id);
+  cout << "ReqOrderAction tag-107 " << orig_order->instrument_id << endl;
   cancel_order.set(security_desc);
   // cancel_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
 
