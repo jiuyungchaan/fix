@@ -118,8 +118,17 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void PrintExecutionReport(const CME_FIX_NAMESPACE::ExecutionReport& report);
   void PrintBasicExecutionReport(
           const CME_FIX_NAMESPACE::ExecutionReport& report);
+  void PrintOrderCancelReject(
+          const CME_FIX_NAMESPACE::OrderCancelReject& report);
 
   void FillHeader(FIX::Message& message);
+
+  // utilities functions
+  std::string ToString(FIX::OrdStatus ord_status);
+  std::string ToString(FIX::OrdType ord_type);
+  std::string ToString(FIX::Side side);
+  std::string ToString(FIX::TimeInForce time_in_force);
+  std::string ToString(FIX::ExecType exec_type);
 
   // FIX::MsgSeqNum last_msg_seq_num_;
   int last_msg_seq_num_;

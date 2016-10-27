@@ -248,16 +248,21 @@ void FixTrader::ReqOrderInsert(Order *order) {
   order->order_id = order_pool_.add(order);
   char cl_order_id_str[16];
   snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
-  FIX::OrdType order_type = FIX::OrdType_LIMIT;
   FIX::HandlInst handl_inst('1');
   FIX::ClOrdID cl_order_id(cl_order_id_str);
-  // FIX::Symbol symbol(order->instrument_id);
-  FIX::Symbol symbol("GE");
+  FIX::Symbol symbol(order->symbol);
+  // FIX::Symbol symbol("GE");
   FIX::Side side;
   if (order->direction == kDirectionBuy) {
     side = FIX::Side_BUY;
   } else {
     side = FIX::Side_SELL;
+  }
+  FIX::OrdType order_type = FIX::OrdType_LIMIT;
+  if (order->order_type == kOrderTypeLimit) {
+    order_type = FIX::OrdType_LIMIT;
+  } else if (order->order_type == kOrderTypeMarket) {
+    order_type = FIX::OrdType_MARKET;
   }
   FIX::TransactTime transact_time(time_now());
   CME_FIX_NAMESPACE::NewOrderSingle new_order(cl_order_id, handl_inst, symbol,
@@ -265,7 +270,16 @@ void FixTrader::ReqOrderInsert(Order *order) {
   FIX::Price price(order->limit_price);
   FIX::Account account(order->account);
   FIX::OrderQty order_qty(order->volume);
-  FIX::TimeInForce time_in_force = FIX::TimeInForce_DAY;
+  FIX::TimeInForce time_in_force;
+  if (order->time_in_force == kTimeInForceDay) {
+    time_in_force = FIX::TimeInForce_DAY;
+  } else if (order->time_in_force == kTimeInForceGTC) {
+    time_in_force = FIX::TimeInForce_GOOD_TILL_CANCEL;
+  } else if (order->time_in_force == kTimeInForceGTD) {
+    time_in_force = FIX::TimeInForce_GOOD_TILL_DATE;
+  } else if (order->time_in_force == kTimeInForceFAK) {
+    time_in_force = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
+  }
   new_order.set(price);
   new_order.set(account);
   new_order.set(order_qty);
@@ -396,8 +410,12 @@ void FixTrader::OnRspOrderInsert(OrderAck *order_ack) {
   Order *order = order_pool_.get(order_ack->order_id);
   if (order != NULL) {
     strcpy(order->sys_order_id, order_ack->sys_order_id);
+    printf("OnRspOrderInsert: %d-%s\n", order_ack->order_id,
+            order_ack->sys_order_id);
+  } else {
+    printf("OnRspOrderInsert Error: Order %d-%s not found\n",
+            order_ack->order_id, order_ack->sys_order_id);
   }
-  cout << "OnRspOrderInsert" << endl;
   // TODO
 }
 
@@ -515,6 +533,87 @@ void FixTrader::PrintBasicExecutionReport(
   report.getField(exec_type);
   report.getField(security_type);
 
+  string str_ord_status = ToString(ord_status);
+  string str_ord_type = ToString(ord_type);
+  string str_side = ToString(side);
+  string str_time_in_force = ToString(time_in_force);
+  string str_exec_type = ToString(exec_type);
+
+  cout << "[ExecutionReport Basic Information]:" << endl;
+  cout << "Account:[" << account << "]" << endl;
+  cout << "AvgPx:[" << avg_px << "]" << endl;
+  cout << "ClOrdID:[" << cl_ord_id << "]" << endl;
+  cout << "CumQty:[" << cum_qty << "]" << endl;
+  cout << "ExecID:[" << exec_id << "]" << endl;
+  cout << "OrderID:[" << order_id << "]" << endl;
+  cout << "OrderQty:[" << order_qty << "]" << endl;
+  cout << "OrdStatus:[" << str_ord_status << "]" << endl;
+  cout << "OrdType:[" << str_ord_type << "]" << endl;
+  cout << "OrigClOrdID:[" << orig_cl_order_id << "]" << endl;
+  cout << "Price:[" << price << "]" << endl;
+  cout << "SecurityID:[" << security_id << "]" << endl;
+  cout << "Side:[" << str_side << "]" << endl;
+  cout << "Symbol:[" << symbol << "]" << endl;
+  cout << "TimeInForce:[" << str_time_in_force << "]" << endl;
+  cout << "TransactTime:[" << transact_time << "]" << endl;
+  cout << "SecurityDesc:[" << security_desc << "]" << endl;
+  cout << "ExecType:[" << str_exec_type << "]" << endl;
+  cout << "SecurityType:[" << security_type << "]" << endl;
+}
+
+void FixTrader::PrintOrderCancelReject(
+      const CME_FIX_NAMESPACE::OrderCancelReject& report) {
+  FIX::Account account;
+  FIX::ClOrdID cl_ord_id;
+  FIX::ExecID exec_id;
+  FIX::OrderID order_id;
+  FIX::OrderQty order_qty;
+  FIX::OrdStatus ord_status;
+  FIX::OrigClOrdID orig_cl_order_id;
+  FIX::SecurityID security_id;
+  FIX::Text text;
+  FIX::TransactTime transact_time;
+  FIX::CxlRejReason cxl_rej_reason;
+  FIX::SecurityDesc security_desc;
+  FIX::CxlRejResponseTo cxl_rej_response_to;
+  
+  report.getField(account);
+  report.getField(cl_ord_id);
+  report.getField(exec_id);
+  report.getField(order_id);
+  report.getField(ord_status);
+  report.getField(orig_cl_order_id);
+  report.getField(security_id);
+  report.getField(text);
+  report.getField(transact_time);
+  report.getField(cxl_rej_reason);
+  report.getField(security_desc);
+  report.getField(cxl_rej_response_to);
+
+  string str_ord_status = ToString(ord_status);
+
+  cout << "[Order Cancel Reject]:" << endl;
+  cout << "Account:[" << account << "]" << endl;
+  cout << "ClOrdID:[" << cl_ord_id << "]" << endl;
+  cout << "ExecID:[" << exec_id << "]" << endl;
+  cout << "OrderID:[" << order_id << "]" << endl;
+  cout << "OrdStatus:[" << str_ord_status << "]" << endl;
+  cout << "OrigClOrdID:[" << orig_cl_order_id << "]" << endl;
+  cout << "SecurityID:[" << security_id << "]" << endl;
+  cout << "Text:[" << text << "]" << endl;
+  cout << "TransactTime:[" << transact_time << "]" << endl;
+  cout << "CxlRejReason:[" << cxl_rej_response_to << "]" << endl;
+  cout << "SecurityDesc:[" << security_desc << "]" << endl;
+  cout << "CxlRejResponseTo:[" << cxl_rej_response_to << "]" << endl;
+}
+
+void FixTrader::FillHeader(FIX::Message& message) {
+  message.getHeader().setField(FIX::SenderSubID("ANYTHING"));
+  message.getHeader().setField(FIX::SenderLocationID("HK"));
+  message.getHeader().setField(FIX::TargetSubID("G"));
+}
+
+string FixTrader::ToString(FIX::OrdStatus ord_status) {
   char val_ord_status[8] = {0};
   val_ord_status[0] = ord_status.getValue();
   string str_ord_status = val_ord_status;
@@ -539,7 +638,10 @@ void FixTrader::PrintBasicExecutionReport(
   } else if (ord_status == FIX::OrdStatus_EXPIRED) {
     str_ord_status = "EXPIRED";
   }
+  return str_ord_status;
+}
 
+string FixTrader::ToString(FIX::OrdType ord_type) {
   char val_ord_type[8] = {0};
   val_ord_type[0] = ord_type.getValue();
   string str_ord_type = val_ord_type;
@@ -554,7 +656,10 @@ void FixTrader::PrintBasicExecutionReport(
   } else if (ord_type == 'K') {
     str_ord_type = "MARKET_LIMIT";
   }
+  return str_ord_type;
+}
 
+string FixTrader::ToString(FIX::Side side) {
   char val_side[8] = {0};
   val_side[0] = side.getValue();
   string str_side = val_side;
@@ -563,7 +668,10 @@ void FixTrader::PrintBasicExecutionReport(
   } else if (side == FIX::Side_SELL) {
     str_side = "SELL";
   }
+  return str_side;
+}
 
+string FixTrader::ToString(FIX::TimeInForce time_in_force) {  
   char val_time_in_force[8] = {0};
   val_time_in_force[0] = time_in_force.getValue();
   string str_time_in_force = val_time_in_force;
@@ -578,7 +686,10 @@ void FixTrader::PrintBasicExecutionReport(
   } else if (time_in_force == FIX::TimeInForce_GOOD_TILL_DATE) {
     str_time_in_force = "GTD";
   }
+  return str_time_in_force;
+}
 
+string FixTrader::ToString(FIX::ExecType exec_type) {
   char val_exec_type[8] = {0};
   val_exec_type[0] = exec_type.getValue();
   string str_exec_type = val_exec_type;
@@ -605,32 +716,5 @@ void FixTrader::PrintBasicExecutionReport(
   } else if (exec_type == 'H') {
     str_exec_type = "TRADE_CANCEL_ACK";
   }
-  
-  cout << "[ExecutionReport Basic Information]:" << endl;
-  cout << "Account:[" << account << "]" << endl;
-  cout << "AvgPx:[" << avg_px << "]" << endl;
-  cout << "ClOrdID:[" << cl_ord_id << "]" << endl;
-  cout << "CumQty:[" << cum_qty << "]" << endl;
-  cout << "ExecID:[" << exec_id << "]" << endl;
-  cout << "OrderID:[" << order_id << "]" << endl;
-  cout << "OrderQty:[" << order_qty << "]" << endl;
-  cout << "OrdStatus:[" << str_ord_status << "]" << endl;
-  cout << "OrdType:[" << str_ord_type << "]" << endl;
-  cout << "OrigClOrdID:[" << orig_cl_order_id << "]" << endl;
-  cout << "Price:[" << price << "]" << endl;
-  cout << "SecurityID:[" << security_id << "]" << endl;
-  cout << "Side:[" << str_side << "]" << endl;
-  cout << "Symbol:[" << symbol << "]" << endl;
-  cout << "TimeInForce:[" << str_time_in_force << "]" << endl;
-  cout << "TransactTime:[" << transact_time << "]" << endl;
-  cout << "SecurityDesc:[" << security_desc << "]" << endl;
-  cout << "ExecType:[" << str_exec_type << "]" << endl;
-  cout << "SecurityType:[" << security_type << "]" << endl;
+  return str_exec_type;
 }
-
-void FixTrader::FillHeader(FIX::Message& message) {
-  message.getHeader().setField(FIX::SenderSubID("ANYTHING"));
-  message.getHeader().setField(FIX::SenderLocationID("HK"));
-  message.getHeader().setField(FIX::TargetSubID("G"));
-}
-

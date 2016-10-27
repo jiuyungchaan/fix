@@ -16,6 +16,20 @@
 #define kOffsetCloseYesterday '3'
 #define kOffsetForceClse '4'
 
+// enum Order Type
+#define kOrderTypeLimit '0'
+#define kOrderTypeMarket '1'
+#define kOrderTypeStop '2'
+#define kOrderTypeStopLimit '3'
+#define kOrderTypeMarketLimit '4'
+
+// enum Time In Force
+#define kTimeInForceDay '0'
+#define kTimeInForceGTC '1'
+#define kTimeInForceFAK '2'
+#define kTimeInForceGTD '3'
+#define kTimeInForceFOK '4'
+
 // enum OrderStatus
 #define kOrderStatusNew '0'
 #define kOrderStatusPartiallyFilled '1'
@@ -29,6 +43,7 @@
 
 class Order {
  public:
+  char symbol[32];
   char instrument_id[32];
   char account[32];
   char sys_order_id[32];
@@ -36,6 +51,7 @@ class Order {
   char offset;
   char order_type;
   char hedge_flag_type;
+  char time_in_force;
   char order_status;
   int order_id;
   int orig_order_id;
@@ -43,9 +59,10 @@ class Order {
   double limit_price;
   long ttl;
 
-  Order() : instrument_id{0}, account{0}, sys_order_id{0},
+  Order() : symbol{0}, instrument_id{0}, account{0}, sys_order_id{0},
             direction(kDirectionBuy), offset(kOffsetOpen),
-            order_type('0'), hedge_flag_type('0'), 
+            order_type(kOrderTypeLimit), hedge_flag_type('0'),
+            time_in_force(kTimeInForceDay), 
             order_status(kOrderStatusUndefined), order_id(-1),
             orig_order_id(-1), volume(0), limit_price(0.00),
             ttl(0) {}
