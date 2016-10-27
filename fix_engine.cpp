@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
         }
       } else if (strcasecmp(request.c_str(), "modify") == 0) {
         string order_id, volume, price;
-        line_stream >> order_id >> volume >> price;
+        line_stream >> order_id >> price >> volume;
         Order *order = new Order();
         order->orig_order_id = atoi(order_id.c_str());
         order->volume = atoi(volume.c_str());
@@ -165,7 +165,13 @@ int main(int argc, char **argv) {
       break;
     }
   }
+
+  char q;
+  cout << "Confirm to quit ? y/n :";
+  scanf("%c", &q);
+  getchar();
   initiator.stop();
+  sleep(3);
 
   return 0;
 }
