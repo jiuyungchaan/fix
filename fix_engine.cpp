@@ -148,6 +148,14 @@ int main(int argc, char **argv) {
           order->orig_order_id = atoi(order_id.c_str());
           fix_trader.ReqOrderAction(order);
         }
+      } else if (strcasecmp(request.c_str(), "modify") == 0) {
+        string order_id, volume, price;
+        line_stream >> order_id >> volume >> price;
+        Order *order = new Order();
+        order->orig_order_id = atoi(order_id.c_str());
+        order->volume = atoi(volume.c_str());
+        order->limit_price = atof(price.c_str());
+        fix_trader.ReqOrderReplace(order);
       }
       sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {

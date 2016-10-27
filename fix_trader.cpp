@@ -382,6 +382,76 @@ void FixTrader::ReqOrderAction(Order *order) {
   FIX::Session::sendToTarget(cancel_order, session_id_);
 }
 
+void FixTrader::ReqOrderReplace(Order *order) {
+  order->order_id = order_pool_.add(order);
+  Order *orig_order = order_pool_.get(order->orig_order_id);
+  char cl_order_id_str[16], orig_order_id_str[16];
+  snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
+  snprintf(orig_order_id_str, sizeof(orig_order_id_str), "%d",
+           order->orig_order_id);
+  FIX::ClOrdID cl_order_id(cl_order_id_str);
+  FIX::OrigClOrdID orig_cl_order_id(orig_order_id_str);
+  FIX::HandlInst handl_inst('1');
+  FIX::Side side;
+  if (orig_order->direction == kDirectionBuy) {
+    side = FIX::Side_BUY;
+  } else {
+    side = FIX::Side_SELL;
+  }
+  FIX::OrdType order_type = FIX::OrdType_LIMIT;
+  if (order->order_type == kOrderTypeLimit) {
+    order_type = FIX::OrdType_LIMIT;
+  } else if (order->order_type == kOrderTypeMarket) {
+    order_type = FIX::OrdType_MARKET;
+  }
+  FIX::Symbol symbol(orig_order->symbol);
+  // FIX::Symbol symbol("GE");
+  FIX::TransactTime transact_time(time_now());
+
+  CME_FIX_NAMESPACE::OrderCancelReplaceRequest replace_order(
+          orig_cl_order_id, cl_order_id, handl_inst, symbol,
+          side, transact_time, order_type);
+
+  FIX::Account account(orig_order->account);
+  FIX::OrderID order_id(orig_order->sys_order_id);
+  replace_order.set(account);
+  replace_order.set(order_id);
+
+  FIX::Price price(order->limit_price);
+  FIX::OrderQty order_qty(order->volume);
+  replace_order.set(price);
+  replace_order.set(order_qty);
+
+  // 1028-ManualOrderIndicator : Y=manual N=antomated
+  replace_order.setField(1028, "n");
+
+  // SecurityDesc : Future Example: GEZ8
+  //                Option Example: CEZ9 C9375
+  // Is SecurityDesc a type? 
+  FIX::SecurityDesc security_desc(orig_order->instrument_id);
+  replace_order.set(security_desc);
+  // replace_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
+
+  // SecurityType : FUT=Future
+  //                OPT=Option
+  // FIX::SecurityType security_type("FUT");
+  // new_order.set(security_type);
+  replace_order.setField(FIX::FIELD::SecurityType, "FUT");
+
+  // 9717-CorrelationClOrdID
+  // This tag should contain the same value as the tag-11 ClOrdID 
+  // of the original New Order message and is used to correlate iLink
+  // messages associated with a single order chain
+  // ClOrdID or OrigClOrdID ?
+  // replace_order.setField(9717, cl_order_id_str);
+  replace_order.setField(9717, orig_order_id_str);
+
+  printf("ReqOrderReplace:%s volume:[%d->%d] price:[%lf->%lf]\n",
+          orig_order_id_str, orig_order->volume, order->volume,
+          orig_order->limit_price, orig_order->limit_price);
+  FIX::Session::sendToTarget(replace_order, session_id_);
+}
+
 void FixTrader::run() {
   // TODO
   int count = 1;

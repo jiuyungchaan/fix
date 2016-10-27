@@ -78,6 +78,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void ReqUserLogout(FIX::Message& message);
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
+  void ReqOrderReplace(Order *order);
 
  private:
   // virtual functions inherited from FIX::Application
