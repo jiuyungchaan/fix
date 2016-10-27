@@ -2012,6 +2012,39 @@
    <value enum='6' description='DUPLICATE_ORDER' />
    <value enum='7' description='DUPLICATE_OF_A_VERBALLY_COMMUNICATED_ORDER' />
    <value enum='8' description='STALE_ORDER' />
+   <value enum='1003' description='NOT_ENTERED_WHILE_MARKET_CLOSED' />
+   <value enum='1007' description='FIX_FIELD_MISSING_OR_INCORRECT' />
+   <value enum='1010' description='REQUIRED_FIELD_MISSING' />
+   <value enum='1011' description='FIX_FIELD_INCORRECT' />
+   <value enum='1012' description='PRICE_MUST_BE_GREATER_THAN_ZERO' />
+   <value enum='1013' description='INVALID_ORDER_QUALIFIER' />
+   <value enum='1014' description='USER_NOT_AUTHORIZED_TO_TRADE' />
+   <value enum='2013' description='MARKET_ORDER_NOT_SUPPORTED' />
+   <value enum='2019' description='GTD_DATE_BEFORE_THE_CURRENT' />
+   <value enum='7000' description='ORDER_REJECTED' />
+   <value enum='2045' description='ORDER_NOT_IN_THE_BOOK' />
+   <value enum='2046' description='DISCLOSED_QTY_CANNOT_GREATER_THAN_TOTAL' />
+   <value enum='2047' description='UNKNOWN_ORDER_CONTRACT' />
+   <value enum='2051' description='SUBMITTED_DIFFERENT_SIDE_THAN_CANCEL' />
+   <value enum='2052' description='SUBMITTED_DIFFERENT_GROUP_THAN_CANCEL' />
+   <value enum='2053' description='SUBMITTED_DIFFERENT_SECURITY_TYPE_THAN_CANCEL' />
+   <value enum='2054' description='SUBMITTED_DIFFERENT_ACCOUNT_THAN_CANCEL' />
+   <value enum='2055' description='SUBMITTED_DIFFERENT_QTY_THAN_CANCEL' />
+   <value enum='2056' description='SUBMITTED_DIFFERENT_TRADERID_THAN_CANCEL' />
+   <value enum='2100' description='MODIFY_SUBMITTED_DIFFERENT_PRODUCT_THAN_ORIGIN' />
+   <value enum='2102' description='MODIFY_DIFFERENT_SENDERCOMPID_THAN_ORIGIN' />
+   <value enum='2103' description='MODIFY_DIFFERENT_TRADERID_THAN_ORIGIN' />
+   <value enum='2115' description='QTY_OUTSIDE_ALLOWABLE_RANGE' />
+   <value enum='2130' description='ORDER_TYPE_NOT_PERMITTED' />
+   <value enum='2137' description='ORDER_PRICE_OUTSIDE_LIMITS' />
+   <value enum='2179' description='ORDER_PRICE_OUTSIDE_BANDS' />
+   <value enum='2311' description='ORDER_TYPE_NOT_PERMITTED_FOR_GROUP' />
+   <value enum='2501' description='ORDER_QTY_TOO_LOW' />
+   <value enum='7024' description='NO_MODIFY_OR_CANCEL_WHILE_IN_NO_CANCEL' />
+   <value enum='7027' description='ORDER_TYPE_NOT_PERMITTED_WHILE_MARKET_RESERVED' />
+   <value enum='7028' description='SESSION_DATE_IN_THE_PAST' />
+   <value enum='7029' description='NOT_ENTERED_WHILE_MARKET_FORBIDDEN' />
+   <value enum='7613' description='DISCLOSED_QTY_CANNOT_SMALLER_THAN_MIN_QTY' />
   </field>
   <field number='104' name='IOIQualifier' type='CHAR'>
    <value enum='A' description='ALL_OR_NONE' />
