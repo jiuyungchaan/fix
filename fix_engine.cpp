@@ -128,25 +128,25 @@ int main(int argc, char **argv) {
                order_type, time_in_force;
         line_stream >> symbol >> instrument >> price >> volume >> direction \
                     >> order_type >> time_in_force;
-        Order order;
-        snprintf(order.account, sizeof(order.account), account.c_str());
-        snprintf(order.symbol, sizeof(order.symbol), symbol.c_str());
-        snprintf(order.instrument_id, sizeof(order.instrument_id), instrument.c_str());
-        order.limit_price = atof(price.c_str());
-        order.volume = atoi(volume.c_str());
-        order.direction = ParseToDirection(direction);
-        order.order_type = ParseToOrderType(order_type);
-        order.time_in_force = ParseToTimeInForce(time_in_force);
-        fix_trader.ReqOrderInsert(&order);
+        Order *order = new Order();
+        snprintf(order->account, sizeof(order->account), account.c_str());
+        snprintf(order->symbol, sizeof(order->symbol), symbol.c_str());
+        snprintf(order->instrument_id, sizeof(order->instrument_id), instrument.c_str());
+        order->limit_price = atof(price.c_str());
+        order->volume = atoi(volume.c_str());
+        order->direction = ParseToDirection(direction);
+        order->order_type = ParseToOrderType(order_type);
+        order->time_in_force = ParseToTimeInForce(time_in_force);
+        fix_trader.ReqOrderInsert(order);
       } else if (strcasecmp(request.c_str(), "cancel") == 0) {
         string order_id;
         line_stream >> order_id;
         if (order_id == "-1") {
 
         } else {
-          Order order;
-          order.orig_order_id = atoi(order_id.c_str());
-          fix_trader.ReqOrderAction(&order);
+          Order *order = new Order();
+          order->orig_order_id = atoi(order_id.c_str());
+          fix_trader.ReqOrderAction(order);
         }
       }
       sleep(3);
