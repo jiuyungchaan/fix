@@ -91,6 +91,7 @@ int main(int argc, char **argv) {
 
   cout << "initiator start" << endl;
   initiator.start();
+  sleep(10);
   // cout << "initiator run" << endl;
   // fix_trader.run();
   fstream cmd_file;
