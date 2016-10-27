@@ -78,6 +78,9 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void ReqUserLogout(FIX::Message& message);
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
+  void ReqOrderAction(std::string symbol, std::string instrument_id,
+                      std::string side, std::string local_id,
+                      std::string sys_id, std::string account);
   void ReqOrderReplace(Order *order);
 
  private:

@@ -382,6 +382,69 @@ void FixTrader::ReqOrderAction(Order *order) {
   FIX::Session::sendToTarget(cancel_order, session_id_);
 }
 
+
+void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
+        string str_side, string local_id, string sys_id, string str_account) {
+  Order *order = new Order();
+  order->order_id = order_pool_.add(order);
+  // Order *orig_order = order_pool_.get(order->orig_order_id);
+  char cl_order_id_str[16], orig_order_id_str[16];
+  snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
+  snprintf(orig_order_id_str, sizeof(orig_order_id_str), local_id.c_str());
+  FIX::ClOrdID cl_order_id(cl_order_id_str);
+  FIX::OrigClOrdID orig_cl_order_id(orig_order_id_str);
+  FIX::Side side;
+  if (strcasecmp(str_side.c_str(), "buy") == 0) {
+    side = FIX::Side_BUY;
+  } else {
+    side = FIX::Side_SELL;
+  }
+  FIX::Symbol symbol(str_symbol.c_str());
+  // FIX::Symbol symbol("GE");
+  FIX::TransactTime transact_time(time_now());
+
+  CME_FIX_NAMESPACE::OrderCancelRequest cancel_order(orig_cl_order_id,
+                                                     cl_order_id,
+                                                     symbol,
+                                                     side,
+                                                     transact_time);
+
+  FIX::Account account(str_account.c_str());
+  FIX::OrderID order_id(sys_id.c_str());
+  cancel_order.set(account);
+  cancel_order.set(order_id);
+
+  // 1028-ManualOrderIndicator : Y=manual N=antomated
+  cancel_order.setField(1028, "n");
+
+  // SecurityDesc : Future Example: GEZ8
+  //                Option Example: CEZ9 C9375
+  // Is SecurityDesc a type? 
+  FIX::SecurityDesc security_desc(instrument_id.c_str());
+  cout << "ReqOrderAction tag-107 " << instrument_id << endl;
+  cancel_order.set(security_desc);
+  // cancel_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
+
+  // SecurityType : FUT=Future
+  //                OPT=Option
+  // FIX::SecurityType security_type("FUT");
+  // new_order.set(security_type);
+  cancel_order.setField(FIX::FIELD::SecurityType, "FUT");
+
+  // 9717-CorrelationClOrdID
+  // This tag should contain the same value as the tag-11 ClOrdID 
+  // of the original New Order message and is used to correlate iLink
+  // messages associated with a single order chain
+  // ClOrdID or OrigClOrdID ?
+  // cancel_order.setField(9717, cl_order_id_str);
+  cancel_order.setField(9717, orig_order_id_str);
+
+  cout << "ReqOrderAction With Info:" << symbol << " "
+       << instrument_id << " " << side << " " << local_id
+       << " " << sys_id << endl;
+  FIX::Session::sendToTarget(cancel_order, session_id_);
+}
+
 void FixTrader::ReqOrderReplace(Order *order) {
   order->order_id = order_pool_.add(order);
   Order *orig_order = order_pool_.get(order->orig_order_id);

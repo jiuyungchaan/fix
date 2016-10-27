@@ -142,7 +142,11 @@ int main(int argc, char **argv) {
         string order_id;
         line_stream >> order_id;
         if (order_id == "-1") {
-
+          string symbol, instrument, side, local_id, sys_id;
+          cout << "\033[33mInput order info to cancel:\033[0m" << endl;
+          cin >> symbol >> instrument >> side >> local_id >> sys_id;
+          fix_trader.ReqOrderAction(symbol, instrument, side, local_id, sys_id,
+                                    account);
         } else {
           Order *order = new Order();
           order->orig_order_id = atoi(order_id.c_str());
