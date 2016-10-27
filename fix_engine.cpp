@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
   int arg_pos = 1;
   string config_file_name = "./test.cfg";
   string cmd_file_name = "";
-  string account = "";
+  string account = "W80004";
   while (arg_pos < argc) {
     if (strcmp(argv[arg_pos], "-f") == 0) {
       config_file_name = argv[++arg_pos];
