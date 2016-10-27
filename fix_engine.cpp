@@ -100,16 +100,16 @@ int main(int argc, char **argv) {
     char line[512];
     cmd_file.getline(line, 512);
     if (line[0] == '#') {
-      cout << "\033[32mComment:[" << line << "\033[0m" << endl;
+      cout << "\033[32mComment:[" << line << "\033[0m]" << endl;
       continue;
     } else if (strcmp(line, "") == 0) {
       cout << "Passing blank line..." << endl;
       continue;
     }
-    cout << "\033[21mCommand:[" << line << "\033[0m" << endl;
+    cout << "\033[31mCommand:[" << line << "\033[0m]" << endl;
     char cmd;
     while(true) {
-      cout << "Input command-[E-Execute P-Pass Q-Quit] :";
+      cout << "\033[31mInput command-[E-Execute P-Pass Q-Quit] :\033[0m";
       scanf("%c", &cmd);
       getchar();
       if (cmd == 'E' || cmd == 'e' || cmd == 'P' || cmd == 'p' ||
