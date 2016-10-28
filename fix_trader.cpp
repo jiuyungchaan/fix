@@ -620,6 +620,8 @@ void FixTrader::PrintExecutionReport(
     cout << "[Execution Report Reject]:" << endl;
   } else if (ord_status == FIX::OrdStatus_EXPIRED) {
     cout << "[Execution Report Elimination]:" << endl;
+  } else if (ord_status == 'H') {
+    cout << "[Execution Report Trade Cancellation]:" << endl;
   } else {
     cout << "[Unknown Type Execution Report]:" << endl;
   }

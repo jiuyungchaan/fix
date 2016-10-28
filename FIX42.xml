@@ -209,7 +209,7 @@
    <field name='LastMkt' required='N' />
    <field name='TradingSessionID' required='N' />
    <field name='LastCapacity' required='N' />
-   <field name='LeavesQty' required='Y' />
+   <field name='LeavesQty' required='N' />
    <field name='CumQty' required='Y' />
    <field name='AvgPx' required='Y' />
    <field name='DayOrderQty' required='N' />
@@ -246,6 +246,11 @@
    <field name='SecondaryExecID' required='N' />
    <field name='AggressorIndicator' required='N' />
    <field name='CorrelationClOrdID' required='N' />
+   <field name='UnderlyingPx' required='N' />
+   <field name='OptionDelta' required='N' />
+   <field name='Volatility' required='N' />
+   <field name='ExpirationTimeValue' required='N' />
+   <field name='RiskFreeRate' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />
@@ -2839,6 +2844,11 @@
   <field number='1603' name='ApplicationSystemName' type='STRING' />
   <field number='1604' name='TradingSystemVersion' type='STRING' />
   <field number='1605' name='ApplicationSystemVendor' type='STRING' />
+  <field number='1188' name='Volatility' type='STRING' />
+  <field number='810' name='UnderlyingPx' type='PRICE' />
+  <field number='1190' name='RiskFreeRate' type='PRICE' />
+  <field number='811' name='OptionDelta' type='FLOAT' />
+  <field number='1189' name='ExpirationTimeValue' type='FLOAT' />
   <field number='1028' name='ManualOrderIndicator' type='BOOLEAN'>
    <value enum='N' description='NO' />
    <value enum='Y' description='YES' />
