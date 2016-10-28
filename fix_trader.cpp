@@ -287,8 +287,8 @@ void FixTrader::ReqOrderInsert(Order *order) {
   new_order.set(time_in_force);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  // new_order.setField(1028, "Y");
-  new_order.setField(1028, "n");
+  new_order.setField(1028, "N");
+  // new_order.setField(1028, "n");
 
   // SecurityDesc is the InstrumentID !!!!!
   // SecurityDesc : Future Example: GEZ8
@@ -355,7 +355,8 @@ void FixTrader::ReqOrderAction(Order *order) {
   cancel_order.set(order_id);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  cancel_order.setField(1028, "n");
+  // cancel_order.setField(1028, "n");
+  cancel_order.setField(1028, "N");
 
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
@@ -416,7 +417,8 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
   cancel_order.set(order_id);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  cancel_order.setField(1028, "n");
+  // cancel_order.setField(1028, "n");
+  cancel_order.setField(1028, "N");
 
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
@@ -487,7 +489,8 @@ void FixTrader::ReqOrderReplace(Order *order) {
   replace_order.set(order_qty);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
-  replace_order.setField(1028, "n");
+  // replace_order.setField(1028, "n");
+  replace_order.setField(1028, "N");
 
   // SecurityDesc : Future Example: GEZ8
   //                Option Example: CEZ9 C9375
