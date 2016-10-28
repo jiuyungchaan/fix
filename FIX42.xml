@@ -251,6 +251,8 @@
    <field name='Volatility' required='N' />
    <field name='ExpirationTimeValue' required='N' />
    <field name='RiskFreeRate' required='N' />
+   <field name='NoAllocs' required='N' />
+   <field name='AllocAccount' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />
