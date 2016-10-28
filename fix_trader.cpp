@@ -281,7 +281,10 @@ void FixTrader::ReqOrderInsert(Order *order) {
   } else if (order->time_in_force == kTimeInForceFAK) {
     time_in_force = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
   }
-  new_order.set(price);
+
+  if (order_type == FIX::OrdType_LIMIT) {
+    new_order.set(price);
+  }
   new_order.set(account);
   new_order.set(order_qty);
   new_order.set(time_in_force);
