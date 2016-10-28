@@ -507,16 +507,19 @@ void FixTrader::ReqOrderReplace(Order *order) {
   FIX::OrderQty order_qty(order->volume);
   replace_order.set(order_qty);
 
+  FIX::CustomerOrFirm customer_or_firm(1);
+  replace_order.set(customer_or_firm);
+
   // 1028-ManualOrderIndicator : Y=manual N=antomated
   // replace_order.setField(1028, "n");
   replace_order.setField(1028, "N");
 
-  // SecurityDesc : Future Example: GEZ8
-  //                Option Example: CEZ9 C9375
-  // Is SecurityDesc a type? 
+  // 1028-ManualOrderIndicator : Y=manual N=antomated
+  // replace_order.setField(1028, "n");
+  replace_order.setField(9702, "2");
+
   FIX::SecurityDesc security_desc(orig_order->instrument_id);
   replace_order.set(security_desc);
-  // replace_order.setField(FIX::FIELD::SecurityDesc, "GEZ8");
 
   // SecurityType : FUT=Future
   //                OPT=Option
