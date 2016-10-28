@@ -507,13 +507,6 @@ void FixTrader::ReqOrderReplace(Order *order) {
   FIX::OrderQty order_qty(order->volume);
   replace_order.set(order_qty);
 
-  cout << "Input max show want to change:";
-  int ms;
-  scanf("%d", &ms);
-  getchar();
-  FIX::MaxShow max_show(ms);
-  replace_order.set(max_show);
-
   FIX::CustomerOrFirm customer_or_firm(1);
   replace_order.set(customer_or_firm);
 
