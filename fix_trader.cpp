@@ -287,10 +287,12 @@ void FixTrader::ReqOrderInsert(Order *order) {
     time_in_force = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
   }
 
-  if (order_type == FIX::OrdType_LIMIT) {
+  if (order_type != FIX::OrdType_MARKET &&
+      order_type != 'K') {
     new_order.set(price);
-  } else if (order_type == FIX::OrdType_STOP ||
-             order_type == FIX::OrdType_STOP_LIMIT) {
+  }
+  if (order_type == FIX::OrdType_STOP ||
+      order_type == FIX::OrdType_STOP_LIMIT) {
     new_order.set(stop_px);
   }
   new_order.set(account);
