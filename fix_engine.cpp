@@ -24,7 +24,7 @@ char ParseToOrderType(string order_type) {
   char ret = kOrderTypeLimit;
   if (strcasecmp(order_type.c_str(), "limit") == 0) {
     ret = kOrderTypeLimit;
-  } else if (strcasecmp(order_type.c_str(), "limit") == 0) {
+  } else if (strcasecmp(order_type.c_str(), "market") == 0) {
     ret = kOrderTypeMarket;
   } else if (strcasecmp(order_type.c_str(), "market_limit") == 0) {
     ret = kOrderTypeMarketLimit;
