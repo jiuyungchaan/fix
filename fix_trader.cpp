@@ -496,9 +496,15 @@ void FixTrader::ReqOrderReplace(Order *order) {
   replace_order.set(account);
   replace_order.set(order_id);
 
-  FIX::Price price(order->limit_price);
+  if (equal(order->limit_price, orig_order->limit_price)) {
+    FIX::Price price(order->limit_price);
+    replace_order.set(price);
+  }
+  // if (order->volume != orig_order->volume) {
+  //   FIX::OrderQty order_qty(order->volume);
+  //   replace_order.set(order_qty);
+  // }
   FIX::OrderQty order_qty(order->volume);
-  replace_order.set(price);
   replace_order.set(order_qty);
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
