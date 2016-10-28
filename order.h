@@ -57,6 +57,7 @@ class Order {
   int orig_order_id;
   int volume;
   double limit_price;
+  double stop_price;
   long ttl;
 
   Order() : symbol{0}, instrument_id{0}, account{0}, sys_order_id{0},

@@ -124,15 +124,16 @@ int main(int argc, char **argv) {
       string request;
       line_stream >> request;
       if (strcasecmp(request.c_str(), "insert") == 0) {
-        string symbol, instrument, price, volume, direction, 
+        string symbol, instrument, price, stop_price, volume, direction, 
                order_type, time_in_force;
-        line_stream >> symbol >> instrument >> price >> volume >> direction \
-                    >> order_type >> time_in_force;
+        line_stream >> symbol >> instrument >> price >> stop_price >> volume 
+                    >> direction >> order_type >> time_in_force;
         Order *order = new Order();
         snprintf(order->account, sizeof(order->account), account.c_str());
         snprintf(order->symbol, sizeof(order->symbol), symbol.c_str());
         snprintf(order->instrument_id, sizeof(order->instrument_id), instrument.c_str());
         order->limit_price = atof(price.c_str());
+        order->stop_price = atof(stop_price.c_str());
         order->volume = atoi(volume.c_str());
         order->direction = ParseToDirection(direction);
         order->order_type = ParseToOrderType(order_type);

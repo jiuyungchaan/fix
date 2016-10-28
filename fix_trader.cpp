@@ -264,11 +264,16 @@ void FixTrader::ReqOrderInsert(Order *order) {
     order_type = FIX::OrdType_LIMIT;
   } else if (order->order_type == kOrderTypeMarket) {
     order_type = FIX::OrdType_MARKET;
+  } else if (order->order_type == kOrderTypeStopLimit) {
+    order_type = FIX::OrdType_STOP_LIMIT;
+  } else if (order->order_type == kOrderTypeStop) {
+    order_type = FIX::OrdType_STOP;
   }
   FIX::TransactTime transact_time(time_now());
   CME_FIX_NAMESPACE::NewOrderSingle new_order(cl_order_id, handl_inst, symbol,
                                             side, transact_time, order_type);
   FIX::Price price(order->limit_price);
+  FIX::StopPx stop_px(order->stop_price);
   FIX::Account account(order->account);
   FIX::OrderQty order_qty(order->volume);
   FIX::TimeInForce time_in_force;
@@ -284,6 +289,9 @@ void FixTrader::ReqOrderInsert(Order *order) {
 
   if (order_type == FIX::OrdType_LIMIT) {
     new_order.set(price);
+  } else if (order_type == FIX::OrdType_STOP ||
+             order_type == FIX::OrdType_STOP_LIMIT) {
+    new_order.set(stop_px);
   }
   new_order.set(account);
   new_order.set(order_qty);
