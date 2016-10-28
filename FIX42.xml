@@ -253,6 +253,7 @@
    <field name='RiskFreeRate' required='N' />
    <field name='NoAllocs' required='N' />
    <field name='AllocAccount' required='N' />
+   <field name='Urgency' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />

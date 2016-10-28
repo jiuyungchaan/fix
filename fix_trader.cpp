@@ -507,6 +507,13 @@ void FixTrader::ReqOrderReplace(Order *order) {
   FIX::OrderQty order_qty(order->volume);
   replace_order.set(order_qty);
 
+  cout << "Input max show want to change:";
+  int ms;
+  scanf("%d", &ms);
+  getchar();
+  FIX::MaxShow max_show(ms);
+  replace_order.set(max_show);
+
   FIX::CustomerOrFirm customer_or_firm(1);
   replace_order.set(customer_or_firm);
 
@@ -516,7 +523,7 @@ void FixTrader::ReqOrderReplace(Order *order) {
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
   // replace_order.setField(1028, "n");
-  replace_order.setField(9702, "2");
+  replace_order.setField(9702, "4");
 
   FIX::SecurityDesc security_desc(orig_order->instrument_id);
   replace_order.set(security_desc);
