@@ -1804,6 +1804,7 @@
    <value enum='C' description='EXPIRED' />
    <value enum='D' description='ACCEPTED_FOR_BIDDING' />
    <value enum='E' description='PENDING_REPLACE' />
+   <value enum='H' description='TRADE_CANCEL' />
    <value enum='U' description='UNDEFINED' />
   </field>
   <field number='40' name='OrdType' type='CHAR'>
