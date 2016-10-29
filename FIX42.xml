@@ -49,6 +49,7 @@
    <field name='EncodedText' required='N' />
    <field name='RequestTime' required='N' />
    <field name='CorrelationClOrdID' required='N' />
+   <field name='ManualOrderIndicator' required='N' />
   </message>
   <message name='SequenceReset' msgcat='admin' msgtype='4'>
    <field name='GapFillFlag' required='N' />
@@ -274,6 +275,7 @@
    <field name='EncodedText' required='N' />
    <field name='RequestTime' required='N' />
    <field name='CorrelationClOrdID' required='N' />
+   <field name='ManualOrderIndicator' required='N' />
   </message>
   <message name='Logon' msgcat='admin' msgtype='A'>
    <field name='EncryptMethod' required='Y' />
