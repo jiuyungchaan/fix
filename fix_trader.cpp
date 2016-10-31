@@ -36,6 +36,8 @@ void FixTrader::fromApp(const FIX::Message& message,
   // throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
   //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
   // FIX::MsgType msg_type;
+  FIX::LastMsgSeqNumProcessed last_msg_seq_num;
+  last_msg_seq_num_ = last_msg_seq_num.getValue();
   // FIX::PosReqType pos_req_type;
   // message.getHeader().getField(msg_type);
   // string message_string = message.toString();
@@ -95,12 +97,14 @@ void FixTrader::fromAdmin(const FIX::Message& message,
     //       FIX::IncorrectTagValue, FIX::RejectLogon) {
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
+  FIX::LastMsgSeqNumProcessed last_msg_seq_num;
+  last_msg_seq_num_ = last_msg_seq_num.getValue();
   if (msg_type == "5") {
-    FIX::LastMsgSeqNumProcessed last_msg_seq_num;
-    message.getHeader().getField(last_msg_seq_num);
-    int start_seq_num = last_msg_seq_num.getValue() + 1;
-    // last_msg_seq_num_.setValue(start_seq_num);
-    last_msg_seq_num_ = start_seq_num;
+    // FIX::LastMsgSeqNumProcessed last_msg_seq_num;
+    // message.getHeader().getField(last_msg_seq_num);
+    // int start_seq_num = last_msg_seq_num.getValue() + 1;
+    // // last_msg_seq_num_.setValue(start_seq_num);
+    // last_msg_seq_num_ = start_seq_num;
     // cout << start_seq_num << "::" << last_msg_seq_num_;
   }
   log_file_ << "[" << time_now() << "]FROM ADMIN XML: " << message.toXML() << endl;
@@ -275,14 +279,11 @@ void FixTrader::SendHeartbeat(FIX::Message& message) {
 
 void FixTrader::ReqUserResend(FIX::Message& message) {
   FIX::BeginSeqNo begin_seq_no;
-  FIX::EndSeqNo end_seq_no;
   message.getField(begin_seq_no);
-  message.getField(end_seq_no);
   int begin_no = begin_seq_no.getValue();
-  int end_no = end_seq_no.getValue();
-  if (end_no - begin_no > 2500) {
+  if (last_msg_seq_num_ - begin_no > 2500) {
     cout << "More than 2500 messages to resend!" << endl;
-    end_seq_no = FIX::EndSeqNo(2500);
+    FIX::EndSeqNo end_seq_no(2500);
     message.setField(end_seq_no);
   }
 }
