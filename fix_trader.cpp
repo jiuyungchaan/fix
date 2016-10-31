@@ -182,6 +182,7 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::TestRequest& request,
                           const FIX::SessionID& sessionID) {
   FIX::TestReqID test_req_id;
   request.getField(test_req_id);
+  cout << "Test Request ID received: " << test_req_id << endl;
 
   CME_FIX_NAMESPACE::Heartbeat heartbeat;
   heartbeat.set(test_req_id);
