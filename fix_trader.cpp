@@ -279,6 +279,18 @@ void FixTrader::ReqUserResend(FIX::Message& message) {
 
 void FixTrader::ReqUserLogon() {
   CME_FIX_NAMESPACE::Logon logon;
+  // cout << "Input sequence number manually? y/n ";
+  // char cmd;
+  // scanf("%c", &cmd);
+  // getchar();
+  // if (cmd == 'y' || cmd == 'Y') {
+  //   getchar();
+  //   FIX::TestReqID test_req_id(req_id);
+  //   heartbeat.set(test_req_id);
+  // } else {
+  //   // No need to input test request ID
+  // }
+
   FIX::Session::sendToTarget(logon, session_id_);
 }
 
@@ -332,6 +344,32 @@ void FixTrader::SendTestRequest() {
 
   cout << "SendTestRequest:" << test_req_id << endl;
   FIX::Session::sendToTarget(test_request, session_id_);
+}
+
+void FixTrader::SendResetSequence() {
+  CME_FIX_NAMESPACE::SequenceReset sequence_reset;
+  int seq_no;
+  cout << "Input new sequence number: ";
+  scanf("%d", &seq_no);
+  getchar();
+  FIX::NewSeqNo new_seq_no(seq_no);
+  sequence_reset.set(new_seq_no);
+
+  char flag;
+  cout << "Input Gap Fill Flag: y/n ";
+  scanf("%c", &flag);
+  getchar();
+  if (flag == 'y' || flag == 'Y') {
+    FIX::GapFillFlag gap_fill_flag(true);
+    sequence_reset.set(gap_fill_flag);
+  } else {
+    FIX::GapFillFlag gap_fill_flag(false);
+    sequence_reset.set(gap_fill_flag);
+  }
+
+  cout << "SendSequenceReset:" << new_seq_no 
+       << " GapFillFlag:" << flag << endl;
+  FIX::Session::sendToTarget(sequence_reset, session_id_);
 }
 
 void FixTrader::ReqUserLogout() {

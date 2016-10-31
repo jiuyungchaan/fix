@@ -87,6 +87,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void SendHeartbeat();
   void SendResendRequest();
   void SendTestRequest();
+  void SendResetSequence();
   void ReqUserLogout();
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
