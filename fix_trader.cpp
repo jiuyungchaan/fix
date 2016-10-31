@@ -37,6 +37,7 @@ void FixTrader::fromApp(const FIX::Message& message,
   //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
   // FIX::MsgType msg_type;
   FIX::MsgSeqNum last_msg_seq_num;
+  message.getHeader().getField(last_msg_seq_num);
   last_msg_seq_num_ = last_msg_seq_num.getValue();
   // FIX::PosReqType pos_req_type;
   // message.getHeader().getField(msg_type);
@@ -98,6 +99,7 @@ void FixTrader::fromAdmin(const FIX::Message& message,
   FIX::MsgType msg_type;
   message.getHeader().getField(msg_type);
   FIX::MsgSeqNum last_msg_seq_num;
+  message.getHeader().getField(last_msg_seq_num);
   last_msg_seq_num_ = last_msg_seq_num.getValue();
   if (msg_type == "5") {
     // FIX::LastMsgSeqNumProcessed last_msg_seq_num;
