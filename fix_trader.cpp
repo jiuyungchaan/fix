@@ -190,6 +190,26 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::TestRequest& request,
   FIX::Session::sendToTarget(heartbeat, session_id_);
 }
 
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::SequenceReset& reset,
+                          const FIX::SessionID& sessionID) {
+  FIX::NewSeqNo new_seq_no;
+  reset.getField(new_seq_no);
+  FIX::GapFillFlag gap_fill_flag;
+  reset.getField(gap_fill_flag);
+  cout << "New Sequence Number received: " << new_seq_no
+       << " GapFillFlag: " << gap_fill_flag << endl;
+
+  // CME_FIX_NAMESPACE::Heartbeat heartbeat;
+  // heartbeat.set(test_req_id);
+  // cout << "Send heartbeat in response to Test Request:" << test_req_id << endl;
+  // FIX::Session::sendToTarget(heartbeat, session_id_);
+}
+
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
+                          const FIX::SessionID& sessionID) {
+  cout << "Heartbeat received: " << heartbeat.toXML() << endl;
+}
+
 void FixTrader::OnFrontConnected() {
   cout << "Front Connected" << endl;
 }
