@@ -128,6 +128,8 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
     cout << "Reject in toAdmin ?" << endl;
   } else if (msg_type == FIX::MsgType_Logout) {
     ReqUserLogout(message);
+  } else if (msg_type == FIX::MsgType_SequenceReset) {
+    SendResetSequence(message);
   }
 
   log_file_ << "[" << time_now() << "]TO ADMIN XML: " << message.toXML() << endl;
@@ -277,6 +279,12 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
 
 void FixTrader::SendHeartbeat(FIX::Message& message) {
   // FillHeader(message);
+}
+
+void FixTrader::SendResetSequence(FIX::Message& message) {
+  // FillHeader(message);
+  FIX::GapFillFlag gap_fill_flag(true);
+  message.setField(gap_fill_flag);
 }
 
 void FixTrader::ReqUserResend(FIX::Message& message) {

@@ -81,6 +81,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void run();
   void ReqUserLogon(FIX::Message& message);
   void SendHeartbeat(FIX::Message& message);
+  void SendResetSequence(FIX::Message& message);
   void ReqUserResend(FIX::Message& message);
   void ReqUserLogout(FIX::Message& message);
   void ReqUserLogon();
