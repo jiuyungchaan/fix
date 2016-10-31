@@ -190,10 +190,10 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::TestRequest& request,
   request.getField(test_req_id);
   cout << "Test Request ID received: " << test_req_id << endl;
 
-  CME_FIX_NAMESPACE::Heartbeat heartbeat;
-  heartbeat.set(test_req_id);
-  cout << "Send heartbeat in response to Test Request:" << test_req_id << endl;
-  FIX::Session::sendToTarget(heartbeat, session_id_);
+  // CME_FIX_NAMESPACE::Heartbeat heartbeat;
+  // heartbeat.set(test_req_id);
+  // cout << "Send heartbeat in response to Test Request:" << test_req_id << endl;
+  // FIX::Session::sendToTarget(heartbeat, session_id_);
 }
 
 void FixTrader::onMessage(const CME_FIX_NAMESPACE::SequenceReset& reset,
