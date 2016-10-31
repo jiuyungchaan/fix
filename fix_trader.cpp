@@ -76,14 +76,21 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     //   cout << "Send Order Query Message:\n" << message_string << endl;
     // }
 
-    /// new version quickfix demo
-    // try {
-    //   FIX::PossDupFlag possDupFlag;
-    //   message.getHeader().getField(possDupFlag);
-    //   if (possDupFlag) {
-    //     throw FIX::DoNotSend();
-    //   }
-    // } catch (FIX::FieldNotFound&) {}
+    ////////////////////////////////
+    /// new version quickfix demo //
+    ////////////////////////////////
+    static int pos = 0;
+    try {
+      FIX::PossDupFlag possDupFlag;
+      message.getHeader().getField(possDupFlag);
+      if (possDupFlag) {
+        if (pos < 2) {
+          pos++;
+        } else {
+          throw FIX::DoNotSend();
+        }
+      }
+    } catch (FIX::FieldNotFound&) {}
 
     FillHeader(message);
     log_file_ << "[" << time_now() << "]TO APP XML: " << message.toXML() << endl;
@@ -221,6 +228,19 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
 void FixTrader::onMessage(const CME_FIX_NAMESPACE::Reject& reject,
                           const FIX::SessionID& sessionID) {
   cout << "Reject received: " << reject.toXML() << endl;
+}
+
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::ResendRequest& request,
+                          const FIX::SessionID& sessionID) {
+  // FIX::BeginSeqNo begin_seq_no;
+  // FIX::EndSeqNo end_seq_no;
+  // request.getField(begin_seq_no);
+  // request.getField(end_seq_no);
+  // int begin_no = begin_seq_no.getValue();
+  // int end_no = end_seq_no.getValue();
+
+
+  cout << "Resend Request received: " << request.toXML() << endl;
 }
 
 void FixTrader::OnFrontConnected() {

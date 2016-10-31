@@ -128,6 +128,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::Reject& reject,
                  const FIX::SessionID& sessionID);
+  void onMessage(const CME_FIX_NAMESPACE::ResendRequest& request,
+                 const FIX::SessionID& sessionID);
   // void onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
   //                const FIX::SessionID& sessionID);
   void queryHeader(FIX::Header& header);
@@ -160,6 +162,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
 
   // FIX::MsgSeqNum last_msg_seq_num_;
   int last_msg_seq_num_;
+  int last_begin_seq_no_;
+  int last_end_seq_no_;
   FIX::SessionID session_id_;
   OrderPool order_pool_;
 
