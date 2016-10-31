@@ -20,6 +20,11 @@
 #include <quickfix/fix41/OrderCancelReject.h>
 #include <quickfix/fix41/OrderCancelReplaceRequest.h>
 
+#include <quickfix/fix42/Logon.h>
+#include <quickfix/fix42/Logout.h>
+#include <quickfix/fix42/Heartbeat.h>
+#include <quickfix/fix42/TestRequest.h>
+#include <quickfix/fix42/ResendRequest.h>
 #include <quickfix/fix42/NewOrderSingle.h>
 #include <quickfix/fix42/ExecutionReport.h>
 #include <quickfix/fix42/OrderCancelRequest.h>
@@ -76,6 +81,10 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void SendHeartbeat(FIX::Message& message);
   void ReqUserResend(FIX::Message& message);
   void ReqUserLogout(FIX::Message& message);
+  void ReqUserLogon();
+  void SendHeartbeat();
+  void SendResendRequest();
+  void ReqUserLogout();
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
   void ReqOrderAction(std::string symbol, std::string instrument_id,
@@ -106,6 +115,10 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
                  const FIX::SessionID& sessionID);
+  void onMessage(const CME_FIX_NAMESPACE::TestRequest& request,
+                 const FIX::SessionID& sessionID);
+  // void onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
+  //                const FIX::SessionID& sessionID);
   void queryHeader(FIX::Header& header);
 
   // virtual functions for Trader

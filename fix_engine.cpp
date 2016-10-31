@@ -161,6 +161,12 @@ int main(int argc, char **argv) {
         order->volume = atoi(volume.c_str());
         order->limit_price = atof(price.c_str());
         fix_trader.ReqOrderReplace(order);
+      } else if (strcasecmp(request.c_str(), "heartbeat") == 0) {
+        fix_trader.SendHeartbeat();
+      } else if (strcasecmp(request.c_str(), "logon") == 0) {
+        fix_trader.ReqUserLogon();
+      } else if (strcasecmp(request.c_str(), "logout") == 0) {
+        fix_trader.ReqUserLogout();
       }
       sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {

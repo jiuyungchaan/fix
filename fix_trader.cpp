@@ -178,6 +178,17 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
   // OnRtnOrder();
 }
 
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::TestRequest& request,
+                          const FIX::SessionID& sessionID) {
+  FIX::TestReqID test_req_id;
+  request.getField(test_req_id);
+
+  CME_FIX_NAMESPACE::Heartbeat heartbeat;
+  heartbeat.set(test_req_id);
+  cout << "Send heartbeat in response to Test Request:" << test_req_id << endl;
+  FIX::Session::sendToTarget(heartbeat, session_id_);
+}
+
 void FixTrader::OnFrontConnected() {
   cout << "Front Connected" << endl;
 }
@@ -237,12 +248,42 @@ void FixTrader::SendHeartbeat(FIX::Message& message) {
 }
 
 void FixTrader::ReqUserResend(FIX::Message& message) {
-  // FillHeader(message);
+  // TODO
+}
+
+void FixTrader::ReqUserLogon() {
+  CME_FIX_NAMESPACE::Logon logon;
+  FIX::Session::sendToTarget(logon, session_id_);
 }
 
 void FixTrader::ReqUserLogout(FIX::Message& message) {
     string message_string = message.toString();
     cout << "Send Logout Message:\n" << message_string << endl;
+}
+
+void FixTrader::SendHeartbeat() {
+  CME_FIX_NAMESPACE::Heartbeat heartbeat;
+  cout << "Send heartbeat manually:" << endl;
+  FIX::Session::sendToTarget(heartbeat, session_id_);
+}
+
+void FixTrader::SendResendRequest() {
+  int begin_no, end_no;
+  printf("Input begin sequence no and end sequence no:");
+  scanf("%d %d", &begin_no, &end_no);
+  getchar();
+
+  FIX::BeginSeqNo begin_seq_no(begin_no);
+  FIX::EndSeqNo end_seq_no(end_no);
+  CME_FIX_NAMESPACE::ResendRequest resend_request(begin_seq_no, end_seq_no);
+
+  cout << "SendResendRequest:" << begin_no << ":" << end_no << endl;
+  FIX::Session::sendToTarget(resend_request, session_id_);
+}
+
+void FixTrader::ReqUserLogout() {
+  CME_FIX_NAMESPACE::Logout logout;
+  FIX::Session::sendToTarget(logout, session_id_);
 }
 
 void FixTrader::ReqOrderInsert(Order *order) {
