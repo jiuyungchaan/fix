@@ -171,6 +171,8 @@ int main(int argc, char **argv) {
         fix_trader.SendResendRequest();
       } else if (strcasecmp(request.c_str(), "testrequest") == 0) {
         fix_trader.SendTestRequest();
+      } else if (strcasecmp(request.c_str(), "reset") == 0) {
+        fix_trader.SendResetSequence();
       }
       sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {
