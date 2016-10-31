@@ -263,6 +263,20 @@ void FixTrader::ReqUserLogout(FIX::Message& message) {
 
 void FixTrader::SendHeartbeat() {
   CME_FIX_NAMESPACE::Heartbeat heartbeat;
+  cout << "Input test request ID manually ? y/n";
+  char cmd;
+  scanf("%c", &cmd);
+  getchar();
+  if (cmd == 'y' || cmd == 'Y') {
+    char req_id[16];
+    cout << "Input test request ID:" << endl;
+    scanf("%s", req_id);
+    getchar();
+    FIX::TestReqID test_req_id(req_id);
+    heartbeat.set(test_req_id);
+  } else {
+    // No need to input test request ID
+  }
   cout << "Send heartbeat manually:" << endl;
   FIX::Session::sendToTarget(heartbeat, session_id_);
 }
