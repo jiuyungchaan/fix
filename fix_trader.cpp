@@ -285,7 +285,7 @@ void FixTrader::ReqUserResend(FIX::Message& message) {
   int begin_no = begin_seq_no.getValue();
   if (last_msg_seq_num_ - begin_no > 2500) {
     cout << "More than 2500 messages to resend!" << endl;
-    FIX::EndSeqNo end_seq_no(2500);
+    FIX::EndSeqNo end_seq_no(begin_no + 2500);
     message.setField(end_seq_no);
   }
 }
