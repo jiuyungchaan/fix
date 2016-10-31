@@ -321,6 +321,19 @@ void FixTrader::SendResendRequest() {
   FIX::Session::sendToTarget(resend_request, session_id_);
 }
 
+void FixTrader::SendTestRequest() {
+  cout << "Input test request ID: ";
+  char req_id[16];
+  scanf("%s", req_id);
+  getchar();
+  FIX::TestReqID test_req_id(req_id);
+  CME_FIX_NAMESPACE::TestRequest test_request;
+  test_request.set(test_req_id);
+
+  cout << "SendTestRequest:" << test_req_id << endl;
+  FIX::Session::sendToTarget(test_request, session_id_);
+}
+
 void FixTrader::ReqUserLogout() {
   CME_FIX_NAMESPACE::Logout logout;
   FIX::Session::sendToTarget(logout, session_id_);

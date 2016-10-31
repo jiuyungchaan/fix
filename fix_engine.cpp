@@ -169,6 +169,8 @@ int main(int argc, char **argv) {
         fix_trader.ReqUserLogout();
       } else if (strcasecmp(request.c_str(), "resend") == 0) {
         fix_trader.SendResendRequest();
+      } else if (strcasecmp(request.c_str(), "testrequest") == 0) {
+        fix_trader.SendTestRequest();
       }
       sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {
