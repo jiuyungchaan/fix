@@ -274,7 +274,17 @@ void FixTrader::SendHeartbeat(FIX::Message& message) {
 }
 
 void FixTrader::ReqUserResend(FIX::Message& message) {
-  // TODO
+  FIX::BeginSeqNo begin_seq_no;
+  FIX::EndSeqNo end_seq_no;
+  message.getField(begin_seq_no);
+  message.getField(end_seq_no);
+  int begin_no = begin_seq_no.getValue();
+  int end_no = end_seq_no.getValue();
+  if (end_no - begin_no > 2500) {
+    cout << "More than 2500 messages to resend!" << endl;
+    end_seq_no = FIX::EndSeqNo(2500);
+    message.setField(end_seq_no);
+  }
 }
 
 void FixTrader::ReqUserLogon() {
