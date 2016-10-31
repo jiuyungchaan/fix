@@ -210,6 +210,11 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
   cout << "Heartbeat received: " << heartbeat.toXML() << endl;
 }
 
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::Reject& reject,
+                          const FIX::SessionID& sessionID) {
+  cout << "Reject received: " << reject.toXML() << endl;
+}
+
 void FixTrader::OnFrontConnected() {
   cout << "Front Connected" << endl;
 }

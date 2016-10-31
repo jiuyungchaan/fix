@@ -26,6 +26,7 @@
 #include <quickfix/fix42/TestRequest.h>
 #include <quickfix/fix42/ResendRequest.h>
 #include <quickfix/fix42/SequenceReset.h>
+#include <quickfix/fix42/Reject.h>
 #include <quickfix/fix42/NewOrderSingle.h>
 #include <quickfix/fix42/ExecutionReport.h>
 #include <quickfix/fix42/OrderCancelRequest.h>
@@ -121,6 +122,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void onMessage(const CME_FIX_NAMESPACE::SequenceReset& reset,
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
+                 const FIX::SessionID& sessionID);
+  void onMessage(const CME_FIX_NAMESPACE::Reject& reject,
                  const FIX::SessionID& sessionID);
   // void onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
   //                const FIX::SessionID& sessionID);
