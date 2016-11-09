@@ -47,6 +47,7 @@ class Order {
   char instrument_id[32];
   char account[32];
   char sys_order_id[32];
+  char order_flow_id[32];
   char direction;
   char offset;
   char order_type;
@@ -61,7 +62,7 @@ class Order {
   long ttl;
 
   Order() : symbol{0}, instrument_id{0}, account{0}, sys_order_id{0},
-            direction(kDirectionBuy), offset(kOffsetOpen),
+            order_flow_id{0}, direction(kDirectionBuy), offset(kOffsetOpen),
             order_type(kOrderTypeLimit), hedge_flag_type('0'),
             time_in_force(kTimeInForceDay), 
             order_status(kOrderStatusUndefined), order_id(-1),
@@ -101,6 +102,10 @@ class OrderPool {
   
   OrderPool() : order_size_(0) {
     memset(order_pool_, sizeof(order_pool_), 0);
+  }
+
+  void reset_sequence(int start_id) {
+    order_size_ = start_id + 1;
   }
 
   Order *get(int order_id) {
