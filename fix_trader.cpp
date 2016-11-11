@@ -1053,12 +1053,20 @@ void FixTrader::PrintExecutionReport(
   report.getField(time_in_force);
   report.getField(transact_time);
   report.getField(security_desc);
-  string self_match_prevention_id = report.getField(7928);
 
   string str_target_comp_id = target_comp_id.getValue();
   string str_target_sub_id = target_sub_id.getValue();
   string session_id = str_target_comp_id.substr(0, 3);
   string firm_id = str_target_comp_id.substr(4, 3);
+
+  if (ord_status == FIX::OrdStatus_NEW ||
+      ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
+      ord_status == FIX::OrdStatus_FILLED ||
+      ord_status == FIX::OrdStatus_CANCELED) {
+    string self_match_prevention_id = report.getField(7928);
+    audit_log.WriteElement("self_match_prevention_id", 
+        self_match_prevention_id);
+  }
 
   string message_type = string(FIX::MsgType_ExecutionReport) + "/" +
                         ord_status.getValue();
@@ -1077,7 +1085,6 @@ void FixTrader::PrintExecutionReport(
   audit_log.WriteElement("receiving_timestamps", timestamp);
   audit_log.WriteElement("message_direction", "FROM CME");
   audit_log.WriteElement("operator_id", "NULL");
-  audit_log.WriteElement("self_match_prevention_id", self_match_prevention_id);
   audit_log.WriteElement("account_number", account.getValue());
   audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", firm_id);
