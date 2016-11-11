@@ -1061,8 +1061,7 @@ void FixTrader::PrintExecutionReport(
 
   if (ord_status == FIX::OrdStatus_NEW ||
       ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
-      ord_status == FIX::OrdStatus_FILLED ||
-      ord_status == FIX::OrdStatus_CANCELED) {
+      ord_status == FIX::OrdStatus_FILLED) {
     string self_match_prevention_id = report.getField(7928);
     audit_log.WriteElement("self_match_prevention_id", 
         self_match_prevention_id);
@@ -1216,7 +1215,7 @@ void FixTrader::PrintOrderCancelReject(
   report.getField(cxl_rej_reason);
   report.getField(security_desc);
   report.getField(cxl_rej_response_to);
-  string self_match_prevention_id = report.getField(7928);
+  // string self_match_prevention_id = report.getField(7928);
 
   AuditLog audit_log;
 
@@ -1243,7 +1242,7 @@ void FixTrader::PrintOrderCancelReject(
   audit_log.WriteElement("receiving_timestamps", timestamp);
   audit_log.WriteElement("message_direction", "FROM CME");
   audit_log.WriteElement("operator_id", "NULL");
-  audit_log.WriteElement("self_match_prevention_id", self_match_prevention_id);
+  // audit_log.WriteElement("self_match_prevention_id", self_match_prevention_id);
   audit_log.WriteElement("account_number", account.getValue());
   audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", firm_id);
