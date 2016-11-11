@@ -436,7 +436,7 @@ void FixTrader::ReqOrderInsert(Order *order) {
   string order_flow_id = seq_serial_.GenFlowIDStr(order->order_id);
   snprintf(order->order_flow_id, sizeof(order->order_flow_id), "%s", 
            order_flow_id.c_str());
-  string trans_id = seq_serial_.GenTransIDStr();
+  // string trans_id = seq_serial_.GenTransIDStr();
   char cl_order_id_str[16];
   snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
   FIX::HandlInst handl_inst('1');
@@ -508,7 +508,9 @@ void FixTrader::ReqOrderInsert(Order *order) {
   //                  1=Firm
   // FIX::CustomerOrFirm customer_or_firm = FIX::CustomerOrFirm_FIRM;
   // new_order.set(customer_or_firm);
-  new_order.setField(FIX::FIELD::CustomerOrFirm, "1");
+  FIX::CustomerOrFirm customer_or_firm(1);
+  new_order.set(customer_or_firm);
+  // new_order.setField(FIX::FIELD::CustomerOrFirm, "1");
 
   // 9702-CtiCode : 1=CTI1 2=CTI2 3=CTI3 4=CTI4
   new_order.setField(9702, "2");
@@ -522,6 +524,11 @@ void FixTrader::ReqOrderInsert(Order *order) {
   int v = order_qty.getValue();
   char h = handl_inst.getValue();
   // string t = transact_time.getValue();
+  // 
+  FIX::SenderCompID sender_comp_id;
+  new_order.getHeader().getField(sender_comp_id);
+  string str_sender_comp_id = sender_comp_id.getValue();
+  string session_id = str_sender_comp_id.substr(0, 3);
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -529,20 +536,20 @@ void FixTrader::ReqOrderInsert(Order *order) {
   audit_log.WriteElement("operator_id", "NULL");
   audit_log.WriteElement("self_match_prevention_id", "CASHALGO_CFI");
   audit_log.WriteElement("account_number", account.getValue());
-  audit_log.WriteElement("session_id", session_id_.toString());
+  audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", "CASHALGO");
   audit_log.WriteElement("manual_order_identifier", "N");  // field-1028
   audit_log.WriteElement("message_type", FIX::MsgType_NewOrderSingle);
   audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
-  audit_log.WriteElement("origin", "Firm");
-  audit_log.WriteElement("message_link_id", trans_id);
+  audit_log.WriteElement("origin", customer_or_firm.getValue());
+  // audit_log.WriteElement("message_link_id", trans_id);
   audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
   audit_log.WriteElement("market_segment_id", "R");
   audit_log.WriteElement("client_order_id", cl_order_id.getValue());
   audit_log.WriteElement("buy_sell_indicator", side.getValue());
-  audit_log.WriteElement("quantity", order_qty.getValue());
+  audit_log.WriteElement("quantity", (int)order_qty.getValue());
   audit_log.WriteElement("limit_price", price.getValue());
   audit_log.WriteElement("order_type", order_type.getValue());
   switch(time_in_force) {
@@ -561,7 +568,7 @@ void FixTrader::ReqOrderInsert(Order *order) {
     default:
       break;
   }
-  audit_log.WriteElement("ifm_flag", "N");
+  // audit_log.WriteElement("ifm_flag", "N");
   // audit_log.WriteElement("display_quantity", order_qty.getValue());
   // audit_log.WriteElement("minimum_quantity", 0);
   audit_log.WriteElement("country_of_origin", "HK");
@@ -576,7 +583,7 @@ void FixTrader::ReqOrderAction(Order *order) {
   order->order_id = order_pool_.add(order);
   Order *orig_order = order_pool_.get(order->orig_order_id);
   seq_serial_.DumpOrderID(order->order_id);
-  string trans_id = seq_serial_.GenTransIDStr();
+  // string trans_id = seq_serial_.GenTransIDStr();
   string order_flow_id = orig_order->order_flow_id;
   char cl_order_id_str[16], orig_order_id_str[16];
   snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
@@ -632,20 +639,25 @@ void FixTrader::ReqOrderAction(Order *order) {
   // cancel_order.setField(9717, cl_order_id_str);
   cancel_order.setField(9717, orig_order_id_str);
 
+  FIX::SenderCompID sender_comp_id;
+  cancel_order.getHeader().getField(sender_comp_id);
+  string str_sender_comp_id = sender_comp_id.getValue();
+  string session_id = str_sender_comp_id.substr(0, 3);
+
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
   audit_log.WriteElement("message_direction", "TO CME");
   audit_log.WriteElement("operator_id", "NULL");
   // audit_log.WriteElement("self_match_prevention_id", "CASHALGO_CFI");
   audit_log.WriteElement("account_number", account.getValue());
-  audit_log.WriteElement("session_id", session_id_.toString());
+  audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", "CASHALGO");
   audit_log.WriteElement("manual_order_identifier", "N");  // field-1028
   
   audit_log.WriteElement("message_type", FIX::MsgType_OrderCancelRequest);
   audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
-  audit_log.WriteElement("origin", "Firm");
-  audit_log.WriteElement("message_link_id", trans_id);
+  // audit_log.WriteElement("origin", "Firm");
+  // audit_log.WriteElement("message_link_id", trans_id);
   audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
@@ -653,7 +665,7 @@ void FixTrader::ReqOrderAction(Order *order) {
   audit_log.WriteElement("client_order_id", cl_order_id.getValue());
   audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
   audit_log.WriteElement("buy_sell_indicator", side.getValue());
-  audit_log.WriteElement("ifm_flag", "N");
+  // audit_log.WriteElement("ifm_flag", "N");
   // audit_log.WriteElement("display_quantity", order_qty.getValue());
   // audit_log.WriteElement("minimum_quantity", 0);
   audit_log.WriteElement("country_of_origin", "HK");
@@ -670,7 +682,7 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
   Order *order = new Order();
   order->order_id = order_pool_.add(order);
   seq_serial_.DumpOrderID(order->order_id);
-  string trans_id = seq_serial_.GenTransIDStr();
+  // string trans_id = seq_serial_.GenTransIDStr();
   string order_flow_id = seq_serial_.GenFlowIDStr(atoi(local_id.c_str()));
   // Order *orig_order = order_pool_.get(order->orig_order_id);
   char cl_order_id_str[16], orig_order_id_str[16];
@@ -726,20 +738,25 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
   // cancel_order.setField(9717, cl_order_id_str);
   cancel_order.setField(9717, orig_order_id_str);
 
+  FIX::SenderCompID sender_comp_id;
+  cancel_order.getHeader().getField(sender_comp_id);
+  string str_sender_comp_id = sender_comp_id.getValue();
+  string session_id = str_sender_comp_id.substr(0, 3);
+
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
   audit_log.WriteElement("message_direction", "TO CME");
   audit_log.WriteElement("operator_id", "NULL");
   // audit_log.WriteElement("self_match_prevention_id", "CASHALGO_CFI");
   audit_log.WriteElement("account_number", account.getValue());
-  audit_log.WriteElement("session_id", session_id_.toString());
+  audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", "CASHALGO");
   audit_log.WriteElement("manual_order_identifier", "N");  // field-1028
   
   audit_log.WriteElement("message_type", FIX::MsgType_OrderCancelRequest);
-  audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
-  audit_log.WriteElement("origin", "Firm");
-  audit_log.WriteElement("message_link_id", trans_id);
+  // audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
+  // audit_log.WriteElement("origin", "Firm");
+  // audit_log.WriteElement("message_link_id", trans_id);
   audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
@@ -747,7 +764,7 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
   audit_log.WriteElement("client_order_id", cl_order_id.getValue());
   audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
   audit_log.WriteElement("buy_sell_indicator", side.getValue());
-  audit_log.WriteElement("ifm_flag", "N");
+  // audit_log.WriteElement("ifm_flag", "N");
   // audit_log.WriteElement("display_quantity", order_qty.getValue());
   // audit_log.WriteElement("minimum_quantity", 0);
   audit_log.WriteElement("country_of_origin", "HK");
@@ -764,7 +781,7 @@ void FixTrader::ReqOrderReplace(Order *order) {
   order->order_id = order_pool_.add(order);
   Order *orig_order = order_pool_.get(order->orig_order_id);
   seq_serial_.DumpOrderID(order->order_id);
-  string trans_id = seq_serial_.GenTransIDStr();
+  // string trans_id = seq_serial_.GenTransIDStr();
   string order_flow_id = orig_order->order_flow_id;
   char cl_order_id_str[16], orig_order_id_str[16];
   snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
@@ -814,7 +831,7 @@ void FixTrader::ReqOrderReplace(Order *order) {
 
   // 1028-ManualOrderIndicator : Y=manual N=antomated
   // replace_order.setField(1028, "n");
-  replace_order.setField(9702, "4");
+  replace_order.setField(9702, "2");
 
   FIX::SecurityDesc security_desc(orig_order->instrument_id);
   replace_order.set(security_desc);
@@ -833,19 +850,24 @@ void FixTrader::ReqOrderReplace(Order *order) {
   // replace_order.setField(9717, cl_order_id_str);
   replace_order.setField(9717, orig_order_id_str);
 
+  FIX::SenderCompID sender_comp_id;
+  replace_order.getHeader().getField(sender_comp_id);
+  string str_sender_comp_id = sender_comp_id.getValue();
+  string session_id = str_sender_comp_id.substr(0, 3);
+
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
   audit_log.WriteElement("message_direction", "TO CME");
   audit_log.WriteElement("operator_id", "NULL");
   // audit_log.WriteElement("self_match_prevention_id", "CASHALGO_CFI");
   audit_log.WriteElement("account_number", account.getValue());
-  audit_log.WriteElement("session_id", session_id_.toString());
+  audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", "CASHALGO");
   audit_log.WriteElement("manual_order_identifier", "N");  // field-1028
   audit_log.WriteElement("message_type", FIX::MsgType_OrderCancelReplaceRequest);
   audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
-  audit_log.WriteElement("origin", "Firm");
-  audit_log.WriteElement("message_link_id", trans_id);
+  audit_log.WriteElement("origin", customer_or_firm.getValue());
+  // audit_log.WriteElement("message_link_id", trans_id);
   audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
@@ -853,7 +875,7 @@ void FixTrader::ReqOrderReplace(Order *order) {
   audit_log.WriteElement("client_order_id", cl_order_id.getValue());
   audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
   audit_log.WriteElement("buy_sell_indicator", side.getValue());
-  audit_log.WriteElement("quantity", order_qty.getValue());
+  audit_log.WriteElement("quantity", (int)order_qty.getValue());
   audit_log.WriteElement("limit_price", price.getValue());
   audit_log.WriteElement("order_type", order_type.getValue());
   audit_log.WriteElement("ifm_flag", "N");
@@ -965,13 +987,16 @@ void FixTrader::PrintExecutionReport(
   } else if (ord_status == FIX::OrdStatus_FILLED) {
     FIX::LastPx last_px;
     FIX::LastQty last_qty;
+    FIX::AggressorIndicator aggressor_indicator;
     report.getField(last_px);
     report.getField(last_qty);
+    report.getField(aggressor_indicator);
     cout << "[Execution Report AllFill]:" << endl;
     cout << "LastPx:[" << last_px << "]" << endl;
     cout << "LastQty:[" << last_qty << "]" << endl;
     audit_log.WriteElement("fill_price", last_px.getValue());
     audit_log.WriteElement("fill_quantity", last_qty.getValue());
+    audit_log.WriteElement("aggressor_flag", aggressor_indicator.getValue());
     // audit_log.WriteElement("aggressor_flag", aggressor_flag.getValue());
   } else if (ord_status == FIX::OrdStatus_CANCELED) {
     cout << "[Execution Report Cancellation]:" << endl;
@@ -991,8 +1016,9 @@ void FixTrader::PrintExecutionReport(
   }
   PrintBasicExecutionReport(report);
 
-  string trans_id = seq_serial_.GenTransIDStr();
+  // string trans_id = seq_serial_.GenTransIDStr();
 
+  FIX::TargetCompID target_comp_id;
   FIX::Account account;
   FIX::ClOrdID cl_ord_id;
   FIX::CumQty cum_qty;
@@ -1007,6 +1033,7 @@ void FixTrader::PrintExecutionReport(
   FIX::TransactTime transact_time;
   FIX::SecurityDesc security_desc;
   
+  report.getHeader().getField(target_comp_id);
   report.getField(account);
   report.getField(cl_ord_id);
   report.getField(cum_qty);
@@ -1021,6 +1048,12 @@ void FixTrader::PrintExecutionReport(
   report.getField(transact_time);
   report.getField(security_desc);
 
+  string str_target_comp_id = target_comp_id.getValue();
+  string session_id = str_target_comp_id.substr(0, 3);
+
+  string message_type = string(FIX::MsgType_ExecutionReport) + "-" +
+                        ord_status.getValue();
+
   int year, month, day, hour, min, second, milsec;
   transact_time.getValue().getYMD(year, month, day);
   transact_time.getValue().getHMS(hour, min, second, milsec);
@@ -1032,13 +1065,13 @@ void FixTrader::PrintExecutionReport(
   audit_log.WriteElement("operator_id", "NULL");
   // audit_log.WriteElement("self_match_prevention_id", "CASHALGO_CFI");
   audit_log.WriteElement("account_number", account.getValue());
-  audit_log.WriteElement("session_id", session_id_.toString());
+  audit_log.WriteElement("session_id", session_id);
   audit_log.WriteElement("executing_firm_id", "CASHALGO");
-  audit_log.WriteElement("message_type", FIX::MsgType_ExecutionReport);
-  audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
-  audit_log.WriteElement("origin", "Firm");
+  audit_log.WriteElement("message_type", message_type);
+  // audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
+  // audit_log.WriteElement("origin", "Firm");
   audit_log.WriteElement("cme_globex_message_id", exec_id.getValue());
-  audit_log.WriteElement("message_link_id", trans_id);
+  // audit_log.WriteElement("message_link_id", trans_id);
   // audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
@@ -1046,7 +1079,7 @@ void FixTrader::PrintExecutionReport(
   audit_log.WriteElement("client_order_id", cl_ord_id.getValue());
   audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
   audit_log.WriteElement("buy_sell_indicator", side.getValue());
-  audit_log.WriteElement("quantity", order_qty.getValue());
+  audit_log.WriteElement("quantity", (int)order_qty.getValue());
   audit_log.WriteElement("limit_price", price.getValue());
   audit_log.WriteElement("order_type", ord_type.getValue());
   switch(time_in_force) {
@@ -1065,7 +1098,7 @@ void FixTrader::PrintExecutionReport(
     default:
       break;
   }
-  audit_log.WriteElement("ifm_flag", "N");
+  // audit_log.WriteElement("ifm_flag", "N");
   // audit_log.WriteElement("display_quantity", order_qty.getValue());
   // audit_log.WriteElement("minimum_quantity", 0);
   audit_log.WriteElement("country_of_origin", "HK");
@@ -1147,6 +1180,7 @@ void FixTrader::PrintBasicExecutionReport(
 
 void FixTrader::PrintOrderCancelReject(
       const CME_FIX_NAMESPACE::OrderCancelReject& report) {
+  FIX::TargetCompID target_comp_id;
   FIX::Account account;
   FIX::ClOrdID cl_ord_id;
   FIX::ExecID exec_id;
@@ -1161,6 +1195,7 @@ void FixTrader::PrintOrderCancelReject(
   FIX::SecurityDesc security_desc;
   FIX::CxlRejResponseTo cxl_rej_response_to;
   
+  report.getHeader().getField(target_comp_id);
   report.getField(account);
   report.getField(cl_ord_id);
   report.getField(exec_id);
@@ -1173,6 +1208,46 @@ void FixTrader::PrintOrderCancelReject(
   report.getField(cxl_rej_reason);
   report.getField(security_desc);
   report.getField(cxl_rej_response_to);
+
+  AuditLog audit_log;
+
+  string str_target_comp_id = target_comp_id.getValue();
+  string session_id = str_target_comp_id.substr(0, 3);
+
+  string message_type = string(FIX::MsgType_ExecutionReport) + "-" +
+                        cxl_rej_response_to.getValue();
+
+  int year, month, day, hour, min, second, milsec;
+  transact_time.getValue().getYMD(year, month, day);
+  transact_time.getValue().getHMS(hour, min, second, milsec);
+  char timestamp[32];
+  snprintf(timestamp, sizeof(timestamp), "%d%02d%02d-%02d:%02d:%02d.%03d",
+           year, month, day, hour, min, second, milsec);
+  audit_log.WriteElement("receiving_timestamps", timestamp);
+  audit_log.WriteElement("message_direction", "FROM CME");
+  audit_log.WriteElement("operator_id", "NULL");
+  // audit_log.WriteElement("self_match_prevention_id", "CASHALGO_CFI");
+  audit_log.WriteElement("account_number", account.getValue());
+  audit_log.WriteElement("session_id", session_id);
+  audit_log.WriteElement("executing_firm_id", "CASHALGO");
+  audit_log.WriteElement("message_type", message_type);
+  // audit_log.WriteElement("customer_type_indicator", "2");  // CtiCode-9702
+  // audit_log.WriteElement("origin", "Firm");
+  audit_log.WriteElement("cme_globex_message_id", exec_id.getValue());
+  // audit_log.WriteElement("message_link_id", trans_id);
+  // audit_log.WriteElement("order_flow_id", order_flow_id);
+  audit_log.WriteElement("instrument_description", security_desc.getValue());
+  // market segment id can be found in InstrumentDefinition in market data
+  // audit_log.WriteElement("market_segment_id", "");
+  audit_log.WriteElement("client_order_id", cl_ord_id.getValue());
+  audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
+  
+  // audit_log.WriteElement("ifm_flag", "N");
+  // audit_log.WriteElement("display_quantity", order_qty.getValue());
+  // audit_log.WriteElement("minimum_quantity", 0);
+  audit_log.WriteElement("country_of_origin", "HK");
+  // audit_log.WriteElement("")
+  audit_trail_.WriteLog(audit_log);
 
   string str_ord_status = ToString(ord_status);
 
