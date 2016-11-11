@@ -636,10 +636,11 @@ void FixTrader::ReqOrderAction(Order *order) {
   // cancel_order.setField(9717, cl_order_id_str);
   cancel_order.setField(9717, orig_order_id_str);
 
-  FIX::SenderCompID sender_comp_id;
-  cancel_order.getHeader().getField(sender_comp_id);
-  string str_sender_comp_id = sender_comp_id.getValue();
-  string session_id = str_sender_comp_id.substr(0, 3);
+  // FIX::SenderCompID sender_comp_id;
+  // cancel_order.getHeader().getField(sender_comp_id);
+  // string str_sender_comp_id = sender_comp_id.getValue();
+  // string session_id = str_sender_comp_id.substr(0, 3);
+  string session_id = "3T7";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -735,10 +736,11 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
   // cancel_order.setField(9717, cl_order_id_str);
   cancel_order.setField(9717, orig_order_id_str);
 
-  FIX::SenderCompID sender_comp_id;
-  cancel_order.getHeader().getField(sender_comp_id);
-  string str_sender_comp_id = sender_comp_id.getValue();
-  string session_id = str_sender_comp_id.substr(0, 3);
+  // FIX::SenderCompID sender_comp_id;
+  // cancel_order.getHeader().getField(sender_comp_id);
+  // string str_sender_comp_id = sender_comp_id.getValue();
+  // string session_id = str_sender_comp_id.substr(0, 3);
+  string session_id = "3T7";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -847,10 +849,11 @@ void FixTrader::ReqOrderReplace(Order *order) {
   // replace_order.setField(9717, cl_order_id_str);
   replace_order.setField(9717, orig_order_id_str);
 
-  FIX::SenderCompID sender_comp_id;
-  replace_order.getHeader().getField(sender_comp_id);
-  string str_sender_comp_id = sender_comp_id.getValue();
-  string session_id = str_sender_comp_id.substr(0, 3);
+  // FIX::SenderCompID sender_comp_id;
+  // replace_order.getHeader().getField(sender_comp_id);
+  // string str_sender_comp_id = sender_comp_id.getValue();
+  // string session_id = str_sender_comp_id.substr(0, 3);
+  string session_id = "3T7";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
