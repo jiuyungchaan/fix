@@ -979,7 +979,7 @@ void FixTrader::PrintExecutionReport(
     cout << "LastPx:[" << last_px << "]" << endl;
     cout << "LastQty:[" << last_qty << "]" << endl;
     audit_log.WriteElement("fill_price", last_px.getValue());
-    audit_log.WriteElement("fill_quantity", last_qty.getValue());
+    audit_log.WriteElement("fill_quantity", (int)last_qty.getValue());
     if (aggressor_indicator.getValue()) {
       audit_log.WriteElement("aggressor_flag", "Y");
     } else {
@@ -996,7 +996,7 @@ void FixTrader::PrintExecutionReport(
     cout << "LastPx:[" << last_px << "]" << endl;
     cout << "LastQty:[" << last_qty << "]" << endl;
     audit_log.WriteElement("fill_price", last_px.getValue());
-    audit_log.WriteElement("fill_quantity", last_qty.getValue());
+    audit_log.WriteElement("fill_quantity", (int)last_qty.getValue());
     if (aggressor_indicator.getValue()) {
       audit_log.WriteElement("aggressor_flag", "Y");
     } else {
