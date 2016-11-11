@@ -978,9 +978,8 @@ void FixTrader::PrintExecutionReport(
     cout << "[Execution Report PartiallyFill]:" << endl;
     cout << "LastPx:[" << last_px << "]" << endl;
     cout << "LastQty:[" << last_qty << "]" << endl;
-    int qty = last_qty.getValue();
     audit_log.WriteElement("fill_price", last_px.getValue());
-    audit_log.WriteElement("fill_quantity", qty);
+    audit_log.WriteElement("fill_quantity", (int)last_qty.getValue());
     if (aggressor_indicator.getValue()) {
       audit_log.WriteElement("aggressor_flag", "Y");
     } else {

@@ -122,7 +122,7 @@ class OrderPool {
 
   Order *get(std::string sys_id) {
     std::map<std::string, int>::iterator it = sys_to_local_.find(sys_id);
-    if (it != sys_to_local_.end()) {
+    if (it == sys_to_local_.end()) {
       printf("SysOrderID-%s not found !\n", sys_id.c_str());
       return (Order *)NULL;
     } else {
