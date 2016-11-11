@@ -4,6 +4,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+
+#include <map>
+#include <string>
 
 // enum Direction 
 #define kDirectionBuy '0'
@@ -116,6 +120,16 @@ class OrderPool {
     }
   }
 
+  Order *get(std::string sys_id) {
+    std::map<std::string, int>::iterator it = sys_to_local_.find(sys_id);
+    if (it != sys_to_local_.end()) {
+      printf("SysOrderID-%s not found !\n", sys_id.c_str());
+      return (Order *)NULL;
+    } else {
+      return order_pool_[it->second];
+    }
+  }
+
   // add Order to OrderPool and return order ID in OrderPool
   int add(Order *order) {
     int order_id = __sync_fetch_and_add(&order_size_, 1);
@@ -123,9 +137,20 @@ class OrderPool {
     return order_id;
   }
 
+  void add_pair(std::string sys_id, int local_id) {
+    std::map<std::string, int>::iterator it = sys_to_local_.find(sys_id);
+    if (it != sys_to_local_.end()) {
+      printf("SysOrderID-%s already match for %d !\n", sys_id.c_str(), 
+             it->second);
+    } else {
+      sys_to_local_.insert(std::pair<std::string, int>(sys_id, local_id));
+    }
+  }
+
  private:
   Order *order_pool_[MAX_ORDER_SIZE];
   int order_size_;
+  std::map<std::string, int> sys_to_local_;
 };
 
 #endif  /// __ORDER_H__
