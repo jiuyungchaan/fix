@@ -129,9 +129,9 @@ int main(int argc, char **argv) {
         line_stream >> symbol >> instrument >> price >> stop_price >> volume 
                     >> direction >> order_type >> time_in_force;
         Order *order = new Order();
-        snprintf(order->account, sizeof(order->account), account.c_str());
-        snprintf(order->symbol, sizeof(order->symbol), symbol.c_str());
-        snprintf(order->instrument_id, sizeof(order->instrument_id), instrument.c_str());
+        snprintf(order->account, sizeof(order->account), "%s", account.c_str());
+        snprintf(order->symbol, sizeof(order->symbol), "%s", symbol.c_str());
+        snprintf(order->instrument_id, sizeof(order->instrument_id), "%s", instrument.c_str());
         order->limit_price = atof(price.c_str());
         order->stop_price = atof(stop_price.c_str());
         order->volume = atoi(volume.c_str());
@@ -146,6 +146,7 @@ int main(int argc, char **argv) {
           string symbol, instrument, side, local_id, sys_id;
           cout << "\033[33mInput order info to cancel:\033[0m" << endl;
           cin >> symbol >> instrument >> side >> local_id >> sys_id;
+          getchar();
           fix_trader.ReqOrderAction(symbol, instrument, side, local_id, sys_id,
                                     account);
         } else {

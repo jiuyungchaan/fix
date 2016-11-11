@@ -58,6 +58,8 @@
 #include <fstream>
 
 #include "order.h"
+#include "audit_trail.h"
+#include "sequence_serialization.h"
 
 #ifdef CME_FIX_40
 #define CME_FIX_NAMESPACE FIX40
@@ -166,6 +168,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   int last_end_seq_no_;
   FIX::SessionID session_id_;
   OrderPool order_pool_;
+  AuditTrail audit_trail_;
+  SequenceSerialization seq_serial_;
 
   std::fstream log_file_;
 };

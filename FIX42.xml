@@ -255,6 +255,8 @@
    <field name='NoAllocs' required='N' />
    <field name='AllocAccount' required='N' />
    <field name='Urgency' required='N' />
+   <field name='SelfMatchPreventionID' required='N' />
+   <field name='SelfMatchPreventionInstruction' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />
@@ -2850,11 +2852,16 @@
   <field number='1603' name='ApplicationSystemName' type='STRING' />
   <field number='1604' name='TradingSystemVersion' type='STRING' />
   <field number='1605' name='ApplicationSystemVendor' type='STRING' />
+  <field number='7928' name='SelfMatchPreventionID' type='STRING' />
   <field number='1188' name='Volatility' type='STRING' />
   <field number='810' name='UnderlyingPx' type='PRICE' />
   <field number='1190' name='RiskFreeRate' type='PRICE' />
   <field number='811' name='OptionDelta' type='FLOAT' />
   <field number='1189' name='ExpirationTimeValue' type='FLOAT' />
+  <field number='8000' name='SelfMatchPreventionInstruction' type='CHAR'>
+   <value enum='O' description='CANCEL_RESTING' />
+   <value enum='N' description='CANCEL_AGGRESSING' />
+  </field>
   <field number='1028' name='ManualOrderIndicator' type='BOOLEAN'>
    <value enum='N' description='NO' />
    <value enum='Y' description='YES' />
