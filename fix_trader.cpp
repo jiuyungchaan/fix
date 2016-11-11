@@ -86,10 +86,12 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     // static int pos = 0;
     try {
       FIX::PossDupFlag possDupFlag;
+      cout << "TO APP down" << endl;
       message.getHeader().getField(possDupFlag);
       if (possDupFlag) {
           throw FIX::DoNotSend();
       }
+      cout << "TO APP down" << endl;
     } catch (FIX::FieldNotFound&) {}
 
     FillHeader(message);
