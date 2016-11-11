@@ -86,12 +86,10 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     // static int pos = 0;
     try {
       FIX::PossDupFlag possDupFlag;
-      cout << "TO APP down" << endl;
       message.getHeader().getField(possDupFlag);
       if (possDupFlag) {
           throw FIX::DoNotSend();
       }
-      cout << "TO APP down" << endl;
     } catch (FIX::FieldNotFound&) {}
 
     FillHeader(message);
@@ -523,10 +521,11 @@ void FixTrader::ReqOrderInsert(Order *order) {
   char h = handl_inst.getValue();
   // string t = transact_time.getValue();
   // 
-  FIX::SenderCompID sender_comp_id;
-  new_order.getHeader().getField(sender_comp_id);
-  string str_sender_comp_id = sender_comp_id.getValue();
-  string session_id = str_sender_comp_id.substr(0, 3);
+  // FIX::SenderCompID sender_comp_id;
+  // new_order.getHeader().getField(sender_comp_id);
+  // string str_sender_comp_id = sender_comp_id.getValue();
+  // string session_id = str_sender_comp_id.substr(0, 3);
+  string session_id = "3T7";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
