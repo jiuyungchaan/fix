@@ -79,18 +79,18 @@ void FixTrader::toApp(FIX::Message& message, const FIX::SessionID& sessionID)
     ////////////////////////////////
     /// new version quickfix demo //
     ////////////////////////////////
-    static int pos = 0;
-    try {
-      FIX::PossDupFlag possDupFlag;
-      message.getHeader().getField(possDupFlag);
-      if (possDupFlag) {
-        if (pos < 2) {
-          pos++;
-        } else {
-          throw FIX::DoNotSend();
-        }
-      }
-    } catch (FIX::FieldNotFound&) {}
+    // static int pos = 0;
+    // try {
+    //   FIX::PossDupFlag possDupFlag;
+    //   message.getHeader().getField(possDupFlag);
+    //   if (possDupFlag) {
+    //     if (pos < 2) {
+    //       pos++;
+    //     } else {
+    //       throw FIX::DoNotSend();
+    //     }
+    //   }
+    // } catch (FIX::FieldNotFound&) {}
 
     FillHeader(message);
     log_file_ << "[" << time_now() << "]TO APP XML: " << message.toXML() << endl;
