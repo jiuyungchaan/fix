@@ -527,7 +527,7 @@ void FixTrader::ReqOrderInsert(Order *order) {
   // string session_id = str_sender_comp_id.substr(0, 3);
   string session_id = "3T7";
   string firm_id = "004";
-  string sender_sub_id = "ANYTHING";
+  string sender_sub_id = "G";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -629,7 +629,7 @@ void FixTrader::ReqOrderAction(Order *order) {
   // string session_id = str_sender_comp_id.substr(0, 3);
   string session_id = "3T7";
   string firm_id = "004";
-  string sender_sub_id = "ANYTHING";
+  string sender_sub_id = "G";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -731,7 +731,7 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
   // string session_id = str_sender_comp_id.substr(0, 3);
   string session_id = "3T7";
   string firm_id = "004";
-  string sender_sub_id = "ANYTHING";
+  string sender_sub_id = "G";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -846,7 +846,7 @@ void FixTrader::ReqOrderReplace(Order *order) {
   // string session_id = str_sender_comp_id.substr(0, 3);
   string session_id = "3T7";
   string firm_id = "004";
-  string sender_sub_id = "ANYTHING";
+  string sender_sub_id = "G";
 
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
@@ -1057,7 +1057,7 @@ void FixTrader::PrintExecutionReport(
   string str_target_comp_id = target_comp_id.getValue();
   string str_target_sub_id = target_sub_id.getValue();
   string session_id = str_target_comp_id.substr(0, 3);
-  string firm_id = str_target_comp_id.substr(4, 3);
+  string firm_id = str_target_comp_id.substr(3, 3);
 
   if (ord_status == FIX::OrdStatus_NEW ||
       ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
@@ -1222,7 +1222,7 @@ void FixTrader::PrintOrderCancelReject(
   string str_target_sub_id = target_sub_id.getValue();
   string str_target_comp_id = target_comp_id.getValue();
   string session_id = str_target_comp_id.substr(0, 3);
-  string firm_id = str_target_comp_id.substr(4, 3);
+  string firm_id = str_target_comp_id.substr(3, 3);
 
   Order *order = order_pool_.get(order_id.getValue());
   string order_flow_id = "";
@@ -1283,7 +1283,7 @@ void FixTrader::PrintOrderCancelReject(
 }
 
 void FixTrader::FillHeader(FIX::Message& message) {
-  message.getHeader().setField(FIX::SenderSubID("ANYTHING"));
+  message.getHeader().setField(FIX::SenderSubID("G"));
   message.getHeader().setField(FIX::SenderLocationID("HK"));
   message.getHeader().setField(FIX::TargetSubID("G"));
 }
