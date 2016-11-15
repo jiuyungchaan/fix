@@ -1057,8 +1057,8 @@ void FixTrader::PrintExecutionReport(
   report.getField(security_desc);
 
   string str_target_comp_id = target_comp_id.getValue();
-  // string str_target_sub_id = target_sub_id.getValue();
-  string str_sender_sub_id = sender_sub_id.getValue();
+  string str_target_sub_id = target_sub_id.getValue();
+  // string str_sender_sub_id = sender_sub_id.getValue();
   string session_id = str_target_comp_id.substr(0, 3);
   string firm_id = str_target_comp_id.substr(3, 3);
 
@@ -1098,7 +1098,7 @@ void FixTrader::PrintExecutionReport(
   audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
-  audit_log.WriteElement("market_segment_id", str_sender_sub_id);
+  audit_log.WriteElement("market_segment_id", str_target_sub_id);
   audit_log.WriteElement("client_order_id", cl_ord_id.getValue());
   audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
   audit_log.WriteElement("buy_sell_indicator", side.getValue());
@@ -1224,7 +1224,7 @@ void FixTrader::PrintOrderCancelReject(
 
   AuditLog audit_log;
 
-  // string str_target_sub_id = target_sub_id.getValue();
+  string str_target_sub_id = target_sub_id.getValue();
   string str_sender_sub_id = sender_sub_id.getValue();
   string str_target_comp_id = target_comp_id.getValue();
   string session_id = str_target_comp_id.substr(0, 3);
@@ -1260,7 +1260,7 @@ void FixTrader::PrintOrderCancelReject(
   audit_log.WriteElement("order_flow_id", order_flow_id);
   audit_log.WriteElement("instrument_description", security_desc.getValue());
   // market segment id can be found in InstrumentDefinition in market data
-  audit_log.WriteElement("market_segment_id", str_sender_sub_id);
+  audit_log.WriteElement("market_segment_id", str_target_sub_id);
   audit_log.WriteElement("client_order_id", cl_ord_id.getValue());
   audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
   
@@ -1289,7 +1289,8 @@ void FixTrader::PrintOrderCancelReject(
 }
 
 void FixTrader::FillHeader(FIX::Message& message) {
-  message.getHeader().setField(FIX::SenderSubID("ANYTHING"));
+  // message.getHeader().setField(FIX::SenderSubID("ANYTHING"));
+  message.getHeader().setField(FIX::SenderSubID("G"));
   message.getHeader().setField(FIX::SenderLocationID("HK"));
   message.getHeader().setField(FIX::TargetSubID("G"));
 }
