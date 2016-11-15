@@ -1070,6 +1070,13 @@ void FixTrader::PrintExecutionReport(
         self_match_prevention_id);
   }
 
+  if (ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
+      ord_status == FIX::OrdStatus_FILLED) {
+    string manual_order_identifier = report.getField(1028);
+    audit_log.WriteElement("manual_order_identifier",
+        manual_order_identifier);
+  }
+
   string message_type = string(FIX::MsgType_ExecutionReport) + "/" +
                         ord_status.getValue();
   Order *order = order_pool_.get(order_id.getValue());
