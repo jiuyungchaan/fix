@@ -1061,6 +1061,7 @@ void FixTrader::PrintExecutionReport(
   // string str_sender_sub_id = sender_sub_id.getValue();
   string session_id = str_target_comp_id.substr(0, 3);
   string firm_id = str_target_comp_id.substr(3, 3);
+  string manual_order_identifier = report.getField(1028);
 
   if (ord_status == FIX::OrdStatus_NEW ||
       ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
@@ -1070,12 +1071,6 @@ void FixTrader::PrintExecutionReport(
         self_match_prevention_id);
   }
 
-  if (ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
-      ord_status == FIX::OrdStatus_FILLED) {
-    string manual_order_identifier = report.getField(1028);
-    audit_log.WriteElement("manual_order_identifier",
-        manual_order_identifier);
-  }
 
   string message_type = string(FIX::MsgType_ExecutionReport) + "/" +
                         ord_status.getValue();
@@ -1119,6 +1114,7 @@ void FixTrader::PrintExecutionReport(
   audit_log.WriteElement("country_of_origin", "HK");
   audit_log.WriteElement("cumulative_quantity", (int)cum_qty.getValue());
   audit_log.WriteElement("remaining_quantity", (int)leaves_qty.getValue());
+  audit_log.WriteElement("manual_order_identifier", manual_order_identifier);
   // audit_log.WriteElement("")
   audit_trail_.WriteLog(audit_log);
 }
