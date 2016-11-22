@@ -143,6 +143,11 @@ void FixTrader::toAdmin(FIX::Message& message, const FIX::SessionID&) {
   // cout << "TO ADMIN: " << message << endl;
 }
 
+void FixTrader::onMessage(const CME_FIX_NAMESPACE::Logon& logon,
+                          const FIX::SessionID& sessionID) {
+  cout << "OnMessage Logon: " << logon.toXML() << endl;
+}
+
 void FixTrader::onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 
                           const FIX::SessionID& sessionID) {
   FIX::ExecType exec_type;

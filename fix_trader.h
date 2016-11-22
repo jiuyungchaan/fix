@@ -118,6 +118,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
     //       FIX::IncorrectTagValue, FIX::UnsupportedMessageType);
 
   // virtual functions inherited from FIX::MessageCracker
+  void onMessage(const CME_FIX_NAMESPACE::Logon& logon, 
+                 const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report, 
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::OrderCancelReject& report,
