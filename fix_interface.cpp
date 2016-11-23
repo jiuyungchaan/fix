@@ -136,6 +136,8 @@ int main() {
   FixTrader fix_trader;
   fix_trader.Init();
 
+  sleep(10);
+
   string account = "3T7004N";
   string symbol = "GE";
   string instrument = "GEZ8";
