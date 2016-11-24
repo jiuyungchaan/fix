@@ -166,6 +166,7 @@ void FixTrader::ReqOrderAction(int order_id) {
   } else {
     req.ExchangeID[0] = THOST_FTDC_D_Sell;
   }
+  trader_api_->ReqOrderAction(&req, 0);
 
   cout << "ReqOrderAction" << endl;
 }
@@ -183,7 +184,7 @@ int main() {
   string account = "3T7004N";
   string symbol = "GE";
   string instrument = "GEZ8";
-  string price = "3866";
+  string price = "9776";
   string volume = "4";
   string direction = "buy";
   string order_type = "market";
