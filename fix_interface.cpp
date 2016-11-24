@@ -73,7 +73,9 @@ void FixTrader::OnFrontDisconnected(int nReason) {
 
 void FixTrader::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
       CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-  cout << "OnRspUserLogin" << endl;
+  cout << "OnRspUserLogin: " << pRspUserLogin->MaxOrderRef << endl;
+  int last_order_id = strtol(pRspUserLogin->MaxOrderRef, NULL, 10) / 100;
+  order_pool_.reset_sequence(last_order_id);
 }
 
 void FixTrader::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout,
@@ -98,6 +100,17 @@ void FixTrader::OnRspError(CThostFtdcRspInfoField *pRspInfo,
 
 void FixTrader::OnRtnOrder(CThostFtdcOrderField *pOrder) {
   cout << "OnRtnOrder" << endl;
+  int order_id = strtol(pOrder->OrderRef, NULL, 10) / 100;
+  Order *order = order_pool_.get(order_id);
+  if (order == NULL) {
+    cout << "Order-" << order_id << " not found!" << endl;
+    return;
+  }
+  if (pOrder->OrderStatus == THOST_FTDC_OST_NoTradeQueueing) {
+    snprintf(order->sys_order_id, sizeof(order->sys_order_id),
+             "%s", pOrder->OrderSysID);
+    order_pool_.add_pair(order->sys_order_id, order_id);
+  }
 }
 
 void FixTrader::OnRtnTrade(CThostFtdcTradeField *pTrade) {
@@ -109,7 +122,7 @@ void FixTrader::ReqOrderInsert(Order *order) {
   CThostFtdcInputOrderField req;
   memset(&req, 0, sizeof(req));
 
-  snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", order_id);
+  snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", order_id*100);
   snprintf(req.InstrumentID, sizeof(req.InstrumentID),
            "%s", order->instrument_id);
   if (order->direction == kDirectionBuy) {
@@ -117,14 +130,43 @@ void FixTrader::ReqOrderInsert(Order *order) {
   } else {
     req.Direction  = THOST_FTDC_D_Sell;
   }
+  if (order->order_type != kOrderTypeLimit) {
+    req.OrderPriceType = THOST_FTDC_OPT_AnyPrice;
+  } else {
+    req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
+  }
 
   strcpy(req.InvestorID, order->account);
   req.VolumeTotalOriginal = order->volume;
+  req.LimitPrice = order->limit_price;
 
   trader_api_->ReqOrderInsert(&req, 0);
 }
 
 void FixTrader::ReqOrderAction(int order_id) {
+  Order *action_order = new Order();
+  int action_order_id = order_pool_.add(action_order);
+  Order *order = order_pool_.get(order_id);
+  if (order == NULL) {
+    cout << "Order-" << order_id << " not found!" << endl;
+    return;
+  }
+
+  CThostFtdcInputOrderActionField req;
+  memset(&req, 0, sizeof(req));
+
+  req.OrderActionRef = action_order_id*100;
+  snprintf(req.OrderRef, sizeof(req.OrderRef), "%d", order_id*100);
+  snprintf(req.InvestorID, sizeof(req.InvestorID), "%s", order->account);
+  snprintf(req.OrderSysID, sizeof(req.OrderSysID), "%s", order->sys_order_id);
+  snprintf(req.InstrumentID, sizeof(req.InstrumentID), "%s",
+           order->instrument_id);  
+  if (order->direction == kDirectionBuy) {
+    req.ExchangeID[0] = THOST_FTDC_D_Buy;
+  } else {
+    req.ExchangeID[0] = THOST_FTDC_D_Sell;
+  }
+
   cout << "ReqOrderAction" << endl;
 }
 
@@ -149,16 +191,25 @@ int main() {
   Order *order = new Order();
   snprintf(order->account, sizeof(order->account), "%s", account.c_str());
   snprintf(order->symbol, sizeof(order->symbol), "%s", symbol.c_str());
-  snprintf(order->instrument_id, sizeof(order->instrument_id), "%s", instrument.c_str());
+  snprintf(order->instrument_id, sizeof(order->instrument_id), "%s",
+           instrument.c_str());
   order->limit_price = atof(price.c_str());
   // order->stop_price = atof(stop_price.c_str());
   order->volume = atoi(volume.c_str());
   order->direction = kDirectionBuy;
-  order->order_type = kOrderTypeMarket;
+  order->order_type = kOrderTypeLimit;
   order->time_in_force = kTimeInForceDay;
   fix_trader.ReqOrderInsert(order);
-
   sleep(5);
+
+  int order_id;
+  cout << "Please input the order-ID to cancel: ";
+  cin >> order_id;
+  if (order_id != -1) {
+    fix_trader.ReqOrderAction(order_id);
+  }
+  sleep(5);
+
   fix_trader.ReqUserLogout();
   sleep(5);
   return 0;
