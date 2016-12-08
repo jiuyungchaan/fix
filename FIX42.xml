@@ -2704,6 +2704,13 @@
    <value enum='3' description='REPRICING_OF_ORDER' />
    <value enum='4' description='BROKER_OPTION' />
    <value enum='5' description='PARTIAL_DECLINE_OF_ORDERQTY' />
+   <value enum='8' description='EXCHANGE' />
+   <value enum='100' description='CANCEL_ON_DISCONNECT' />
+   <value enum='103' description='CANCEL_OLDEST_DUE_TO_SELF_MATCH_PREV' />
+   <value enum='104' description='CANCEL_FROM_CME_GLOBEX_CREDIT_CONTROLS' />
+   <value enum='105' description='CANCEL_FROM_FIRMSOFT' />
+   <value enum='106' description='CANCEL_FROM_RMI' />
+   <value enum='107' description='CANCEL_NEWEST_DUE_TO_SELF_MATCH_PREV' />
   </field>
   <field number='379' name='BusinessRejectRefID' type='STRING' />
   <field number='380' name='BusinessRejectReason' type='INT'>
@@ -2848,12 +2855,16 @@
   <field number='5979' name='RequestTime' type='INT' />
   <field number='789' name='NextExpectedMsgSeqNum' type='INT' />
   <field number='527' name='SecondaryExecID' type='STRING' />
+  <field number='548' name='CrossID' type='STRING' />
+  <field number='549' name='CrossType' type='CHAR' />
+  <field number='961' name='HostCrossID' type='STRING' />
   <field number='9717' name='CorrelationClOrdID' type='STRING' />
   <field number='1603' name='ApplicationSystemName' type='STRING' />
   <field number='1604' name='TradingSystemVersion' type='STRING' />
   <field number='1605' name='ApplicationSystemVendor' type='STRING' />
   <field number='7928' name='SelfMatchPreventionID' type='STRING' />
   <field number='1188' name='Volatility' type='STRING' />
+  <field number='1031' name='CustOrderHandlingInst' type='STRING' />
   <field number='810' name='UnderlyingPx' type='PRICE' />
   <field number='1190' name='RiskFreeRate' type='PRICE' />
   <field number='811' name='OptionDelta' type='FLOAT' />
@@ -2863,6 +2874,10 @@
    <value enum='N' description='CANCEL_AGGRESSING' />
   </field>
   <field number='1028' name='ManualOrderIndicator' type='BOOLEAN'>
+   <value enum='N' description='NO' />
+   <value enum='Y' description='YES' />
+  </field>
+  <field number='1091' name='PreTradeAnonymity' type='BOOLEAN'>
    <value enum='N' description='NO' />
    <value enum='Y' description='YES' />
   </field>
