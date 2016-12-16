@@ -1,0 +1,17 @@
+
+CXX=g++
+SRC=FixFtdcTraderApi.cpp
+INCLUDE=-I../include
+CXXFLAGS=-Wall -shared -fpic --std=c++0x
+TARGET=libfixtraderapi.so
+LD_FLAGS=-lquickfix
+
+all:$(TARGET)
+
+clean:
+	rm libfixtraderapi.so
+
+$(TARGET):
+	$(CXX) $(SRC) $(INCLUDE) -o $(TARGET) $(CXXFLAGS) $(LD_FLAGS)
+	scp -P 1022 libfixtraderapi.so root@192.168.91.100:/usr/local/lib/
+	cp libfixtraderapi.so /home/rongcan/local/lib/
