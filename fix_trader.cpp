@@ -28,6 +28,10 @@ void FixTrader::Init(const string &config_file_name) {
   initiator_->start();
 }
 
+void FixTrader::Logout() {
+  initiator_->stop();
+}
+
 void FixTrader::onCreate(const FIX::SessionID& sessionID) {
   cout << "Session created : " << sessionID << endl;
   session_id_ = sessionID;

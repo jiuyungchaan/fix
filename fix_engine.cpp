@@ -79,20 +79,20 @@ int main(int argc, char **argv) {
   }
 
   FixTrader fix_trader;
-  cout << "initialize setting" << endl;
-  // FIX::SessionSettings settings(config_file_name);
-  FIX::SessionSettings *settings = new FIX::SessionSettings(config_file_name);
-  cout << "initialize store factory" << endl;
-  // FIX::FileStoreFactory store_factory(settings);
-  FIX::FileStoreFactory *store_factory = new FIX::FileStoreFactory(*settings);
-  cout << "initialize log factory" << endl;
-  FIX::ScreenLogFactory *log_factory = new FIX::ScreenLogFactory(*settings);
-  cout << "initialize initiator" << endl;
-  FIX::SocketInitiator initiator(fix_trader, *store_factory, *settings, 
-                                 *log_factory);
-
-  cout << "initiator start" << endl;
-  initiator.start();
+  // cout << "initialize setting" << endl;
+  // // FIX::SessionSettings settings(config_file_name);
+  // FIX::SessionSettings *settings = new FIX::SessionSettings(config_file_name);
+  // cout << "initialize store factory" << endl;
+  // // FIX::FileStoreFactory store_factory(settings);
+  // FIX::FileStoreFactory *store_factory = new FIX::FileStoreFactory(*settings);
+  // cout << "initialize log factory" << endl;
+  // FIX::ScreenLogFactory *log_factory = new FIX::ScreenLogFactory(*settings);
+  // cout << "initialize initiator" << endl;
+  // FIX::SocketInitiator initiator(fix_trader, *store_factory, *settings, 
+  //                                *log_factory);
+  // cout << "initiator start" << endl;
+  // initiator.start();
+  fix_trader.Init(config_file_name);
   sleep(10);
   // cout << "initiator run" << endl;
   // fix_trader.run();
@@ -190,7 +190,8 @@ int main(int argc, char **argv) {
   cout << "Confirm to quit ? y/n :";
   scanf("%c", &q);
   getchar();
-  initiator.stop();
+  // initiator.stop();
+  fix_trader.Logout();
   sleep(3);
 
   return 0;

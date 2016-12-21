@@ -86,6 +86,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
  public:
   FixTrader();// : last_msg_seq_num_(0) {}
   void Init(const std::string &config_file_name);
+  void Logout();
   void run();
   void ReqUserLogon(FIX::Message& message);
   void SendHeartbeat(FIX::Message& message);
