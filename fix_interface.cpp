@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "../api/include/FixFtdcTraderApi.h"
+#include "FixFtdcTraderApi.h"
 #include "order.h"
 
 class FixTrader : public CFixFtdcTraderSpi {

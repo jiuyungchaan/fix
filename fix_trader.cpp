@@ -266,7 +266,7 @@ void FixTrader::ReqUserLogon(FIX::Message& message) {
   //   message.getHeader().setField(msg_seq_num);
   // }
   // char sz_password[32] = "JY8FR";
-  char sz_password[32] = "4PVSK";
+  char sz_password[32] = "lfick";
   char sz_reset_seq_num_flag[5] = "N";
 
   // char raw_data[1024] = {0};
