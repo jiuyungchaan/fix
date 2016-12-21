@@ -7,6 +7,10 @@
 #include <quickfix/MessageCracker.h>
 #include <quickfix/Values.h>
 #include <quickfix/Mutex.h>
+#include <quickfix/FileStore.h>
+#include <quickfix/SocketInitiator.h>
+#include <quickfix/SessionSettings.h>
+#include <quickfix/Log.h>
 
 #include <quickfix/fix40/NewOrderSingle.h>
 #include <quickfix/fix40/ExecutionReport.h>
@@ -56,6 +60,7 @@
 
 #include <queue>
 #include <fstream>
+#include <string>
 
 #include "order.h"
 #include "audit_trail.h"
@@ -80,6 +85,7 @@
 class FixTrader : public FIX::Application, public FIX::MessageCracker {
  public:
   FixTrader();// : last_msg_seq_num_(0) {}
+  void Init(const std::string &config_file_name);
   void run();
   void ReqUserLogon(FIX::Message& message);
   void SendHeartbeat(FIX::Message& message);
@@ -168,7 +174,18 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   int last_msg_seq_num_;
   int last_begin_seq_no_;
   int last_end_seq_no_;
+  char password_[16];
+  char acc_session_id_[8];
+  char firm_id_[8];
+  char sender_sub_id_[32];
+  char target_sub_id_[32];
+  char sender_loc_id_[32];
+  char self_match_prev_id_[32];
   FIX::SessionID session_id_;
+  FIX::SessionSettings *settings_;
+  FIX::FileStoreFactory *store_factory_;
+  FIX::ScreenLogFactory *log_factory_;
+  FIX::SocketInitiator *initiator_;
   OrderPool order_pool_;
   AuditTrail audit_trail_;
   SequenceSerialization seq_serial_;
