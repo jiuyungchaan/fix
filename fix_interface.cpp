@@ -13,6 +13,7 @@
 class FixTrader : public CFixFtdcTraderSpi {
  public:
   FixTrader();
+  FixTrader(const std::string &account, const std::string &password);
   virtual ~FixTrader();
 
   void Init();
@@ -43,6 +44,13 @@ FixTrader::FixTrader() {
   // TODO
   user_id_ = "3T7004N";
   password_ = "4PVSK";
+  user_id_ = "W80004N";
+  password_ = "JY8FR";
+}
+
+FixTrader::FixTrader(const string &account, const string &password) {
+  user_id_ = account;
+  password_ = password;
 }
 
 FixTrader::~FixTrader() {
@@ -50,7 +58,8 @@ FixTrader::~FixTrader() {
 }
 
 void FixTrader::Init() {
-  trader_api_ = CFixFtdcTraderApi::CreateFtdcTraderApi("./test.cfg");
+  string config_file = user_id_ + ".cfg";
+  trader_api_ = CFixFtdcTraderApi::CreateFtdcTraderApi(config_file.c_str());
   trader_api_->RegisterSpi(this);
   trader_api_->RegisterFront(const_cast<char *>("NULL"));
   trader_api_->Init();
@@ -175,19 +184,39 @@ void FixTrader::ReqUserLogout() {
   trader_api_->ReqUserLogout(NULL, 0);
 }
 
-int main() {
-  FixTrader fix_trader;
+int main(int argc, char **argv) {
+  int arg_pos = 1;
+  string config_file_name = "./test.cfg";
+  string cmd_file_name = "";
+  string account = "W80004N";
+  string password = "JY8FR";
+  while (arg_pos < argc) {
+    if (strcmp(argv[arg_pos], "-f") == 0) {
+      config_file_name = argv[++arg_pos];
+    }
+    if (strcmp(argv[arg_pos], "-c") == 0) {
+      cmd_file_name = argv[++arg_pos];
+    }
+    if (strcmp(argv[arg_pos], "-a") == 0) {
+      account = argv[++arg_pos];
+    }
+    if (strcmp(argv[arg_pos], "-p") == 0) {
+      password = argv[++arg_pos];
+    }
+    ++arg_pos;
+  }
+  FixTrader fix_trader(account, password);
   fix_trader.Init();
 
   sleep(10);
 
-  string account = "3T7004N";
+  // string account = "3T7004N";
   string symbol = "GE";
   string instrument = "GEZ8";
   string price = "9776";
   string volume = "4";
   string direction = "buy";
-  string order_type = "market";
+  string order_type = "limit";
   string time_in_force = "day";
   Order *order = new Order();
   snprintf(order->account, sizeof(order->account), "%s", account.c_str());
