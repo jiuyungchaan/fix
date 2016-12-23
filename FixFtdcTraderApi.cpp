@@ -685,7 +685,7 @@ void ImplFixFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
 ImplFixFtdcTraderApi::ImplFixFtdcTraderApi(const char *configPath) :
     last_msg_seq_num_(0), acc_session_id_{0}, firm_id_{0}, sender_sub_id_{0},
     target_sub_id_{0}, sender_loc_id_{0}, self_match_prev_id_{0} {
-  snprintf(fix_config_path_, sizeof(fix_config_path_), configPath);
+  snprintf(fix_config_path_, sizeof(fix_config_path_), "%s", configPath);
 #ifndef __DEBUG__
   log_file_.open("./fix.log", fstream::out | fstream::app);
 #endif
@@ -731,8 +731,8 @@ void ImplFixFtdcTraderApi::SubscribePublicTopic(
 int ImplFixFtdcTraderApi::ReqUserLogin(
       CThostFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) {
   // save password and used for the real Login Request in toAdmin
-  snprintf(user_id_, sizeof(user_id_), pReqUserLoginField->UserID);
-  snprintf(user_passwd_, sizeof(user_passwd_), pReqUserLoginField->Password);
+  snprintf(user_id_, sizeof(user_id_), "%s", pReqUserLoginField->UserID);
+  snprintf(user_passwd_, sizeof(user_passwd_), "%s", pReqUserLoginField->Password);
   // CThostFtdcRspInfoField info_field;
   // memset(&info_field, 0, sizeof(info_field));
   initiator_->start();
@@ -753,7 +753,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   seq_serial_.DumpOrderID(order_id);
   string order_flow_id = seq_serial_.GenFlowIDStr(order_id);
   snprintf(input_order->order_flow_id, sizeof(input_order->order_flow_id),
-        order_flow_id.c_str());
+         "%s", order_flow_id.c_str());
   FIX::OrdType order_type = FIX::OrdType_LIMIT;
   if (pInputOrder->OrderPriceType == THOST_FTDC_OPT_AnyPrice) {
     order_type = FIX::OrdType_MARKET;
@@ -951,18 +951,19 @@ void ImplFixFtdcTraderApi::onCreate(const FIX::SessionID& sessionID) {
   string str_target_comp_id = sessionID.getTargetCompID().getValue();
   string acc_session_id = str_sender_comp_id.substr(0, 3);
   string firm_id = str_sender_comp_id.substr(3, 3);
-  snprintf(acc_session_id_, sizeof(acc_session_id_), acc_session_id.c_str());
-  snprintf(firm_id_, sizeof(firm_id_), firm_id.c_str());
+  snprintf(acc_session_id_, sizeof(acc_session_id_), "%s",
+           acc_session_id.c_str());
+  snprintf(firm_id_, sizeof(firm_id_), "%s", firm_id.c_str());
 
   const FIX::Dictionary& dict = settings_->get(sessionID);
   string target_sub_id = dict.getString("TARGETSUBID");
   string sender_sub_id = dict.getString("SENDERSUBID");
   string sender_loc_id = dict.getString("SENDERLOCATIONID");
   string self_match_prev_id = dict.getString("SELFMATCHPREVENTIONID");
-  snprintf(target_sub_id_, sizeof(target_sub_id_), target_sub_id.c_str());
-  snprintf(sender_sub_id_, sizeof(sender_sub_id_), sender_sub_id.c_str());
-  snprintf(sender_loc_id_, sizeof(sender_loc_id_), sender_loc_id.c_str());
-  snprintf(self_match_prev_id_, sizeof(self_match_prev_id_),
+  snprintf(target_sub_id_, sizeof(target_sub_id_), "%s", target_sub_id.c_str());
+  snprintf(sender_sub_id_, sizeof(sender_sub_id_), "%s", sender_sub_id.c_str());
+  snprintf(sender_loc_id_, sizeof(sender_loc_id_), "%s", sender_loc_id.c_str());
+  snprintf(self_match_prev_id_, sizeof(self_match_prev_id_), "%s",
            self_match_prev_id.c_str());
 
   int date = date_now();
@@ -1105,7 +1106,7 @@ void ImplFixFtdcTraderApi::onMessage(
   logon.getHeader().getField(target_sub_id);
 
   string str_target_sub_id = target_sub_id.getValue();
-  snprintf(sender_sub_id_, sizeof(sender_sub_id_), str_target_sub_id.c_str());
+  snprintf(sender_sub_id_, sizeof(sender_sub_id_), "%s", str_target_sub_id.c_str());
 }
 
 void ImplFixFtdcTraderApi::onMessage(
@@ -1120,17 +1121,20 @@ void ImplFixFtdcTraderApi::onMessage(
       int local_id = strtol(order_field.OrderRef, NULL, 10)/100;
       string sys_id(order_field.OrderSysID);
       order_pool_.add_pair(sys_id, local_id);
+      LogAuditTrail(report);
       trader_spi_->OnRtnOrder(&order_field);  // OnRspOrderInsert
     }
     break;
     case  FIX::ExecType_PARTIAL_FILL: {
       CThostFtdcTradeField trade_field = ToTradeField(report);
+      LogAuditTrail(report);
       trader_spi_->OnRtnTrade(&trade_field);   // OnRtnTrade
     }
     break;
     case FIX::ExecType_FILL: {
       CThostFtdcTradeField trade_field = ToTradeField(report);
       CThostFtdcOrderField order_field = ToOrderField(report);
+      LogAuditTrail(report);
       trader_spi_->OnRtnTrade(&trade_field);
       trader_spi_->OnRtnOrder(&order_field);
       // OnRtnOrder if necessary
@@ -1138,23 +1142,28 @@ void ImplFixFtdcTraderApi::onMessage(
     break;
     case FIX::ExecType_CANCELED: {
       CThostFtdcOrderField order_field = ToOrderField(report);
+      LogAuditTrail(report);
       trader_spi_->OnRtnOrder(&order_field);  // OnRtnOrder
     }
     break;
-    case FIX::ExecType_REPLACE:
+    case FIX::ExecType_REPLACE: {
       // OnRtnOrder of modified
-      break;
+      LogAuditTrail(report);
+    }
+    break;
     case FIX::ExecType_REJECTED: {
       CThostFtdcInputOrderField order_field = ToInputOrderField(report);
       CThostFtdcRspInfoField rsp_field = ToRspField(report);
+      LogAuditTrail(report);
       trader_spi_->OnRspOrderInsert(&order_field, &rsp_field, 0, true);      
     }
       break;
-    default:
+    default: {
+      LogAuditTrail(report);
+    }
       break;
   }  // switch exec_type
 
-  LogAuditTrail(report);
 }
 
 void ImplFixFtdcTraderApi::onMessage(
@@ -1162,9 +1171,8 @@ void ImplFixFtdcTraderApi::onMessage(
       const FIX::SessionID& sessionID) {
   CThostFtdcInputOrderActionField action_field = ToActionField(report);
   CThostFtdcRspInfoField rsp_field = ToRspField(report);
-  trader_spi_->OnRspOrderAction(&action_field, &rsp_field, 0, true);
-
   LogAuditTrail(report);
+  trader_spi_->OnRspOrderAction(&action_field, &rsp_field, 0, true);
 }
 
 void ImplFixFtdcTraderApi::onMessage(
@@ -1529,19 +1537,19 @@ CThostFtdcOrderField ImplFixFtdcTraderApi::ToOrderField(
   FIX::Account account;
   report.getField(account);
   string str_account = account.getValue();
-  snprintf(order_field.InvestorID, sizeof(order_field.InvestorID),
+  snprintf(order_field.InvestorID, sizeof(order_field.InvestorID), "%s",
            str_account.c_str());
 
   FIX::ClOrdID cl_ord_id;
   report.getField(cl_ord_id);
   string str_cl_ord_id = cl_ord_id.getValue();
-  snprintf(order_field.OrderRef, sizeof(order_field.OrderRef),
+  snprintf(order_field.OrderRef, sizeof(order_field.OrderRef), "%s",
            str_cl_ord_id.c_str());
 
   FIX::OrderID order_id;
   report.getField(order_id);
   string str_order_id = order_id.getValue();
-  snprintf(order_field.OrderSysID, sizeof(order_field.OrderSysID),
+  snprintf(order_field.OrderSysID, sizeof(order_field.OrderSysID), "%s",
            str_order_id.c_str());
   
   FIX::OrderQty order_qty;
@@ -1576,7 +1584,7 @@ CThostFtdcOrderField ImplFixFtdcTraderApi::ToOrderField(
   FIX::SecurityDesc security_desc;
   report.getField(security_desc);
   string str_security_desc = security_desc.getValue();
-  snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID),
+  snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID), "%s",
            str_security_desc.c_str());
 
   return order_field;
@@ -1591,13 +1599,13 @@ CThostFtdcTradeField ImplFixFtdcTraderApi::ToTradeField(
   FIX::Account account;
   report.getField(account);
   string str_account = account.getValue();
-  snprintf(trade_field.InvestorID, sizeof(trade_field.InvestorID),
+  snprintf(trade_field.InvestorID, sizeof(trade_field.InvestorID), "%s",
            str_account.c_str());
 
   FIX::ClOrdID cl_ord_id;
   report.getField(cl_ord_id);
   string str_cl_ord_id = cl_ord_id.getValue();
-  snprintf(trade_field.OrderRef, sizeof(trade_field.OrderRef),
+  snprintf(trade_field.OrderRef, sizeof(trade_field.OrderRef), "%s",
            str_cl_ord_id.c_str());
 
   FIX::LastPx last_px;
@@ -1613,7 +1621,7 @@ CThostFtdcTradeField ImplFixFtdcTraderApi::ToTradeField(
   FIX::OrderID order_id;
   report.getField(order_id);
   string str_order_id = order_id.getValue();
-  snprintf(trade_field.OrderSysID, sizeof(trade_field.OrderSysID),
+  snprintf(trade_field.OrderSysID, sizeof(trade_field.OrderSysID), "%s",
            str_order_id.c_str());
 
   FIX::Side side;
@@ -1627,7 +1635,7 @@ CThostFtdcTradeField ImplFixFtdcTraderApi::ToTradeField(
   FIX::SecurityDesc security_desc;
   report.getField(security_desc);
   string str_security_desc = security_desc.getValue();
-  snprintf(trade_field.InstrumentID, sizeof(trade_field.InstrumentID),
+  snprintf(trade_field.InstrumentID, sizeof(trade_field.InstrumentID), "%s",
            str_security_desc.c_str());
 
   return trade_field;
@@ -1641,13 +1649,13 @@ CThostFtdcInputOrderField ImplFixFtdcTraderApi::ToInputOrderField(
   FIX::Account account;
   report.getField(account);
   string str_account = account.getValue();
-  snprintf(order_field.InvestorID, sizeof(order_field.InvestorID),
+  snprintf(order_field.InvestorID, sizeof(order_field.InvestorID), "%s",
            str_account.c_str());
 
   FIX::ClOrdID cl_ord_id;
   report.getField(cl_ord_id);
   string str_cl_ord_id = cl_ord_id.getValue();
-  snprintf(order_field.OrderRef, sizeof(order_field.OrderRef),
+  snprintf(order_field.OrderRef, sizeof(order_field.OrderRef), "%s",
            str_cl_ord_id.c_str());
   
   FIX::OrderQty order_qty;
@@ -1671,7 +1679,7 @@ CThostFtdcInputOrderField ImplFixFtdcTraderApi::ToInputOrderField(
   FIX::SecurityDesc security_desc;
   report.getField(security_desc);
   string str_security_desc = security_desc.getValue();
-  snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID),
+  snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID), "%s",
            str_security_desc.c_str());
 
   return order_field;
@@ -1685,7 +1693,7 @@ CThostFtdcInputOrderActionField ImplFixFtdcTraderApi::ToActionField(
   FIX::OrigClOrdID orig_cl_ord_id;
   report.getField(orig_cl_ord_id);
   string str_orig_cl_ord_id = orig_cl_ord_id.getValue();
-  snprintf(action_field.OrderRef, sizeof(action_field.OrderRef),
+  snprintf(action_field.OrderRef, sizeof(action_field.OrderRef), "%s",
            str_orig_cl_ord_id.c_str());
 
   // SecurityDesc may be not found
