@@ -92,12 +92,18 @@ void FixTrader::fromApp(const FIX::Message& message,
   throw () {
   // throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
   //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
-  // FIX::MsgType msg_type;
+  log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
+
+  FIX::MsgType msg_type;
   FIX::MsgSeqNum last_msg_seq_num;
   message.getHeader().getField(last_msg_seq_num);
   last_msg_seq_num_ = last_msg_seq_num.getValue();
   // FIX::PosReqType pos_req_type;
-  // message.getHeader().getField(msg_type);
+  message.getHeader().getField(msg_type);
+  if (msg_type == "BZ") {
+
+    return;
+  }
   // string message_string = message.toString();
   // if (msg_type == "8") {
   //   cout << "Order Response is received:\n" << message_string << endl;
@@ -108,7 +114,6 @@ void FixTrader::fromApp(const FIX::Message& message,
   
   /// new version quickfix demo
   /// what crack does?
-  log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
   crack(message, sessionID);
   // cout << "FROM APP: " << message << endl;
 }
@@ -299,6 +304,42 @@ void FixTrader::onMessage(const CME_FIX_NAMESPACE::ResendRequest& request,
 
 
   cout << "Resend Request received: " << request.toXML() << endl;
+}
+
+void FixTrader::onMassActionReport(const FIX::Message& message,
+                                   const FIX::SessionID& sessionID) {
+  FIX::ClOrdID cl_order_id;
+  message.getField(cl_order_id);
+  string report_id = message.getField(1369);
+  string action_type = message.getField(1373);
+  string action_scope = message.getField(1374);
+  string action_response = message.getField(1375);
+  string affected_orders = message.getField(533);
+  string last_fragment = message.getField(893);
+  cout << "OnMassActionReport: ReportID-" << report_id
+       << " ActionType-" << action_type 
+       << " ActionScope-" << action_scope
+       << " ActionResponse-" << action_response
+       << " TotalAffectedOrders-" << affected_orders
+       << " LastFragment-" << last_fragment
+       << endl;
+  int total_affected = atoi(affected_orders.c_str());
+  if (total_affected > 0) {
+    int no_affected = atoi(message.getField(534).c_str());
+    FIX::OrigClOrdID orig_cl_ord_id;
+    FIX::CxlQty cxl_qty;
+    FIX::SecurityDesc security_desc;
+    message.getField(orig_cl_ord_id);
+    message.getField(cxl_qty);
+    message.getField(security_desc);
+    string affected_ord_id = message.getField(535);
+    cout << "Cancelled: NoAffectedOrders-" << no_affected
+         << " OrigClOrdID-" << orig_cl_ord_id
+         << " CxlQty-" << cxl_qty
+         << " SecurityDesc-" << security_desc
+         << " AffectedOrderID-" << affected_ord_id
+         << endl;
+  }
 }
 
 void FixTrader::OnFrontConnected() {
@@ -823,6 +864,35 @@ void FixTrader::ReqOrderAction(string str_symbol, string instrument_id,
        << instrument_id << " " << side << " " << local_id
        << " " << sys_id << endl;
   FIX::Session::sendToTarget(cancel_order, session_id_);
+}
+
+void FixTrader::ReqMassOrderAction(Order *order) {
+  FIX::Message mass_order_cancel;
+  order->order_id = order_pool_.add(order);
+  seq_serial_.DumpOrderID(order->order_id);
+  char cl_order_id_str[16];
+  snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d", order->order_id);
+  FIX::ClOrdID cl_order_id(cl_order_id_str);
+  FIX::SecurityDesc security_desc(order->instrument_id);
+  string timestamp(time_now());
+  FIX::TransactTime transact_time(timestamp.c_str());
+
+  mass_order_cancel.setField(cl_order_id);
+  mass_order_cancel.setField(security_desc);
+  mass_order_cancel.setField(transact_time);
+  int mass_action_type = 3;
+  int mass_action_scope = 1;
+  char action_type[8], action_scope[8], manual_order_indicator[4];
+  snprintf(action_type, sizeof(action_type), "%d", mass_action_type);
+  snprintf(action_scope, sizeof(action_scope), "%d", mass_action_scope);
+  snprintf(action_scope, sizeof(action_scope), "N");
+
+  mass_order_cancel.setField(1373, action_type);
+  mass_order_cancel.setField(1374, action_scope);
+  mass_order_cancel.setField(1028, manual_order_indicator);
+
+  cout << "ReqMassOrderAction: " << order->instrument_id << endl;
+  FIX::Session::sendToTarget(mass_order_cancel, session_id_);
 }
 
 void FixTrader::ReqOrderReplace(Order *order) {

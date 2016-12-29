@@ -2855,8 +2855,16 @@
   <field number='5979' name='RequestTime' type='INT' />
   <field number='789' name='NextExpectedMsgSeqNum' type='INT' />
   <field number='527' name='SecondaryExecID' type='STRING' />
+  <field number='1369' name='MassActionReportID' type='STRING' />
+  <field number='1373' name='MassActionType' type='INT' />
+  <field number='1374' name='MassActionScope' type='INT' />
+  <field number='1375' name='MassActionResponse' type='INT' />
+  <field number='6115' name='MassCancelRequestType' type='INT' />
   <field number='548' name='CrossID' type='STRING' />
   <field number='549' name='CrossType' type='CHAR' />
+  <field number='533' name='TotalAffectedOrders' type='INT' />
+  <field number='534' name='NoAffectedOrders' type='INT' />
+  <field number='535' name='AffectedOrderID' type='STRING' />
   <field number='961' name='HostCrossID' type='STRING' />
   <field number='9717' name='CorrelationClOrdID' type='STRING' />
   <field number='1603' name='ApplicationSystemName' type='STRING' />
@@ -2865,6 +2873,7 @@
   <field number='7928' name='SelfMatchPreventionID' type='STRING' />
   <field number='1188' name='Volatility' type='STRING' />
   <field number='1031' name='CustOrderHandlingInst' type='STRING' />
+  <field number='1300' name='MarketSegmentID' type='STRING' />
   <field number='810' name='UnderlyingPx' type='PRICE' />
   <field number='1190' name='RiskFreeRate' type='PRICE' />
   <field number='811' name='OptionDelta' type='FLOAT' />
@@ -2874,6 +2883,10 @@
    <value enum='N' description='CANCEL_AGGRESSING' />
   </field>
   <field number='1028' name='ManualOrderIndicator' type='BOOLEAN'>
+   <value enum='N' description='NO' />
+   <value enum='Y' description='YES' />
+  </field>
+  <field number='893' name='LastFragment' type='BOOLEAN'>
    <value enum='N' description='NO' />
    <value enum='Y' description='YES' />
   </field>

@@ -156,6 +156,16 @@ int main(int argc, char **argv) {
           order->orig_order_id = atoi(order_id.c_str());
           fix_trader.ReqOrderAction(order);
         }
+      }  else if (strcasecmp(request.c_str(), "cancelall") == 0) {
+        string instrument_id;
+        line_stream >> instrument_id;
+        if (instrument_id == "all") {
+        } else {
+          Order *order = new Order();
+          snprintf(order->instrument_id, sizeof(order->instrument_id),
+                   "%s", instrument_id.c_str());
+          fix_trader.ReqMassOrderAction(order);
+        }
       } else if (strcasecmp(request.c_str(), "modify") == 0) {
         string order_id, volume, price;
         line_stream >> order_id >> price >> volume;

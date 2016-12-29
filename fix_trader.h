@@ -101,6 +101,7 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   void ReqUserLogout();
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(Order *order);
+  void ReqMassOrderAction(Order *order);
   void ReqOrderAction(std::string symbol, std::string instrument_id,
                       std::string side, std::string local_id,
                       std::string sys_id, std::string account);
@@ -143,6 +144,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
                  const FIX::SessionID& sessionID);
   // void onMessage(const CME_FIX_NAMESPACE::Heartbeat& heartbeat,
   //                const FIX::SessionID& sessionID);
+  void onMassActionReport(const FIX::Message& message,
+                          const FIX::SessionID& sessionID);
   void queryHeader(FIX::Header& header);
 
   // virtual functions for Trader
