@@ -90,6 +90,7 @@ void FixTrader::onLogout(const FIX::SessionID& sessionID) {
 void FixTrader::fromApp(const FIX::Message& message, 
                         const FIX::SessionID& sessionID) 
   throw () {
+  cout << "fromApp" << message << endl;
   // throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
   //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
   log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
@@ -100,8 +101,8 @@ void FixTrader::fromApp(const FIX::Message& message,
   last_msg_seq_num_ = last_msg_seq_num.getValue();
   // FIX::PosReqType pos_req_type;
   message.getHeader().getField(msg_type);
-  if (msg_type == "BZ") {
-
+  if (msg_type == "n") {
+    cout << "XML NON FIX message" << endl;
     return;
   }
   // string message_string = message.toString();
