@@ -334,12 +334,13 @@ void FixTrader::onMassActionReport(const FIX::Message& message,
     FIX::SecurityDesc security_desc;
     message.getField(orig_cl_ord_id);
     message.getField(cxl_qty);
-    message.getField(security_desc);
+    // message.getField(security_desc);
+    // message.getFieldIfSet(security_desc);
     string affected_ord_id = message.getField(535);
     cout << "Cancelled: NoAffectedOrders-" << no_affected
          << " OrigClOrdID-" << orig_cl_ord_id
          << " CxlQty-" << cxl_qty
-         << " SecurityDesc-" << security_desc
+         // << " SecurityDesc-" << security_desc
          << " AffectedOrderID-" << affected_ord_id
          << endl;
   }
