@@ -346,7 +346,7 @@ void FixTrader::onMassActionReport(const FIX::Message& message,
 
 void FixTrader::onXmlNonFix(const FIX::Message& message,
                             const FIX::SessionID& sessionID) {
-  string xml_data = message.getField(213);
+  string xml_data = message.getHeader().getField(213);
   // strip header and tailor of <RTRF> </RTRF>
   string message_data = xml_data.substr(6, xml_data.size() - 6 - 7);
   for (size_t i = 0; i < message_data.size(); i++) {
