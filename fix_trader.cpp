@@ -90,7 +90,6 @@ void FixTrader::onLogout(const FIX::SessionID& sessionID) {
 void FixTrader::fromApp(const FIX::Message& message, 
                         const FIX::SessionID& sessionID) 
   throw () {
-  cout << "fromApp" << message << endl;
   // throw (FIX::FieldNotFound, FIX::IncorrectDataFormat,
   //        FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
   log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
@@ -101,9 +100,11 @@ void FixTrader::fromApp(const FIX::Message& message,
   last_msg_seq_num_ = last_msg_seq_num.getValue();
   // FIX::PosReqType pos_req_type;
   message.getHeader().getField(msg_type);
-  if (msg_type == "n") {
-    cout << "XML NON FIX message" << endl;
+  if (msg_type == FIX::MsgType_XMLnonFIX) {
+    onXmlNonFix(message, sessionID);
     return;
+  } else if (msg_type == FIX::MsgType_OrderMassActionReport) {
+    onMassActionReport(message, sessionID);
   }
   // string message_string = message.toString();
   // if (msg_type == "8") {
@@ -340,6 +341,28 @@ void FixTrader::onMassActionReport(const FIX::Message& message,
          << " SecurityDesc-" << security_desc
          << " AffectedOrderID-" << affected_ord_id
          << endl;
+  }
+}
+
+void FixTrader::onXmlNonFix(const FIX::Message& message,
+                            const FIX::SessionID& sessionID) {
+  string xml_data = message.getField(213);
+  // strip header and tailor of <RTRF> </RTRF>
+  string message_data = xml_data.substr(6, xml_data.size() - 6 - 7);
+  for (size_t i = 0; i < message_data.size(); i++) {
+    if (message_data[i] == '\002') {
+      message_data[i] = '\001';
+    }
+  }
+  cout << "Recover message data: " << message_data << endl;
+  FIX::Message report(message_data, false);
+  FIX::MsgType msg_type;
+  report.getHeader().getField(msg_type);
+  if (msg_type == FIX::MsgType_ExecutionReport) {
+    CME_FIX_NAMESPACE::ExecutionReport exe_report(report);
+    onMessage(exe_report, sessionID);
+  } else if (msg_type == FIX::MsgType_OrderMassActionReport) {
+    onMassActionReport(report, sessionID);
   }
 }
 

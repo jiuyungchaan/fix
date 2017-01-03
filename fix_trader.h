@@ -146,6 +146,8 @@ class FixTrader : public FIX::Application, public FIX::MessageCracker {
   //                const FIX::SessionID& sessionID);
   void onMassActionReport(const FIX::Message& message,
                           const FIX::SessionID& sessionID);
+  void onXmlNonFix(const FIX::Message& message,
+                   const FIX::SessionID& sessionID);
   void queryHeader(FIX::Header& header);
 
   // virtual functions for Trader
