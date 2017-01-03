@@ -1220,9 +1220,12 @@ void FixTrader::PrintExecutionReport(
   if (ord_status == FIX::OrdStatus_NEW ||
       ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
       ord_status == FIX::OrdStatus_FILLED) {
-    string self_match_prevention_id = report.getField(7928);
-    audit_log.WriteElement("self_match_prevention_id", 
-        self_match_prevention_id);
+    // if (report.getFieldIfSet(7928)) {
+    if (report.isSetField(7928)) {
+      string self_match_prevention_id = report.getField(7928);
+      audit_log.WriteElement("self_match_prevention_id", 
+          self_match_prevention_id);
+    }
   }
 
 
