@@ -105,6 +105,7 @@ void FixTrader::fromApp(const FIX::Message& message,
     return;
   } else if (msg_type == FIX::MsgType_OrderMassActionReport) {
     onMassActionReport(message, sessionID);
+    return;
   }
   // string message_string = message.toString();
   // if (msg_type == "8") {
@@ -364,6 +365,7 @@ void FixTrader::onXmlNonFix(const FIX::Message& message,
   } else if (msg_type == FIX::MsgType_OrderMassActionReport) {
     onMassActionReport(report, sessionID);
   }
+  cout << "onXmlNonFix DONE" << endl;
 }
 
 void FixTrader::OnFrontConnected() {
