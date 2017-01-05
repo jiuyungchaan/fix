@@ -188,6 +188,8 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
                      int nRequestID);
   int ReqOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction,
                      int nRequestID);
+  int ReqMassOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction,
+                         int nRequestID);
 
 
  protected:
@@ -243,6 +245,10 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::BusinessMessageReject& reject,
                  const FIX::SessionID& sessionID);
+  void onMassActionReport(const FIX::Message& message,
+                          const FIX::SessionID& sessionID);
+  void onXmlNonFix(const FIX::Message& message,
+                   const FIX::SessionID& sessionID);
 
   void LogAuditTrail(const CME_FIX_NAMESPACE::ExecutionReport& report);
   void LogAuditTrail(const CME_FIX_NAMESPACE::OrderCancelReject& report);
@@ -945,6 +951,38 @@ int ImplFixFtdcTraderApi::ReqOrderAction(
   return 0;
 }
 
+int ImplFixFtdcTraderApi::ReqMassOrderAction(
+      CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID) {
+  FIX::Message mass_order_cancel;
+  int action_id = pInputOrderAction->OrderActionRef / 100;
+  seq_serial_.DumpOrderID(action_id);
+  char cl_order_id_str[32];
+  snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d",
+           pInputOrderAction->OrderActionRef);
+  FIX::ClOrdID cl_order_id(cl_order_id_str);
+  FIX::SecurityDesc security_desc(pInputOrderAction->InstrumentID);
+  string timestamp(time_now());
+  FIX::TransactTime transact_time(timestamp.c_str());
+
+  mass_order_cancel.setField(cl_order_id);
+  mass_order_cancel.setField(security_desc);
+  mass_order_cancel.setField(transact_time);
+  int mass_action_type = 3;
+  int mass_action_scope = 1;
+  char action_type[8], action_scope[8], manual_order_indicator[4];
+  snprintf(action_type, sizeof(action_type), "%d", mass_action_type);
+  snprintf(action_scope, sizeof(action_scope), "%d", mass_action_scope);
+  snprintf(action_scope, sizeof(action_scope), "N");
+
+  mass_order_cancel.setField(1373, action_type);
+  mass_order_cancel.setField(1374, action_scope);
+  mass_order_cancel.setField(1028, manual_order_indicator);
+
+  cout << "ReqMassOrderAction: " << pInputOrderAction->InstrumentID << endl;
+  FIX::Session::sendToTarget(mass_order_cancel, session_id_);
+  return 0;
+}
+
 void ImplFixFtdcTraderApi::onCreate(const FIX::SessionID& sessionID) {
   session_id_ = sessionID;
   string str_sender_comp_id = sessionID.getSenderCompID().getValue();
@@ -1081,12 +1119,95 @@ void ImplFixFtdcTraderApi::fromApp(const FIX::Message& message,
       const FIX::SessionID& sessionID)
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat,
           FIX::IncorrectTagValue, FIX::UnsupportedMessageType) {
+  FIX::MsgType msg_type;
+  message.getHeader().getField(msg_type);
+  if (msg_type == FIX::MsgType_XMLnonFIX) {
+    onXmlNonFix(message, sessionID);
+    return;
+  } else if (msg_type == FIX::MsgType_OrderMassActionReport) {
+    onMassActionReport(message, sessionID);
+    return;
+  }
+
   crack(message, sessionID);
 #ifdef __DEBUG__
   cout << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
 #else
   log_file_ << "[" << time_now() << "]FROM APP XML: " << message.toXML() << endl;
 #endif
+}
+
+void ImplFixFtdcTraderApi::onXmlNonFix(const FIX::Message& message,
+      const FIX::SessionID& sessionID) {
+  string xml_data = message.getHeader().getField(213);
+  // strip header and tailor of <RTRF> </RTRF>
+  string message_data = xml_data.substr(6, xml_data.size() - 6 - 7);
+  for (size_t i = 0; i < message_data.size(); i++) {
+    if (message_data[i] == '\002') {
+      message_data[i] = '\001';
+    }
+  } // decode xml data
+  FIX::Message report(message_data, false);
+  FIX::MsgType msg_type;
+  report.getHeader().getField(msg_type);
+  if (msg_type == FIX::MsgType_ExecutionReport) {
+    CME_FIX_NAMESPACE::ExecutionReport exe_report(report);
+    onMessage(exe_report, sessionID);
+  } else if (msg_type == FIX::MsgType_OrderMassActionReport) {
+    onMassActionReport(report, sessionID);
+  }
+}
+
+void ImplFixFtdcTraderApi::onMassActionReport(const FIX::Message& message,
+      const FIX::SessionID& sessionID) {
+  FIX::ClOrdID cl_order_id;
+  message.getField(cl_order_id);
+  string report_id = message.getField(1369);
+  string action_type = message.getField(1373);
+  string action_scope = message.getField(1374);
+  string action_response = message.getField(1375);
+  string affected_orders = message.getField(533);
+  string last_fragment = message.getField(893);
+  int total_affected = atoi(message.getField(534).c_str());
+  if (total_affected > 0) {
+    CThostFtdcOrderField order_field;
+    memset(&order_field, 0, sizeof(order_field));
+
+    FIX::Account account;
+    if (message.getFieldIfSet(account)) {
+      string str_account = account.getValue();
+      snprintf(order_field.InvestorID, sizeof(order_field.InvestorID),
+               str_account.c_str());
+    }
+
+    FIX::OrigClOrdID orig_cl_ord_id;
+    message.getField(orig_cl_ord_id);
+    string str_cl_ord_id = orig_cl_ord_id.getValue();
+    snprintf(order_field.OrderRef, sizeof(order_field.OrderRef),
+             str_cl_ord_id.c_str());
+
+    if (message.isSetField(535)) {
+      string str_order_id = message.getField(535);
+      snprintf(order_field.OrderSysID, sizeof(order_field.OrderSysID),
+               str_order_id.c_str());
+    }
+
+    // FIX::OrderQty order_qty;
+    // report.getField(order_qty);
+    // int int_order_qty = order_qty.getValue();
+    // order_field.VolumeTotalOriginal = int_order_qty;
+
+    order_field.OrderStatus = THOST_FTDC_OST_Canceled;
+
+    FIX::SecurityDesc security_desc;
+    if (message.getFieldIfSet(security_desc)) {
+      string str_security_desc = security_desc.getValue();
+      snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID),
+               str_security_desc.c_str());
+    }
+
+    trader_spi_->OnRtnOrder(&order_field);
+  }
 }
 
 void ImplFixFtdcTraderApi::onMessage(
@@ -1261,9 +1382,12 @@ void ImplFixFtdcTraderApi::LogAuditTrail(
   if (ord_status == FIX::OrdStatus_NEW ||
       ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
       ord_status == FIX::OrdStatus_FILLED) {
-    string self_match_prevention_id = report.getField(7928);
-    audit_log.WriteElement("self_match_prevention_id", 
-        self_match_prevention_id);
+    // string self_match_prevention_id = report.getField(7928);
+    if (report.isSetField(7928)) {
+      string self_match_prevention_id = report.getField(7928);
+      audit_log.WriteElement("self_match_prevention_id", 
+          self_match_prevention_id);
+    }
   }
 
 
