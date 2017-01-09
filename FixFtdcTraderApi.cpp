@@ -755,9 +755,11 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
       CThostFtdcInputOrderField *pInputOrder, int nRequestID) {
   InputOrder *input_order = order_pool_.add(pInputOrder);
   // real order-ID equal OrderRef/MAX_STRATEGY_NUM(100)
-  int order_id = atoi(pInputOrder->OrderRef) / 100;
+  // int order_id = atoi(pInputOrder->OrderRef) / 100;
+  int order_id = atoi(pInputOrder->OrderRef);
   seq_serial_.DumpOrderID(order_id);
-  string order_flow_id = seq_serial_.GenFlowIDStr(order_id);
+  int no_stid = order_id / 100;
+  string order_flow_id = seq_serial_.GenFlowIDStr(no_stid);
   snprintf(input_order->order_flow_id, sizeof(input_order->order_flow_id),
          "%s", order_flow_id.c_str());
   FIX::OrdType order_type = FIX::OrdType_LIMIT;
@@ -855,7 +857,8 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
 int ImplFixFtdcTraderApi::ReqOrderAction(
       CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID) {
   // real order-ID equal to OrderRef / MAX_STRATEGY_NUM(100)
-  int action_id = pInputOrderAction->OrderActionRef / 100;
+  // int action_id = pInputOrderAction->OrderActionRef / 100;
+  int action_id = pInputOrderAction->OrderActionRef;
   seq_serial_.DumpOrderID(action_id);
   int local_order_ref = strtol(pInputOrderAction->OrderRef, NULL, 10) / 100;
   InputOrder *input_order = order_pool_.get(local_order_ref);
@@ -954,7 +957,8 @@ int ImplFixFtdcTraderApi::ReqOrderAction(
 int ImplFixFtdcTraderApi::ReqMassOrderAction(
       CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID) {
   FIX::Message mass_order_cancel;
-  int action_id = pInputOrderAction->OrderActionRef / 100;
+  // int action_id = pInputOrderAction->OrderActionRef / 100;
+  int action_id = pInputOrderAction->OrderActionRef;
   seq_serial_.DumpOrderID(action_id);
   char cl_order_id_str[32];
   snprintf(cl_order_id_str, sizeof(cl_order_id_str), "%d",
@@ -1034,7 +1038,8 @@ void ImplFixFtdcTraderApi::onLogon(const FIX::SessionID& sessionID) {
   memset(&login_field, 0, sizeof(login_field));
   // return Max Local Order ID should be equal to 
   // Real Order ID * MAX_STRATEGY_NUM(100)
-  int max_order_id = seq_serial_.GetCurOrderID() * 100;
+  // int max_order_id = seq_serial_.GetCurOrderID() * 100;
+  int max_order_id = seq_serial_.GetCurOrderID();
   snprintf(login_field.MaxOrderRef, sizeof(login_field.MaxOrderRef), "%d",
            max_order_id);
   trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);
@@ -1177,19 +1182,19 @@ void ImplFixFtdcTraderApi::onMassActionReport(const FIX::Message& message,
     if (message.getFieldIfSet(account)) {
       string str_account = account.getValue();
       snprintf(order_field.InvestorID, sizeof(order_field.InvestorID),
-               str_account.c_str());
+               "%s", str_account.c_str());
     }
 
     FIX::OrigClOrdID orig_cl_ord_id;
     message.getField(orig_cl_ord_id);
     string str_cl_ord_id = orig_cl_ord_id.getValue();
     snprintf(order_field.OrderRef, sizeof(order_field.OrderRef),
-             str_cl_ord_id.c_str());
+             "%s", str_cl_ord_id.c_str());
 
     if (message.isSetField(535)) {
       string str_order_id = message.getField(535);
       snprintf(order_field.OrderSysID, sizeof(order_field.OrderSysID),
-               str_order_id.c_str());
+               "%s", str_order_id.c_str());
     }
 
     // FIX::OrderQty order_qty;
@@ -1203,7 +1208,7 @@ void ImplFixFtdcTraderApi::onMassActionReport(const FIX::Message& message,
     if (message.getFieldIfSet(security_desc)) {
       string str_security_desc = security_desc.getValue();
       snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID),
-               str_security_desc.c_str());
+               "%s", str_security_desc.c_str());
     }
 
     trader_spi_->OnRtnOrder(&order_field);
