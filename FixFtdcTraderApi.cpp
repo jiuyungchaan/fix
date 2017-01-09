@@ -1692,6 +1692,11 @@ CThostFtdcOrderField ImplFixFtdcTraderApi::ToOrderField(
     order_field.OrderStatus = THOST_FTDC_OST_NoTradeQueueing;
   } else if (ord_status == FIX::OrdStatus_CANCELED) {
     order_field.OrderStatus = THOST_FTDC_OST_Canceled;
+    FIX::OrigClOrdID orig_cl_ord_id;
+    report.getField(orig_cl_ord_id);
+    string str_orig_cl_ord_id = orig_cl_ord_id.getValue();
+    snprintf(order_field.OrderRef, sizeof(order_field.OrderRef), "%s",
+             str_cl_ord_id.c_str());
     // or THOST_FTDC_OST_PartTradedNotQueueing ?
   } else if (ord_status == FIX::OrdStatus_FILLED) {
     order_field.OrderStatus = THOST_FTDC_OST_AllTraded;
