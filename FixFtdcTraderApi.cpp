@@ -190,7 +190,10 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
                      int nRequestID);
   int ReqMassOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction,
                          int nRequestID);
-
+  int ReqQryInvestorPosition(CThostFtdcQryInvestorPositionField *pQryInvestorPosition,
+                             int nRequestID);
+  int ReqQryTradingAccount(CThostFtdcQryTradingAccountField *pQryTradingAccount,
+                           int nRequestID);
 
  protected:
   virtual ~ImplFixFtdcTraderApi();
@@ -987,6 +990,18 @@ int ImplFixFtdcTraderApi::ReqMassOrderAction(
   return 0;
 }
 
+int ImplFixFtdcTraderApi::ReqQryInvestorPosition(
+      CThostFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID) {
+  // TODO
+  return 0;
+}
+
+int ImplFixFtdcTraderApi::ReqQryTradingAccount(
+      CThostFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) {
+  // TODO
+  return 0;
+}
+
 void ImplFixFtdcTraderApi::onCreate(const FIX::SessionID& sessionID) {
   session_id_ = sessionID;
   string str_sender_comp_id = sessionID.getSenderCompID().getValue();
@@ -1403,6 +1418,11 @@ void ImplFixFtdcTraderApi::LogAuditTrail(
   if (input_order != NULL) {
     order_flow_id = input_order->order_flow_id;
   } else {
+    int real_order_id = atoi(cl_ord_id.getValue().c_str()) / 100;
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "%s%08d",
+             target_comp_id.getValue().c_str(), real_order_id);
+    order_flow_id = buffer;
     printf("InputOrder [SysID-%s] not found!\n", order_id.getValue().c_str());
   }
 
@@ -1489,6 +1509,11 @@ void ImplFixFtdcTraderApi::LogAuditTrail(
   if (input_order != NULL) {
     order_flow_id = input_order->order_flow_id;
   } else {
+    int real_order_id = atoi(orig_cl_order_id.getValue().c_str()) / 100;
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "%s%08d",
+             target_comp_id.getValue().c_str(), real_order_id);
+    order_flow_id = buffer;
     printf("InputOrder [SysID-%s] not found!\n", order_id.getValue().c_str());
   }
 

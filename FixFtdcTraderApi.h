@@ -49,6 +49,12 @@ class CFixFtdcTraderSpi {
   ///成交通知
   virtual void OnRtnTrade(CThostFtdcTradeField *pTrade) {};
 
+  ///ÇëÇó²éÑ¯Í¶×ÊÕß³Ö²ÖÏìÓ¦
+  virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
+
+  ///ÇëÇó²éÑ¯×Ê½ðÕË»§ÏìÓ¦
+  virtual void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
+
 };
 
 class CFixFtdcTraderApi {
@@ -107,6 +113,12 @@ class CFixFtdcTraderApi {
   ///报单操作请求
   virtual int ReqOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction,
                              int nRequestID) = 0;
+
+  ///ÇëÇó²éÑ¯Í¶×ÊÕß³Ö²Ö
+  virtual int ReqQryInvestorPosition(CThostFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID) = 0;
+
+  ///ÇëÇó²éÑ¯×Ê½ðÕË»§
+  virtual int ReqQryTradingAccount(CThostFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) = 0;
 
  protected:
   ~CFixFtdcTraderApi() {};
