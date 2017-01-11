@@ -96,10 +96,13 @@
 class AuditLog {
  public:
   AuditLog();
+  AuditLog(std::string logstr);
   ~AuditLog();
 
+  void ClearAll();
   void ClearElement(std::string key);
 
+  void WriteVector(const std::vector<std::string>& v);
   int WriteElement(std::string key, std::string value);
   int WriteElement(std::string key, const char *value);
   int WriteElement(std::string key, int value);
@@ -108,7 +111,7 @@ class AuditLog {
 
   std::string ToString();
 
- private:
+ // private:
   std::map<std::string, std::string> elements;
 };
 
@@ -304,6 +307,10 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
 
 const char *time_now();
 int date_now();
+int date_yesterday();
+void split(const std::string& str, const std::string& del,
+           std::vector<std::string>& v);
+
 
 /* ===============================================
    =============== IMPLEMENTATION ================ */
@@ -311,6 +318,28 @@ int date_now();
 using namespace std;
 
 AuditLog::AuditLog() {
+  ClearAll();
+}
+
+AuditLog::AuditLog(string logstr) {
+  ClearAll();
+  vector<string> v;
+  split(logstr, ",", v);
+  if (v.size() == 46) {
+    WriteVector(v);
+  } else if (v.size() == 45) {
+    v.push_back("");
+    WriteVector(v);
+  } else {
+    cout << "Invalid audit log: " << logstr << endl;
+  }
+}
+
+AuditLog::~AuditLog() {
+  // TODO
+}
+
+void AuditLog::ClearAll() {
   ClearElement("sending_timestamps");
   ClearElement("receiving_timestamps");
   ClearElement("message_direction");
@@ -359,10 +388,6 @@ AuditLog::AuditLog() {
   ClearElement("offer_size");
 }
 
-AuditLog::~AuditLog() {
-  // TODO
-}
-
 void AuditLog::ClearElement(string key) {
   map<string, string>::iterator iter = elements.find(key);
   if (iter == elements.end()) {
@@ -370,6 +395,55 @@ void AuditLog::ClearElement(string key) {
   } else {
     iter->second = "";
   }
+}
+
+void AuditLog::WriteVector(const vector<string>& v) {
+  elements["sending_timestamps"] = v[0];
+  elements["receiving_timestamps"] = v[1];
+  elements["message_direction"] = v[2];
+  elements["operator_id"] = v[3];
+  elements["self_match_prevention_id"] = v[4];
+  elements["account_number"] = v[5];
+  elements["session_id"] = v[6];
+  elements["executing_firm_id"] = v[7];
+  elements["manual_order_identifier"] = v[8];
+  elements["message_type"] = v[9];
+  elements["customer_type_indicator"] = v[10];
+  elements["origin"] = v[11];
+  elements["cme_globex_message_id"] = v[12];
+  elements["message_link_id"] = v[13];
+  elements["order_flow_id"] = v[14];
+  elements["spread_leg_link_id"] = v[15];
+  elements["instrument_description"] = v[16];
+  elements["market_segment_id"] = v[17];
+  elements["client_order_id"] = v[18];
+  elements["cme_globex_order_id"] = v[19];
+  elements["buy_sell_indicator"] = v[20];
+  elements["quantity"] = v[21];
+  elements["limit_price"] = v[22];
+  elements["stop_price"] = v[23];
+  elements["order_type"] = v[24];
+  elements["order_qualifier"] = v[25];
+  elements["ifm_flag"] = v[26];
+  elements["display_quantity"] = v[27];
+  elements["minimum_quantity"] = v[28];
+  elements["country_of_origin"] = v[29];
+  elements["fill_price"] = v[30];
+  elements["fill_quantity"] = v[31];
+  elements["cumulative_quantity"] = v[32];
+  elements["remaining_quantity"] = v[33];
+  elements["aggressor_flag"] = v[34];
+  elements["source_of_cancellation"] = v[35];
+  elements["reject_reason"] = v[36];
+  elements["processed_quotes"] = v[37];
+  elements["cross_id"] = v[38];
+  elements["quote_request_id"] = v[39];
+  elements["message_quote_id"] = v[40];
+  elements["quote_entry_id"] = v[41];
+  elements["bid_price"] = v[42];
+  elements["bid_size"] = v[43];
+  elements["offer_price"] = v[44];
+  elements["offer_size"] = v[45];
 }
 
 int AuditLog::WriteElement(string key, string value) {
@@ -1932,4 +2006,41 @@ int date_now() {
              (1 + timeinfo->tm_mon) * 100 +
              timeinfo->tm_mday;
   return date;
+}
+
+int date_yesterday() {
+  // static char timestamp_str[32];
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+  int year = 1900 + timeinfo->tm_year;
+  int month = 1 + timeinfo->tm_mon;
+  int day = timeinfo->tm_mday;
+
+  int mon_days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  if (year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) {
+    mon_days[1] = 29;
+  }
+  int year_yes = (day == 1 && month == 1)? year - 1 : year;
+  int month_yes = (day == 1)? month - 1 : month;
+  month_yes = (month_yes == 0)? 12 : month_yes;
+  int day_yes = (day == 1)? mon_days[month_yes - 1] : day - 1;
+
+  int date = year_yes * 10000 + month_yes * 100 + day_yes;
+  return date;
+}
+
+void split(const string& str, const string& del, vector<string>& v) {
+  string::size_type start, end;
+  start = 0;
+  end = str.find(del);
+  while(end != string::npos) {
+    v.push_back(str.substr(start, end - start));
+    start = end + del.size();
+    end = str.find(del, start);
+  }
+  if (start != str.length()) {
+    v.push_back(str.substr(start));
+  }
 }
