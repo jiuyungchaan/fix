@@ -1640,8 +1640,10 @@ void ImplFixFtdcTraderApi::LoadSettlementPosition(
 			cout << "LoadSettlementPosition:" << direction << " " << instrument
 					 << " " << position << " " << price << endl;
 			if (direction == "long") {
+				position_pool_.SetYdLongPosition(instrument, position, price);
 				position_pool_.AddLongTrade(instrument, position, price);
 			} else if (direction == "short") {
+				position_pool_.SetYdShortPosition(instrument, position, price);
 				position_pool_.AddShortTrade(instrument, position, price);
 			}
 		}

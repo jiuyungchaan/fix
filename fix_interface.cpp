@@ -19,6 +19,7 @@ class FixTrader : public CFixFtdcTraderSpi {
   void Init();
   void ReqOrderInsert(Order *order);
   void ReqOrderAction(int order_id);
+  void ReqQryInvestorPosition();
   void ReqUserLogout();
 
   virtual void OnFrontConnected();
@@ -27,6 +28,8 @@ class FixTrader : public CFixFtdcTraderSpi {
   virtual void OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   virtual void OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   virtual void OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+  virtual void OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+  virtual void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
   virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   virtual void OnRtnOrder(CThostFtdcOrderField *pOrder);
   virtual void OnRtnTrade(CThostFtdcTradeField *pTrade);
@@ -46,6 +49,8 @@ FixTrader::FixTrader() {
   password_ = "4PVSK";
   user_id_ = "W80004N";
   password_ = "JY8FR";
+  user_id_ = "OBCJDDN";
+  password_ = "dense";
 }
 
 FixTrader::FixTrader(const string &account, const string &password) {
@@ -100,6 +105,15 @@ void FixTrader::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder,
 void FixTrader::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, 
       CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
   cout << "OnRspOrderAction" << endl;
+}
+
+void FixTrader::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition,
+      CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+  cout << "OnRspQryInvestorPosition:" << pInvestorPosition->InstrumentID
+       << " " << pInvestorPosition->PosiDirection 
+       << " " << pInvestorPosition->YdPosition
+       << " " << pInvestorPosition->Position
+       << " " << pInvestorPosition->TradingDay << endl;
 }
 
 void FixTrader::OnRspError(CThostFtdcRspInfoField *pRspInfo,
@@ -180,6 +194,12 @@ void FixTrader::ReqOrderAction(int order_id) {
   cout << "ReqOrderAction" << endl;
 }
 
+void FixTrader::ReqQryInvestorPosition() {
+  CThostFtdcQryInvestorPositionField req;
+  memset(&req, 0, sizeof(req));
+  trader_api_->ReqQryInvestorPosition(&req, 0);
+}
+
 void FixTrader::ReqUserLogout() {
   trader_api_->ReqUserLogout(NULL, 0);
 }
@@ -210,6 +230,7 @@ int main(int argc, char **argv) {
 
   sleep(10);
 
+/*
   // string account = "3T7004N";
   string symbol = "GE";
   string instrument = "GEZ8";
@@ -239,6 +260,16 @@ int main(int argc, char **argv) {
     fix_trader.ReqOrderAction(order_id);
   }
   sleep(5);
+*/
+
+  int count = 1;
+  while(true) {
+    fix_trader.ReqQryInvestorPosition();
+    count++;
+    sleep(2);
+    if (count > 10)
+      break;
+  }
 
   fix_trader.ReqUserLogout();
   sleep(5);
