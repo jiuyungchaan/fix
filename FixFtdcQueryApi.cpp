@@ -1201,7 +1201,7 @@ void ImplFixFtdcTraderApi::onMessage(
 			string sys_id(order_field.OrderSysID);
 			order_pool_.add_pair(sys_id, local_id);
 			LogAuditTrail(report);
-			trader_spi_->OnRtnOrder(&order_field);  // OnRspOrderInsert
+			// trader_spi_->OnRtnOrder(&order_field);  // OnRspOrderInsert
 		}
 		break;
 		case  FIX::ExecType_PARTIAL_FILL: {
@@ -1214,7 +1214,7 @@ void ImplFixFtdcTraderApi::onMessage(
 							trade_field.Volume, trade_field.Price);
 			}
 			LogAuditTrail(report);
-			trader_spi_->OnRtnTrade(&trade_field);   // OnRtnTrade
+			// trader_spi_->OnRtnTrade(&trade_field);   // OnRtnTrade
 		}
 		break;
 		case FIX::ExecType_FILL: {
@@ -1228,15 +1228,15 @@ void ImplFixFtdcTraderApi::onMessage(
 							trade_field.Volume, trade_field.Price);
 			}
 			LogAuditTrail(report);
-			trader_spi_->OnRtnTrade(&trade_field);
-			trader_spi_->OnRtnOrder(&order_field);
+			// trader_spi_->OnRtnTrade(&trade_field);
+			// trader_spi_->OnRtnOrder(&order_field);
 			// OnRtnOrder if necessary
 		}
 		break;
 		case FIX::ExecType_CANCELED: {
 			CThostFtdcOrderField order_field = ToOrderField(report);
 			LogAuditTrail(report);
-			trader_spi_->OnRtnOrder(&order_field);  // OnRtnOrder
+			// trader_spi_->OnRtnOrder(&order_field);  // OnRtnOrder
 		}
 		break;
 		case FIX::ExecType_REPLACE: {
@@ -1248,7 +1248,7 @@ void ImplFixFtdcTraderApi::onMessage(
 			CThostFtdcInputOrderField order_field = ToInputOrderField(report);
 			CThostFtdcRspInfoField rsp_field = ToRspField(report);
 			LogAuditTrail(report);
-			trader_spi_->OnRspOrderInsert(&order_field, &rsp_field, 0, true);      
+			// trader_spi_->OnRspOrderInsert(&order_field, &rsp_field, 0, true);      
 		}
 			break;
 		default: {
@@ -1338,7 +1338,6 @@ void ImplFixFtdcTraderApi::LogAuditTrail(
 	report.getField(order_qty);
 	report.getField(leaves_qty);
 	report.getField(ord_type);
-	report.getField(price);
 	report.getField(side);
 	report.getField(time_in_force);
 	report.getField(transact_time);
@@ -1351,6 +1350,9 @@ void ImplFixFtdcTraderApi::LogAuditTrail(
 	string firm_id = str_target_comp_id.substr(3, 3);
 	string manual_order_identifier = report.getField(1028);
 
+	if (report.getFieldIfSet(price)) {
+		audit_log.WriteElement("limit_price", price.getValue());
+	}
 	if (ord_status == FIX::OrdStatus_NEW ||
 			ord_status == FIX::OrdStatus_PARTIALLY_FILLED ||
 			ord_status == FIX::OrdStatus_FILLED) {
@@ -1403,7 +1405,6 @@ void ImplFixFtdcTraderApi::LogAuditTrail(
 	audit_log.WriteElement("cme_globex_order_id", order_id.getValue());
 	audit_log.WriteElement("buy_sell_indicator", side.getValue());
 	audit_log.WriteElement("quantity", (int)order_qty.getValue());
-	audit_log.WriteElement("limit_price", price.getValue());
 	audit_log.WriteElement("order_type", ord_type.getValue());
 	audit_log.WriteElement("order_qualifier", time_in_force);
 	// audit_log.WriteElement("ifm_flag", "N");
