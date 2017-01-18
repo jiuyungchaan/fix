@@ -290,6 +290,7 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
 	char target_sub_id_[32];
 	char sender_loc_id_[32];
 	char self_match_prev_id_[32];
+	char investor_id[32];
 
 	FIX::SessionSettings *settings_;
 	FIX::FileStoreFactory *store_factory_;
@@ -805,7 +806,7 @@ int ImplFixFtdcTraderApi::PositionPool::GetNetPos(const string& instrument) {
 
 ImplFixFtdcTraderApi::ImplFixFtdcTraderApi(const char *configPath) :
 		last_msg_seq_num_(0), acc_session_id_{0}, firm_id_{0}, sender_sub_id_{0},
-		target_sub_id_{0}, sender_loc_id_{0}, self_match_prev_id_{0} {
+		target_sub_id_{0}, sender_loc_id_{0}, self_match_prev_id_{0}, investor_id{0} {
 	snprintf(fix_config_path_, sizeof(fix_config_path_), "%s", configPath);
 #ifndef __DEBUG__
 	log_file_.open("./dropcopy.log", fstream::out | fstream::app);
@@ -922,6 +923,21 @@ void *ImplFixFtdcTraderApi::query_position(void *obj) {
 				field.YdPosition = position->short_yd_pos_;
 				field.Position = -1*net_position;
 			}
+
+			self->trader_spi_->OnRspQryInvestorPosition(&field, &rsp, 0, true);
+		} else {
+			CThostFtdcInvestorPositionField field;
+			CThostFtdcRspInfoField rsp;
+			memset(&field, 0, sizeof(field));
+			memset(&rsp, 0, sizeof(rsp));
+			snprintf(field.InvestorID, sizeof(field.InvestorID), "%s", self->user_id_);
+			snprintf(field.InstrumentID, sizeof(field.InstrumentID), "%s", 
+							 position->instrument_id_.c_str());
+			int date = date_now();
+			snprintf(field.TradingDay, sizeof(field.TradingDay), "%d", date);
+			field.PosiDirection = THOST_FTDC_PD_Long;
+			field.YdPosition = position->long_yd_pos_;
+			field.Position = net_position;
 
 			self->trader_spi_->OnRspQryInvestorPosition(&field, &rsp, 0, true);
 		}
