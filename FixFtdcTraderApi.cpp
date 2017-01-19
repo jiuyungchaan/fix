@@ -43,6 +43,7 @@
 #include <quickfix/fix41/OrderCancelReplaceRequest.h>
 
 #include <quickfix/fix42/Logon.h>
+#include <quickfix/fix42/Logout.h>
 #include <quickfix/fix42/Reject.h>
 #include <quickfix/fix42/BusinessMessageReject.h>
 #include <quickfix/fix42/NewOrderSingle.h>
@@ -242,6 +243,8 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
 
   // interfaces of FIX::MessageCracker
   void onMessage(const CME_FIX_NAMESPACE::Logon& logon,
+                 const FIX::SessionID& sessionID);
+  void onMessage(const CME_FIX_NAMESPACE::Logout& logout,
                  const FIX::SessionID& sessionID);
   void onMessage(const CME_FIX_NAMESPACE::ExecutionReport& report,
                  const FIX::SessionID& sessionID);
@@ -1322,6 +1325,28 @@ void ImplFixFtdcTraderApi::onMessage(
 
   string str_target_sub_id = target_sub_id.getValue();
   snprintf(sender_sub_id_, sizeof(sender_sub_id_), "%s", str_target_sub_id.c_str());
+}
+
+
+void ImplFixFtdcTraderApi::onMessage(
+      const CME_FIX_NAMESPACE::Logout& logout,
+      const FIX::SessionID& sessionID) {
+  cout << "onMessage - Logout" << endl;
+
+  FIX::Text text;
+  if (logout.getFieldIfSet(text)) {
+    string reason = text.getValue();
+    if (strcmp(reason.c_str(), "Logout confirmed.") != 0) {
+      CThostFtdcRspUserLoginField login_field;
+      memset(&login_field, 0, sizeof(login_field));
+      CThostFtdcRspInfoField rsp_field;
+      memset(&rsp_field, 0, sizeof(rsp_field));
+      rsp_field.ErrorID = 1001;
+      snprintf(rsp_field.ErrorMsg, sizeof(rsp_field.ErrorMsg),
+               "%s", reason.c_str());
+      trader_spi_->OnRspUserLogin(&login_field, &rsp_field, 0, true);
+    }
+  }
 }
 
 void ImplFixFtdcTraderApi::onMessage(
