@@ -836,10 +836,15 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   InputOrder *input_order = order_pool_.add(pInputOrder);
   // real order-ID equal OrderRef/MAX_STRATEGY_NUM(100)
   // int order_id = atoi(pInputOrder->OrderRef) / 100;
+  cout << "get order id" << endl;
   int order_id = atoi(pInputOrder->OrderRef);
+  cout << "get order id" << endl;
   seq_serial_.DumpOrderID(order_id);
+  cout << "get order id" << endl;
   int no_stid = order_id / 100;
+  cout << "get order id" << endl;
   string order_flow_id = seq_serial_.GenFlowIDStr(no_stid);
+  cout << "gen flow id" << endl;
   snprintf(input_order->order_flow_id, sizeof(input_order->order_flow_id),
          "%s", order_flow_id.c_str());
   FIX::OrdType order_type = FIX::OrdType_LIMIT;
@@ -849,6 +854,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   FIX::HandlInst handl_inst('1');
   // FIX::ClOrdID cl_order_id(pInputOrder->UserOrderLocalID);
   FIX::ClOrdID cl_order_id(pInputOrder->OrderRef);
+  cout << "get cl order id" << endl;
   char inst_group[8] = {0};
   strncpy(inst_group, pInputOrder->InstrumentID, 2);
   FIX::Symbol symbol(inst_group);
@@ -897,6 +903,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   new_order.setField(7928, self_match_prev_id_);  // SelfMatchPreventionID
   new_order.setField(8000, "O");  // SelfMatchPreventionInstruction
 
+  cout << "before audit log" << endl;
   AuditLog audit_log;
   audit_log.WriteElement("sending_timestamps", timestamp);
   audit_log.WriteElement("message_direction", "TO CME");
@@ -927,10 +934,12 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   // audit_log.WriteElement("")
   audit_trail_.WriteLog(audit_log);
 
+  cout << "write audit log" << endl;
   // cout << "ReqOrderInsert" << pInputOrder->UserOrderLocalID << endl;
   cout << "ReqOrderInsert" << pInputOrder->OrderRef << endl;
   FIX::Session::sendToTarget(new_order, session_id_);
 
+  cout << "sendToTarget" << endl;
   return 0;
 }
 
