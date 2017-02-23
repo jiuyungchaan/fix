@@ -42,7 +42,7 @@ void split(const string& str, const string& del, vector<string>& v) {
 void* recv_thread(void *arg) {
   int recv_len;
   char buffer[512];
-  while(recv_len = recv(server_fd_, buffer, 512, 0) > 0) {
+  while((recv_len = recv(server_fd_, buffer, 512, 0)) > 0) {
     buffer[recv_len] = '\0';
     printf("Data Received: %s\n", buffer);
   }
@@ -59,27 +59,29 @@ int main() {
     split(vals[1], ":", addr);
     if (addr.size() == 2) {
       int port = atoi(addr[1].c_str());
-      if (server_fd_ = socket(AF_INET, SOCK_STREAM, 0) < 0) {
-        printf("Failed to create socket: %d-%s\n", strerror(errno), errno);
+      server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+      if (server_fd_ == -1) {
+        printf("Failed to create socket: %s-%d\n", strerror(errno), errno);
         exit(0);
       }
       char ip_addr[32];
       snprintf(ip_addr, sizeof(ip_addr), "%s", addr[0].c_str());
+      printf("parse ip:%s:%d\n", ip_addr, port);
       memset(&server_addr_, 0, sizeof(server_addr_));
       server_addr_.sin_family = AF_INET;
       server_addr_.sin_port = htons(port);
       if (inet_pton(AF_INET, ip_addr, &server_addr_.sin_addr) <= 0) {
-        printf("Failed to parse ip address: %s-%d-%s\n", ip_addr, 
+        printf("Failed to parse ip address: %s-%s-%d\n", ip_addr, 
                strerror(errno), errno);
         // trader_spi_->OnFrontDisconnected(1001);
         return 0;
       }
       if (connect(server_fd_, (struct sockaddr*)&server_addr_, 
                   sizeof(server_addr_)) < 0) {
-        printf("Failed to connect: [%s:%d]-%d-%s\n", ip_addr, port, 
+        printf("Failed to connect: [%s:%d]-%s-%d\n", ip_addr, port, 
                strerror(errno), errno);
         // trader_spi_->OnFrontDisconnected(1001);
-        return 0; 
+        return 0;
       }
       // trader_spi_->OnFrontConnected();
 
@@ -93,7 +95,7 @@ int main() {
 
       sleep(3);
 
-      char message[512] = "COMMAND=SENDORDER;ACCOUNT=410082065696;ACTION=BUY;SYMBOL=000060.SZ;QUANTITY=100;TYPE=MARKET;DURATION=IC5";
+      char message[512] = "COMMAND=SENDORDER;ACCOUNT=410082065696;ACTION=BUY;SYMBOL=000060.SZ;QUANTITY=100;TYPE=MARKET;DURATION=IC5;CLIENTID=kdbkkk";
       send(server_fd_, message, strlen(message), 0);
 
       sleep(5);

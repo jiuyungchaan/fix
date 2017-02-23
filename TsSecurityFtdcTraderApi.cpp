@@ -1,12 +1,12 @@
 ////////////////////////
 ///@author Kenny Chiu
 ///@date 20170120
-///@summary Implementation of CTsFtdcTraderApi and ImplTsFtdcTraderApi
+///@summary Implementation of CTsSecurityFtdcTraderApi and ImplTsFtdcTraderApi
 ///         
 ///
 ////////////////////////
 
-#include "TsFtdcTraderApi.h"
+#include "TsSecurityFtdcTraderApi.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -32,31 +32,29 @@
 const char *second_now();
 void split(const std::string& str, const std::string& del, std::vector<std::string>& v);
 
-class ImplTsFtdcTraderApi : public CTsFtdcTraderApi{
+class ImplTsFtdcTraderApi : public CTsSecurityFtdcTraderApi{
  public:
   explicit ImplTsFtdcTraderApi(const char *configPath);
 
-  // interfaces of CTsFtdcTraderApi
+  // interfaces of CTsSecurityFtdcTraderApi
+  void Release();
   void Init();
   int Join();
+  const char *GetTradingDay();
   void RegisterFront(char *pszFrontAddress);
-  void RegisterSpi(CTsFtdcTraderSpi *pSpi);
-  void SubscribePrivateTopic(THOST_TE_RESUME_TYPE nResumeType);
-  void SubscribePublicTopic(THOST_TE_RESUME_TYPE nResumeType);
-  int ReqUserLogin(CThostFtdcReqUserLoginField *pReqUserLoginField,
+  void RegisterSpi(CTsSecurityFtdcTraderSpi *pSpi);
+  void SubscribePrivateTopic(SECURITY_TE_RESUME_TYPE nResumeType);
+  void SubscribePublicTopic(SECURITY_TE_RESUME_TYPE nResumeType);
+  int ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginField,
                    int nRequestID);
-  int ReqUserLogout(CThostFtdcUserLogoutField *pUserLogout,
+  int ReqUserLogout(CSecurityFtdcUserLogoutField *pUserLogout,
                     int nRequestID);
-  int ReqOrderInsert(CThostFtdcInputOrderField *pInputOrder,
-                     int nRequestID);
-  int ReqOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction,
-                     int nRequestID);
-  int ReqMassOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction,
-                         int nRequestID);
-  int ReqQryInvestorPosition(CThostFtdcQryInvestorPositionField *pQryInvestorPosition,
-                             int nRequestID);
-  int ReqQryTradingAccount(CThostFtdcQryTradingAccountField *pQryTradingAccount,
+  int ReqFetchAuthRandCode(CSecurityFtdcAuthRandCodeField *pAuthRandCode,
                            int nRequestID);
+  int ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder,
+                     int nRequestID);
+  int ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrderAction,
+                     int nRequestID);
 
  protected:
   virtual ~ImplTsFtdcTraderApi();
@@ -72,13 +70,13 @@ class ImplTsFtdcTraderApi : public CTsFtdcTraderApi{
       SubTrade(int vol, double prc) : quantity(vol), price(prc), time{0} {}
     };
 
-    CThostFtdcInputOrderField basic_order;
+    CSecurityFtdcInputOrderField basic_order;
     char client_id[64];
     SubTrade *trades[100];
     int trade_size;
 
     InputOrder();
-    InputOrder(CThostFtdcInputOrderField *pInputOrder);
+    InputOrder(CSecurityFtdcInputOrderField *pInputOrder);
     void add_trade(int volume, double price);
   };
 
@@ -89,7 +87,7 @@ class ImplTsFtdcTraderApi : public CTsFtdcTraderApi{
     OrderPool();
     InputOrder *get(int order_id);
     InputOrder *get(std::string sys_id);
-    InputOrder *add(CThostFtdcInputOrderField *pInputOrder);
+    InputOrder *add(CSecurityFtdcInputOrderField *pInputOrder);
     void add_pair(std::string sys_id, int local_id);
     bool has_order(std::string sys_id);
 
@@ -101,18 +99,19 @@ class ImplTsFtdcTraderApi : public CTsFtdcTraderApi{
   static void *recv_thread(void *obj);
   static void *callback_onlogin(void *obj);
   static void *callback_onlogout(void *obj);
+  static void *callback_onrandcode(void *obj);
 
   void decode(const char *message);
 
   // typedef std::map<std::string, std::string> stringmap;
 
-  CThostFtdcOrderField ToOrderField(std::map<std::string, std::string>& properties);
-  CThostFtdcTradeField ToTradeField(std::map<std::string, std::string>& properties);
-  CThostFtdcInputOrderField ToInputOrderField(std::map<std::string, std::string>& properties);
-  CThostFtdcInputOrderActionField ToActionField(std::map<std::string, std::string>& properties);
-  CThostFtdcRspInfoField ToRspField(std::map<std::string, std::string>& properties);
+  CSecurityFtdcOrderField ToOrderField(std::map<std::string, std::string>& properties);
+  CSecurityFtdcTradeField ToTradeField(std::map<std::string, std::string>& properties);
+  CSecurityFtdcInputOrderField ToInputOrderField(std::map<std::string, std::string>& properties);
+  CSecurityFtdcInputOrderActionField ToActionField(std::map<std::string, std::string>& properties);
+  CSecurityFtdcRspInfoField ToRspField(std::map<std::string, std::string>& properties);
 
-  CTsFtdcTraderSpi *trader_spi_;
+  CTsSecurityFtdcTraderSpi *trader_spi_;
   char front_addr_[64];
   char user_id_[64];
   char user_passwd_[64];
@@ -132,9 +131,9 @@ class ImplTsFtdcTraderApi : public CTsFtdcTraderApi{
 
 using namespace std;
 
-CTsFtdcTraderApi *CTsFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) {
+CTsSecurityFtdcTraderApi *CTsSecurityFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) {
   ImplTsFtdcTraderApi *api = new ImplTsFtdcTraderApi(configPath);
-  return (CTsFtdcTraderApi *)api;
+  return (CTsSecurityFtdcTraderApi *)api;
 }
 
 ImplTsFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, trade_size(0) {
@@ -143,7 +142,7 @@ ImplTsFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, trade_size(0) {
 }
 
 ImplTsFtdcTraderApi::InputOrder::InputOrder(
-      CThostFtdcInputOrderField *pInputOrder) : client_id{0}, trade_size(0) {
+      CSecurityFtdcInputOrderField *pInputOrder) : client_id{0}, trade_size(0) {
   memcpy(&basic_order, pInputOrder, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
 }
@@ -183,7 +182,7 @@ bool ImplTsFtdcTraderApi::OrderPool::has_order(string sys_id) {
 }
 
 ImplTsFtdcTraderApi::InputOrder *ImplTsFtdcTraderApi::OrderPool::add(
-      CThostFtdcInputOrderField *pInputOrder) {
+      CSecurityFtdcInputOrderField *pInputOrder) {
   ImplTsFtdcTraderApi::InputOrder *input_order = new
       ImplTsFtdcTraderApi::InputOrder(pInputOrder);
   int order_id = atoi(pInputOrder->OrderRef) / 100;
@@ -231,11 +230,25 @@ void *ImplTsFtdcTraderApi::recv_thread(void *obj) {
   ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
   int fd = self->server_fd_;
   int recv_len;
-  char buffer[512];
-  while((recv_len = recv(fd, buffer, 512, 0)) > 0) {
+  char buffer[2048];
+  while((recv_len = recv(fd, buffer, 2048, 0)) > 0) {
     buffer[recv_len] = '\0';
-    cout << "Data recieved: " << buffer << endl;
-    self->decode(buffer);
+    printf("Data total received-[%d]\n", recv_len);
+    char *start = buffer;
+    while (true) {
+      char *p = strchr(start, '\0');
+      if (p == NULL) 
+        break;
+      if (p - buffer < recv_len - 1) {
+        printf("Multi datagram-[%ld]:%s\n", p - start, start);
+        self->decode(start);
+        start = p + 1;
+      } else {
+        printf("Last datagram-[%ld]:%s\n", p - start, start);
+        self->decode(start);
+        break;
+      }
+    }  // while
   }
   printf("Failed to receive data! Exit thread...\n");
   return (void *)NULL;
@@ -262,42 +275,54 @@ void ImplTsFtdcTraderApi::decode(const char *message) {
     properties[key_val[0]] = key_val[1];
   }
   
-  string status = properties["STATUS"];
-  if (status == "SENDING") {
-    // NOTHING TO DO
-  } else if (status == "QUEUED") {
-    // NOTHING TO DO
-  } else if (status == "RECEIVED") {
-    // OnRtnOrder
-    // if RECEIVED is already received, this must be a cancel received confirmation.
-    if (!order_pool_.has_order(properties["SYS_ORDER_ID"])) {
-      CThostFtdcOrderField order_field = ToOrderField(properties);
-      // add LocalOrderID&SysOrderID in the OrderPool?
-      int local_id = strtol(order_field.OrderRef, NULL, 10)/100;
-      order_pool_.add_pair(properties["SYS_ORDER_ID"], local_id);
+  string msg_type = properties["TYPE"];
+
+  if (msg_type == "UPDATE") {
+    string status = properties["STATUS"];
+    if (status == "SENDING") {
+      // NOTHING TO DO
+    } else if (status == "QUEUED") {
+      // NOTHING TO DO
+    } else if (status == "RECEIVED") {
+      // OnRtnOrder
+      // if RECEIVED is already received, this must be a cancel received confirmation.
+      if (!order_pool_.has_order(properties["SYS_ORDER_ID"])) {
+        CSecurityFtdcOrderField order_field = ToOrderField(properties);
+        // add LocalOrderID&SysOrderID in the OrderPool?
+        int local_id = strtol(order_field.OrderRef, NULL, 10)/100;
+        order_pool_.add_pair(properties["SYS_ORDER_ID"], local_id);
+        trader_spi_->OnRtnOrder(&order_field);
+      }
+    } else if (status == "PARTIALLYFILLED") {
+      // OnRtnTrade
+      if (properties["AVG_FILLED_PRICE"] != "" && 
+          properties["AVG_FILLED_PRICE"] != "0.0") {
+        CSecurityFtdcTradeField trade_field = ToTradeField(properties);
+        trader_spi_->OnRtnTrade(&trade_field);
+      }  // if AVG_FILLED_PRICE == 0.0, it is a cancel request confirmation
+    } else if (status == "PARTIALLYFILLEDUROUT") {
+      // OnRtnOrder -- success cancel
+      CSecurityFtdcOrderField order_field = ToOrderField(properties);
       trader_spi_->OnRtnOrder(&order_field);
-    }
-  } else if (status == "PARTIALLYFILLED") {
-    // OnRtnTrade
-    if (properties["AVG_FILLED_PRICE"] != "" && 
-        properties["AVG_FILLED_PRICE"] != "0.0") {
-      CThostFtdcTradeField trade_field = ToTradeField(properties);
+    } else if (status == "FILLED") {
+      // OnRtnTrade and OnRtnOrder
+      CSecurityFtdcTradeField trade_field = ToTradeField(properties);
+      CSecurityFtdcOrderField order_field = ToOrderField(properties);
       trader_spi_->OnRtnTrade(&trade_field);
-    }  // if AVG_FILLED_PRICE == 0.0, it is a cancel request confirmation
-  } else if (status == "PARTIALLYFILLEDUROUT") {
-    // OnRtnOrder -- success cancel
-    CThostFtdcOrderField order_field = ToOrderField(properties);
-    trader_spi_->OnRtnOrder(&order_field);
-  } else if (status == "FILLED") {
-    // OnRtnTrade and OnRtnOrder
-    CThostFtdcTradeField trade_field = ToTradeField(properties);
-    CThostFtdcOrderField order_field = ToOrderField(properties);
-    trader_spi_->OnRtnTrade(&trade_field);
-    trader_spi_->OnRtnOrder(&order_field);
-  } else if (status == "CANCELED") {
-    CThostFtdcOrderField order_field = ToOrderField(properties);
-    trader_spi_->OnRtnOrder(&order_field);
-  }
+      trader_spi_->OnRtnOrder(&order_field);
+    } else if (status == "CANCELED") {
+      CSecurityFtdcOrderField order_field = ToOrderField(properties);
+      trader_spi_->OnRtnOrder(&order_field);
+    } else if (status == "REJECTED") {
+      CSecurityFtdcInputOrderField order_field = ToInputOrderField(properties);
+      CSecurityFtdcRspInfoField info_field = ToRspField(properties);
+      trader_spi_->OnRspOrderInsert(&order_field, &info_field, 0, true);
+    }
+  } // if type == "UPDATE"
+}
+
+void ImplTsFtdcTraderApi::Release() {
+  // TODO
 }
 
 void ImplTsFtdcTraderApi::Init() {
@@ -356,29 +381,43 @@ int ImplTsFtdcTraderApi::Join() {
   return 0;
 }
 
+const char * ImplTsFtdcTraderApi::GetTradingDay() {
+  static char timestamp_str[32];
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+  
+  int date = (1900 + timeinfo->tm_year) * 10000 +
+             (1 + timeinfo->tm_mon) * 100 +
+             timeinfo->tm_mday;
+  snprintf(timestamp_str, sizeof(timestamp_str), "%d", date);
+  return timestamp_str;
+}
+
 void ImplTsFtdcTraderApi::RegisterFront(char *pszFrontAddress) {
   snprintf(front_addr_, sizeof(front_addr_), "%s", pszFrontAddress);
 }
 
 
-void ImplTsFtdcTraderApi::RegisterSpi(CTsFtdcTraderSpi *pSpi) {
+void ImplTsFtdcTraderApi::RegisterSpi(CTsSecurityFtdcTraderSpi *pSpi) {
   trader_spi_ = pSpi;
 }
 
 void ImplTsFtdcTraderApi::SubscribePrivateTopic(
-      THOST_TE_RESUME_TYPE nResumeType) {
-  // dummy function to adapt CTP API
+      SECURITY_TE_RESUME_TYPE nResumeType) {
+  // dummy function to adapt LTS API
 }
 
 void ImplTsFtdcTraderApi::SubscribePublicTopic(
-      THOST_TE_RESUME_TYPE nResumeType) {
-  // dummy function to adapt CTP API
+      SECURITY_TE_RESUME_TYPE nResumeType) {
+  // dummy function to adapt LTS API
 }
 
 void *ImplTsFtdcTraderApi::callback_onlogin(void *obj) {
   sleep(1);
   ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
-  CThostFtdcRspUserLoginField login_field;
+  CSecurityFtdcRspUserLoginField login_field;
   memset(&login_field, 0, sizeof(login_field));
   self->trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);  
   return (void *)NULL;
@@ -387,16 +426,28 @@ void *ImplTsFtdcTraderApi::callback_onlogin(void *obj) {
 void *ImplTsFtdcTraderApi::callback_onlogout(void *obj) {
   sleep(1);
   ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
-  CThostFtdcUserLogoutField logout_field;
+  CSecurityFtdcUserLogoutField logout_field;
   memset(&logout_field, 0, sizeof(logout_field));
-  CThostFtdcRspInfoField info_field;
+  CSecurityFtdcRspInfoField info_field;
   memset(&info_field, 0, sizeof(info_field));
   self->trader_spi_->OnRspUserLogout(&logout_field, &info_field, 0, true);  
   return (void *)NULL;
 }
 
+void *ImplTsFtdcTraderApi::callback_onrandcode(void *obj) {
+  sleep(1);
+  ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
+  CSecurityFtdcAuthRandCodeField code_field;
+  memset(&code_field, 0, sizeof(code_field));
+  snprintf(code_field.RandCode, sizeof(code_field.RandCode), "nonsense");
+  CSecurityFtdcRspInfoField info_field;
+  memset(&info_field, 0, sizeof(info_field));
+  self->trader_spi_->OnRspFetchAuthRandCode(&code_field, &info_field, 0, true);
+  return (void *)NULL;
+}
+
 int ImplTsFtdcTraderApi::ReqUserLogin(
-      CThostFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) {
+      CSecurityFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) {
   snprintf(user_id_, sizeof(user_id_), "%s", pReqUserLoginField->UserID);
   snprintf(user_passwd_, sizeof(user_passwd_), "%s", pReqUserLoginField->Password);
   pthread_t callback_thread;
@@ -405,31 +456,53 @@ int ImplTsFtdcTraderApi::ReqUserLogin(
 }
 
 int ImplTsFtdcTraderApi::ReqUserLogout(
-      CThostFtdcUserLogoutField *pUserLogout, int nRequestID) {
+      CSecurityFtdcUserLogoutField *pUserLogout, int nRequestID) {
   close(server_fd_);
   pthread_t callback_thread;
   pthread_create(&callback_thread, NULL, callback_onlogout, (void *)this);
   return 0;
 }
 
+int ImplTsFtdcTraderApi::ReqFetchAuthRandCode(
+      CSecurityFtdcAuthRandCodeField *pAuthRandCode, int nRequestID) {
+  pthread_t callback_thread;
+  pthread_create(&callback_thread, NULL, callback_onrandcode, (void *)this);
+  return 0;
+}
+
 int ImplTsFtdcTraderApi::ReqOrderInsert(
-      CThostFtdcInputOrderField *pInputOrder, int nRequestID) {
+      CSecurityFtdcInputOrderField *pInputOrder, int nRequestID) {
   InputOrder *input_order = order_pool_.add(pInputOrder);
 
   char action[16], order_type[16], symbol[16], duration[16], client_id[64];
-  char message[512];
+  char message[1024];
   
-  if (pInputOrder->Direction == THOST_FTDC_D_Buy) {
-    snprintf(action, sizeof(action), "BUY");
+  if (pInputOrder->Direction == SECURITY_FTDC_D_Buy) {
+    if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_Open) {
+      // snprintf(action, sizeof(action), "BUY");
+      snprintf(action, sizeof(action), "COLLATERALBUY");
+    } else if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_Close) {
+      snprintf(action, sizeof(action), "BORROWTOBUY");
+    } else if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_CloseToday) {
+      snprintf(action, sizeof(action), "BUYTOPAY");
+    } else if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_CloseYesterday) {
+      snprintf(action, sizeof(action), "PAYBYCASH");
+    }
   } else {
-    snprintf(action, sizeof(action), "SELL");
+    if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_Open) {
+      // snprintf(action, sizeof(action), "SELL");
+      snprintf(action, sizeof(action), "COLLATERALSELL");
+    } else if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_Close) {
+      snprintf(action, sizeof(action), "BORROWTOSELL");
+    } else if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_CloseToday) {
+      snprintf(action, sizeof(action), "SELLTOPAY");
+    } else if (pInputOrder->CombOffsetFlag[0] == SECURITY_FTDC_OF_CloseYesterday) {
+      snprintf(action, sizeof(action), "PAYBYSTOCK");
+    }
   }
 
-  if (pInputOrder->InstrumentID[0] == '6') {
-    snprintf(symbol, sizeof(symbol), "%s.SH", pInputOrder->InstrumentID);
-  } else {
-    snprintf(symbol, sizeof(symbol), "%s.SZ", pInputOrder->InstrumentID);
-  }
+  snprintf(symbol, sizeof(symbol), "%s.%s", pInputOrder->InstrumentID, 
+           pInputOrder->ExchangeID);
 
   snprintf(duration, sizeof(duration), "GFD");
   snprintf(order_type, sizeof(order_type), "LIMIT");
@@ -439,7 +512,7 @@ int ImplTsFtdcTraderApi::ReqOrderInsert(
            client_id);
 
   snprintf(message, sizeof(message), "COMMAND=SENDORDER;ACCOUNT=%s;ACTION=%s;" \
-           "SYMBOL=%s;QUANTITY=%d;TYPE=%s;LIMITPRICE=%lf;DURATION=%s;" \
+           "SYMBOL=%s;QUANTITY=%d;TYPE=%s;LIMITPRICE=%s;DURATION=%s;" \
            "CLIENTID=%s",
            user_id_, action, symbol, pInputOrder->VolumeTotalOriginal,
            order_type, pInputOrder->LimitPrice, duration, client_id);
@@ -452,8 +525,8 @@ int ImplTsFtdcTraderApi::ReqOrderInsert(
 }
 
 int ImplTsFtdcTraderApi::ReqOrderAction(
-      CThostFtdcInputOrderActionField *pInputOrderAction, int nRequestID) {
-  char message[512];
+      CSecurityFtdcInputOrderActionField *pInputOrderAction, int nRequestID) {
+  char message[1024];
 
   int local_id = strtol(pInputOrderAction->OrderRef, NULL, 10)/100;
   InputOrder *input_order = order_pool_.get(local_id);
@@ -473,21 +546,21 @@ int ImplTsFtdcTraderApi::ReqOrderAction(
 }
 
 
-int ImplTsFtdcTraderApi::ReqQryInvestorPosition(
-      CThostFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID) {
-  // TODO
-  return 0;
-}
+// int ImplTsFtdcTraderApi::ReqQryInvestorPosition(
+//       CThostFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID) {
+//   // TODO
+//   return 0;
+// }
 
-int ImplTsFtdcTraderApi::ReqQryTradingAccount(
-      CThostFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) {
-  // TODO
-  return 0;
-}
+// int ImplTsFtdcTraderApi::ReqQryTradingAccount(
+//       CThostFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) {
+//   // TODO
+//   return 0;
+// }
 
-CThostFtdcOrderField ImplTsFtdcTraderApi::ToOrderField(
+CSecurityFtdcOrderField ImplTsFtdcTraderApi::ToOrderField(
       map<string, string>& properties) {
-  CThostFtdcOrderField order_field;
+  CSecurityFtdcOrderField order_field;
   memset(&order_field, 0, sizeof(order_field));
 
   string account = properties["ACCOUNT"];
@@ -515,27 +588,44 @@ CThostFtdcOrderField ImplTsFtdcTraderApi::ToOrderField(
   snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID), "%s",
            symbol.c_str());
   order_field.VolumeTotalOriginal = atoi(quantity.c_str());
-  order_field.LimitPrice = atof(limit_price.c_str());
-  if (direction == "BUY") {
-    order_field.Direction = THOST_FTDC_D_Buy;
-  } else if (direction == "SELL") {
-    order_field.Direction = THOST_FTDC_D_Sell;
+  snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
+           limit_price.c_str());
+  if (direction == "BUY" || 
+      direction == "COLLATERALBUY") {
+    order_field.Direction = SECURITY_FTDC_D_Buy;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
+  } else if (direction == "SELL" ||
+             direction == "COLLATERALSELL") {
+    order_field.Direction = SECURITY_FTDC_D_Sell;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
+  } else if (direction == "BORROWTOBUY") {
+    order_field.Direction = SECURITY_FTDC_D_Buy;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Close;
+  } else if (direction == "BORROWTOSELL") {
+    order_field.Direction = SECURITY_FTDC_D_Sell;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Close;
+  } else if (direction == "PAYBYCASH") {
+    order_field.Direction = SECURITY_FTDC_D_Buy;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_CloseToday;
+  } else if (direction == "PAYBYSTOCK") {
+    order_field.Direction = SECURITY_FTDC_D_Sell;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_CloseToday;
   }
 
   if (status == "RECEIVED") {
-    order_field.OrderStatus = THOST_FTDC_OST_NoTradeQueueing;
+    order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing ;
   } else if (status == "CANCELED" || status == "PARTIALLYFILLEDUROUT") {
-    order_field.OrderStatus = THOST_FTDC_OST_Canceled;
+    order_field.OrderStatus = SECURITY_FTDC_OST_Canceled;
   } else if (status == "FILLED") {
-    order_field.OrderStatus = THOST_FTDC_OST_AllTraded;
+    order_field.OrderStatus = SECURITY_FTDC_OST_AllTraded;
   }
 
   return order_field;
 }
 
-CThostFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
+CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
       map<string, string>& properties) {
-  CThostFtdcTradeField trade_field;
+  CSecurityFtdcTradeField trade_field;
   memset(&trade_field, 0, sizeof(trade_field));
 
   string account = properties["ACCOUNT"];
@@ -565,10 +655,26 @@ CThostFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
   snprintf(trade_field.InstrumentID, sizeof(trade_field.InstrumentID), "%s",
            symbol.c_str());
 
-  if (direction == "BUY") {
-    trade_field.Direction = THOST_FTDC_D_Buy;
-  } else if (direction == "SELL") {
-    trade_field.Direction = THOST_FTDC_D_Sell;
+  if (direction == "BUY" || 
+      direction == "COLLATERALBUY") {
+    trade_field.Direction = SECURITY_FTDC_D_Buy;
+    trade_field.OffsetFlag = SECURITY_FTDC_OF_Open;
+  } else if (direction == "SELL" ||
+             direction == "COLLATERALSELL") {
+    trade_field.Direction = SECURITY_FTDC_D_Sell;
+    trade_field.OffsetFlag = SECURITY_FTDC_OF_Open;
+  } else if (direction == "BORROWTOBUY") {
+    trade_field.Direction = SECURITY_FTDC_D_Buy;
+    trade_field.OffsetFlag = SECURITY_FTDC_OF_Close;
+  } else if (direction == "BORROWTOSELL") {
+    trade_field.Direction = SECURITY_FTDC_D_Sell;
+    trade_field.OffsetFlag = SECURITY_FTDC_OF_Close;
+  } else if (direction == "PAYBYCASH") {
+    trade_field.Direction = SECURITY_FTDC_D_Buy;
+    trade_field.OffsetFlag = SECURITY_FTDC_OF_CloseToday;
+  } else if (direction == "PAYBYSTOCK") {
+    trade_field.Direction = SECURITY_FTDC_D_Sell;
+    trade_field.OffsetFlag = SECURITY_FTDC_OF_CloseToday;
   }
 
   if (fill_price == "0.0") {
@@ -589,7 +695,7 @@ CThostFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
         if (total_qty <= 0 || total_turnover <= 0.0) {
           printf("Invalid total quantity[%d] or total turnover[%lf]\n", 
                  total_qty, total_turnover);
-          trade_field.Price = atof(fill_price.c_str());
+          snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
           trade_field.Volume = atoi(fill_qty.c_str());
           is_valid = false;
           break;
@@ -597,18 +703,86 @@ CThostFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
       }
     }  // for loop to 
     if (is_valid) {
-      trade_field.Price = total_turnover / (double)total_qty;
+      double trade_price = total_turnover / (double)total_qty;
+      snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
       trade_field.Volume = total_qty;
-      input_order->add_trade(trade_field.Volume, trade_field.Price);
+      input_order->add_trade(trade_field.Volume, trade_price);
     }
     return trade_field;
   } else {
     printf("InputOrder [SysID-%s] not found!\n", sys_id.c_str());
-    trade_field.Price = atof(fill_price.c_str());
+    snprintf(trade_field.Price, sizeof(trade_field.Price), "%s",
+             fill_price.c_str());
     trade_field.Volume = atoi(fill_qty.c_str());
   }
 
   return trade_field;
+}
+
+CSecurityFtdcInputOrderField ImplTsFtdcTraderApi::ToInputOrderField(
+      map<string, string>& properties) {
+  CSecurityFtdcInputOrderField order_field;
+  memset(&order_field, 0, sizeof(order_field));
+
+  string account = properties["ACCOUNT"];
+  string status = properties["STATUS"];
+  string client_id = properties["LOCAL_ORDER_ID"];
+  string sys_id = properties["SYS_ORDER_ID"];
+  string symbol = properties["SYMBOL"];
+  string quantity = properties["QUANTITY"];
+  string limit_price = properties["LIMIT_PRICE"];
+  string direction = properties["DIRECTION"];
+  string local_id = client_id;
+
+  vector<string> ids;
+  split(client_id, "_", ids);
+  if (ids.size() == 2) {
+    local_id = ids[1];
+  }
+
+  snprintf(order_field.InvestorID, sizeof(order_field.InvestorID), "%s",
+           account.c_str());
+  snprintf(order_field.OrderRef, sizeof(order_field.OrderRef), "%s",
+           local_id.c_str());
+  snprintf(order_field.InstrumentID, sizeof(order_field.InstrumentID), "%s",
+           symbol.c_str());
+  order_field.VolumeTotalOriginal = atoi(quantity.c_str());
+  snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
+           limit_price.c_str());
+  if (direction == "BUY" ||
+      direction == "COLLATERALBUY") {
+    order_field.Direction = SECURITY_FTDC_D_Buy;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
+  } else if (direction == "SELL" ||
+             direction == "COLLATERALSELL") {
+    order_field.Direction = SECURITY_FTDC_D_Sell;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
+  } else if (direction == "BORROWTOBUY") {
+    order_field.Direction = SECURITY_FTDC_D_Buy;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Close;
+  } else if (direction == "BORROWTOSELL") {
+    order_field.Direction = SECURITY_FTDC_D_Sell;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Close;
+  } else if (direction == "PAYBYCASH") {
+    order_field.Direction = SECURITY_FTDC_D_Buy;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_CloseToday;
+  } else if (direction == "PAYBYSTOCK") {
+    order_field.Direction = SECURITY_FTDC_D_Sell;
+    order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_CloseToday;
+  }
+
+  return order_field;
+}
+
+CSecurityFtdcRspInfoField ImplTsFtdcTraderApi::ToRspField(
+      map<string, string>& properties) {
+  CSecurityFtdcRspInfoField rsp_field;
+  memset(&rsp_field, 0, sizeof(rsp_field));
+
+  rsp_field.ErrorID = 50001;
+  snprintf(rsp_field.ErrorMsg, sizeof(rsp_field.ErrorMsg), "Order Insert Failure!");
+
+  return rsp_field;
 }
 
 void split(const string& str, const string& del, vector<string>& v) {
