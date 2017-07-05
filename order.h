@@ -12,13 +12,19 @@
 // enum Direction 
 #define kDirectionBuy '0'
 #define kDirectionSell '1'
+#define kDirectionCollateralBuy '3'
+#define kDirectionCollateralSell '4'
+#define kDirectionBorrowToBuy '5'
+#define kDirectionBorrowToSell '6'
+#define kDirectionBuyToPay '7'
+#define kDirectionSellToPay '8'
 
 // enum Offset
 #define kOffsetOpen '0'
 #define kOffsetClose '1'
 #define kOffsetCloseToday '2'
 #define kOffsetCloseYesterday '3'
-#define kOffsetForceClse '4'
+#define kOffsetForceClose '4'
 
 // enum Order Type
 #define kOrderTypeLimit '0'

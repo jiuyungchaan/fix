@@ -5,6 +5,7 @@
 #define ALMOST_ZERO 1e-5
 
 const char* time_now();
+const char* time_now_ms();
 int date_now();
 
 bool equal(double lh, double rh);

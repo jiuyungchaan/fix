@@ -12,6 +12,7 @@
 #include "TsSecurityFtdcTraderApi.h"
 #include "TsSecurityFtdcQueryApi.h"
 #include "order.h"
+#include "utils.h"
 
 class FixTrader : public CTsSecurityFtdcTraderSpi {
  public:
@@ -56,6 +57,7 @@ class FixQuery : public CTsSecurityFtdcQuerySpi {
   // void ReqOrderInsert(Order *order);
   // void ReqOrderAction(int order_id);
   void ReqQryInvestorPosition();
+  void ReqQryCreditStockAssignInfo();
   void ReqQryTradingAccount();
   void ReqUserLogout();
 
@@ -68,6 +70,7 @@ class FixQuery : public CTsSecurityFtdcQuerySpi {
   // virtual void OnRspOrderAction(CSecurityFtdcInputOrderActionField *pInputOrderAction, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   virtual void OnRspQryInvestorPosition(CSecurityFtdcInvestorPositionField *pInvestorPosition, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   virtual void OnRspQryTradingAccount(CSecurityFtdcTradingAccountField *pTradingAccount, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+  virtual void OnRspQryCreditStockAssignInfo(CSecurityFtdcCreditStockAssignInfoField *pCreditStockAssignInfo, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   // virtual void OnRspError(CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
   // virtual void OnRtnOrder(CSecurityFtdcOrderField *pOrder);
   // virtual void OnRtnTrade(CSecurityFtdcTradeField *pTrade);
@@ -144,7 +147,7 @@ void FixTrader::OnRspFetchAuthRandCode(CSecurityFtdcAuthRandCodeField *pAuthRand
 
 void FixTrader::OnRspOrderInsert(CSecurityFtdcInputOrderField *pInputOrder,
       CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
-  cout << "OnRspOrderInsert" << endl;
+  cout << "OnRspOrderInsert:" << time_now_ms() << " - " << pInputOrder->OrderRef << endl;
 }
 
 void FixTrader::OnRspOrderAction(CSecurityFtdcInputOrderActionField *pInputOrderAction, 
@@ -167,7 +170,7 @@ void FixTrader::OnRspError(CSecurityFtdcRspInfoField *pRspInfo,
 }
 
 void FixTrader::OnRtnOrder(CSecurityFtdcOrderField *pOrder) {
-  cout << "OnRtnOrder" << endl;
+  cout << "OnRtnOrder:" << time_now_ms() << "-" << pOrder->OrderRef << endl;
   int order_id = strtol(pOrder->OrderRef, NULL, 10) / 100;
   Order *order = order_pool_.get(order_id);
   if (order == NULL) {
@@ -200,13 +203,31 @@ void FixTrader::ReqOrderInsert(Order *order) {
   }
   if (order->direction == kDirectionBuy) {
     req.Direction = SECURITY_FTDC_D_Buy;
-  } else {
+  } else if (order->direction == kDirectionSell){
     req.Direction  = SECURITY_FTDC_D_Sell;
+  } else if (order->direction == kDirectionCollateralBuy){
+    req.Direction  = SECURITY_FTDC_D_BuyCollateral;
+  } else if (order->direction == kDirectionCollateralSell){
+    req.Direction  = SECURITY_FTDC_D_SellCollateral;
+  } else if (order->direction == kDirectionBorrowToBuy){
+    req.Direction  = SECURITY_FTDC_D_MarginTrade;
+  } else if (order->direction == kDirectionBorrowToSell){
+    req.Direction  = SECURITY_FTDC_D_ShortSell;
+  } else if (order->direction == kDirectionBuyToPay){
+    req.Direction  = SECURITY_FTDC_D_RepayStock;
+  } else if (order->direction == kDirectionSellToPay){
+    req.Direction  = SECURITY_FTDC_D_RepayMargin;
   }
   if (order->offset == kOffsetOpen) {
     req.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
-  } else {
+  } else if (order->offset == kOffsetClose){
     req.CombOffsetFlag[0] = SECURITY_FTDC_OF_Close;
+  } else if (order->offset == kOffsetCloseToday){
+    req.CombOffsetFlag[0] = SECURITY_FTDC_OF_CloseToday;
+  } else if (order->offset == kOffsetCloseYesterday){
+    req.CombOffsetFlag[0] = SECURITY_FTDC_OF_CloseYesterday;
+  } else if (order->offset == kOffsetForceClose){
+    req.CombOffsetFlag[0] = SECURITY_FTDC_OF_ForceOff;
   }
   if (order->order_type != kOrderTypeLimit) {
     req.OrderPriceType = SECURITY_FTDC_OPT_AnyPrice;
@@ -219,7 +240,9 @@ void FixTrader::ReqOrderInsert(Order *order) {
   snprintf(req.LimitPrice, sizeof(req.LimitPrice), "%lf",
            order->limit_price);
 
+  cout << "ReqOrderInsert:" << time_now_ms() << "-" << req.OrderRef << endl;
   trader_api_->ReqOrderInsert(&req, 0);
+  cout << "After ReqOrderInsert:" << time_now_ms() << "-" << req.OrderRef << endl;
 }
 
 void FixTrader::ReqOrderAction(int order_id) {
@@ -327,6 +350,7 @@ void FixQuery::OnRspQryInvestorPosition(CSecurityFtdcInvestorPositionField *pInv
        << " " << pInvestorPosition->PosiDirection 
        << " " << pInvestorPosition->YdPosition
        << " " << pInvestorPosition->Position
+       << " " << bIsLast
        << " " << pInvestorPosition->TradingDay << endl;
 }
 
@@ -335,6 +359,15 @@ void FixQuery::OnRspQryTradingAccount(CSecurityFtdcTradingAccountField *pTrading
   cout << "OnRspQryTradingAccount:" << pTradingAccount->Balance
        << " " << pTradingAccount->Available
        << " " << pTradingAccount->StockValue << endl;
+}
+
+void FixQuery::OnRspQryCreditStockAssignInfo(CSecurityFtdcCreditStockAssignInfoField *pCreditStockAssignInfo,
+      CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {
+  cout << "OnRspQryCreditStockAssignInfo:" << pCreditStockAssignInfo->InvestorID
+       << " " << pCreditStockAssignInfo->InstrumentID
+       << "." << pCreditStockAssignInfo->ExchangeID
+       << " TotalMarginStock:" << pCreditStockAssignInfo->LimitVolume
+       << " AvailMarginStock:" << pCreditStockAssignInfo->LeftVolume << endl;
 }
 
 void FixQuery::ReqQryInvestorPosition() {
@@ -347,6 +380,12 @@ void FixQuery::ReqQryTradingAccount() {
   CSecurityFtdcQryTradingAccountField req;
   memset(&req, 0, sizeof(req));
   trader_api_->ReqQryTradingAccount(&req, 0);
+}
+
+void FixQuery::ReqQryCreditStockAssignInfo() {
+  CSecurityFtdcQryCreditStockAssignInfoField req;
+  memset(&req, 0, sizeof(req));
+  trader_api_->ReqQryCreditStockAssignInfo(&req, 0);
 }
 
 void FixQuery::ReqUserLogout() {
@@ -376,6 +415,18 @@ char ParseToDirection(string direction) {
     ret = kDirectionBuy;
   } else if (strcasecmp(direction.c_str(), "sell") == 0){
     ret = kDirectionSell;
+  } else if (strcasecmp(direction.c_str(), "collateralbuy") == 0){
+    ret = kDirectionCollateralBuy;
+  } else if (strcasecmp(direction.c_str(), "collateralsell") == 0){
+    ret = kDirectionCollateralSell;
+  } else if (strcasecmp(direction.c_str(), "borrowtobuy") == 0){
+    ret = kDirectionBorrowToBuy;
+  } else if (strcasecmp(direction.c_str(), "borrowtosell") == 0){
+    ret = kDirectionBorrowToSell;
+  } else if (strcasecmp(direction.c_str(), "buytopay") == 0){
+    ret = kDirectionBuyToPay;
+  } else if (strcasecmp(direction.c_str(), "selltopay") == 0){
+    ret = kDirectionSellToPay;
   }
   return ret;
 }
@@ -402,6 +453,8 @@ char ParseToOffset(string offset) {
     ret = kOffsetCloseToday;
   } else if (strcasecmp(offset.c_str(), "closeyesterday") == 0) {
     ret = kOffsetCloseYesterday;
+  } else if (strcasecmp(offset.c_str(), "forceclose") == 0) {
+    ret = kOffsetForceClose;
   }
   return ret;
 }
@@ -431,7 +484,8 @@ int main(int argc, char **argv) {
     }
     ++arg_pos;
   }
-  FixTrader fix_trader("410082065696", password, front_addr);
+  // FixTrader fix_trader("410082065696", password, front_addr);
+  FixTrader fix_trader(account, password, front_addr);
   FixQuery fix_query(account, password, front_addr);
   fix_trader.Init();
   fix_query.Init();
@@ -503,6 +557,8 @@ int main(int argc, char **argv) {
         fix_query.ReqQryInvestorPosition();
       } else if (strcasecmp(request.c_str(), "account") == 0) {
         fix_query.ReqQryTradingAccount();
+      } else if (strcasecmp(request.c_str(), "marginposition") == 0) {
+        fix_query.ReqQryCreditStockAssignInfo();
       }
       sleep(3);
     } else if (cmd == 'P' || cmd == 'p') {

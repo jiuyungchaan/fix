@@ -4,8 +4,8 @@
 ///@brief 定义客户端接口
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __TSSECURITY_FTDCQUERYAPI_H__
-#define __TSSECURITY_FTDCQUERYAPI_H__
+#ifndef __COX_FTDCQUERYAPI_H__
+#define __COX_FTDCQUERYAPI_H__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -13,7 +13,7 @@
 
 #include "SecurityFtdcUserApiStruct.h"
 
-class CTsSecurityFtdcQuerySpi
+class COXFtdcQuerySpi
 {
 public:
 	///当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
@@ -73,13 +73,13 @@ public:
 	#endif
 #endif
 
-class CTsSecurityFtdcQueryApi
+class COXFtdcQueryApi
 {
 public:
 	///创建QueryApi
 	///@param pszFlowPath 存贮订阅信息文件的目录，默认为当前目录
 	///@return 创建出的UserApi
-	static CTsSecurityFtdcQueryApi *CreateFtdcQueryApi(const char *pszFlowPath = "");
+	static COXFtdcQueryApi *CreateFtdcQueryApi(const char *pszFlowPath = "");
 	
 	///删除接口对象本身
 	///@remark 不再使用本接口对象时,调用该函数删除接口对象
@@ -106,7 +106,7 @@ public:
 	
 	///注册回调接口
 	///@param pSpi 派生自回调接口类的实例
-	virtual void RegisterSpi(CTsSecurityFtdcQuerySpi *pSpi) = 0;
+	virtual void RegisterSpi(COXFtdcQuerySpi *pSpi) = 0;
 	
 	///用户登录请求
 	virtual int ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) = 0;
@@ -141,7 +141,7 @@ public:
 
 	virtual int ReqQryCreditStockAssignInfo(CSecurityFtdcQryCreditStockAssignInfoField *pQryCreditStockAssignInfo, int nRequestID) = 0;
 protected:
-	~CTsSecurityFtdcQueryApi(){};
+	~COXFtdcQueryApi(){};
 };
   
 #ifndef WINDOWS

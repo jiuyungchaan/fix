@@ -1,12 +1,12 @@
 ////////////////////////
 ///@author Kenny Chiu
-///@date 20170120
-///@summary Implementation of CTsSecurityFtdcTraderApi and ImplTsFtdcTraderApi
+///@date 20170411
+///@summary Implementation of COXFtdcTraderApi
 ///         
 ///
 ////////////////////////
 
-#include "TsSecurityFtdcTraderApi.h"
+#include "COXFtdcTraderApi.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -33,17 +33,17 @@ const char *second_now();
 const char *time_now();
 void split(const std::string& str, const std::string& del, std::vector<std::string>& v);
 
-class ImplTsFtdcTraderApi : public CTsSecurityFtdcTraderApi{
+class ImplCOXFtdcTraderApi : public COXFtdcTraderApi{
  public:
-  explicit ImplTsFtdcTraderApi(const char *configPath);
+  explicit ImplCOXFtdcTraderApi(const char *configPath);
 
-  // interfaces of CTsSecurityFtdcTraderApi
+  // interfaces of COXFtdcTraderApi
   void Release();
   void Init();
   int Join();
   const char *GetTradingDay();
   void RegisterFront(char *pszFrontAddress);
-  void RegisterSpi(CTsSecurityFtdcTraderSpi *pSpi);
+  void RegisterSpi(COXFtdcTraderSpi *pSpi);
   void SubscribePrivateTopic(SECURITY_TE_RESUME_TYPE nResumeType);
   void SubscribePublicTopic(SECURITY_TE_RESUME_TYPE nResumeType);
   int ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginField,
@@ -58,7 +58,7 @@ class ImplTsFtdcTraderApi : public CTsSecurityFtdcTraderApi{
                      int nRequestID);
 
  protected:
-  virtual ~ImplTsFtdcTraderApi();
+  virtual ~ImplCOXFtdcTraderApi();
 
  private:
   class InputOrder {
@@ -98,7 +98,7 @@ class ImplTsFtdcTraderApi : public CTsSecurityFtdcTraderApi{
   };
 
   static void *recv_thread(void *obj);
-  static void *callback_onlogin(void *obj);
+  // static void *callback_onlogin(void *obj);
   static void *callback_onlogout(void *obj);
   static void *callback_onrandcode(void *obj);
 
@@ -114,7 +114,7 @@ class ImplTsFtdcTraderApi : public CTsSecurityFtdcTraderApi{
   CSecurityFtdcInputOrderActionField ToActionField(std::map<std::string, std::string>& properties);
   CSecurityFtdcRspInfoField ToRspField(std::map<std::string, std::string>& properties);
 
-  CTsSecurityFtdcTraderSpi *trader_spi_;
+  COXFtdcTraderSpi *trader_spi_;
   char front_addr_[64];
   char user_id_[64];
   char user_passwd_[64];
@@ -134,60 +134,60 @@ class ImplTsFtdcTraderApi : public CTsSecurityFtdcTraderApi{
 
 using namespace std;
 
-CTsSecurityFtdcTraderApi *CTsSecurityFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) {
-  ImplTsFtdcTraderApi *api = new ImplTsFtdcTraderApi(configPath);
-  return (CTsSecurityFtdcTraderApi *)api;
+COXFtdcTraderApi *COXFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) {
+  ImplCOXFtdcTraderApi *api = new ImplCOXFtdcTraderApi(configPath);
+  return (COXFtdcTraderApi *)api;
 }
 
-ImplTsFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, trade_size(0) {
+ImplCOXFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, trade_size(0) {
   memset(&basic_order, 0, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
 }
 
-ImplTsFtdcTraderApi::InputOrder::InputOrder(
+ImplCOXFtdcTraderApi::InputOrder::InputOrder(
       CSecurityFtdcInputOrderField *pInputOrder) : client_id{0}, trade_size(0) {
   memcpy(&basic_order, pInputOrder, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
 }
 
-void ImplTsFtdcTraderApi::InputOrder::add_trade(int volume, double price) {
+void ImplCOXFtdcTraderApi::InputOrder::add_trade(int volume, double price) {
   SubTrade *sub_trade = new SubTrade(volume, price);
   trades[trade_size++] = sub_trade;
 }
 
-ImplTsFtdcTraderApi::OrderPool::OrderPool() {
+ImplCOXFtdcTraderApi::OrderPool::OrderPool() {
   memset(order_pool_, sizeof(order_pool_), 0);
 }
 
-ImplTsFtdcTraderApi::InputOrder *ImplTsFtdcTraderApi::OrderPool::get(
+ImplCOXFtdcTraderApi::InputOrder *ImplCOXFtdcTraderApi::OrderPool::get(
       int order_id) {
   if (order_id >= 0 && order_id < MAX_ORDER_SIZE) {
     return order_pool_[order_id];
   } else {
-    return (ImplTsFtdcTraderApi::InputOrder *)NULL;
+    return (ImplCOXFtdcTraderApi::InputOrder *)NULL;
   }
 }
 
-ImplTsFtdcTraderApi::InputOrder *ImplTsFtdcTraderApi::OrderPool::get(
+ImplCOXFtdcTraderApi::InputOrder *ImplCOXFtdcTraderApi::OrderPool::get(
       string sys_id) {
   map<string, int>::iterator it = sys_to_local_.find(sys_id);
   if (it == sys_to_local_.end()) {
     printf("SysOrderID-%s not found!\n", sys_id.c_str());
-    return (ImplTsFtdcTraderApi::InputOrder *)NULL;
+    return (ImplCOXFtdcTraderApi::InputOrder *)NULL;
   } else {
     return get(it->second);
   }
 }
 
-bool ImplTsFtdcTraderApi::OrderPool::has_order(string sys_id) {
+bool ImplCOXFtdcTraderApi::OrderPool::has_order(string sys_id) {
   map<string, int>::iterator it = sys_to_local_.find(sys_id);
   return (it != sys_to_local_.end());
 }
 
-ImplTsFtdcTraderApi::InputOrder *ImplTsFtdcTraderApi::OrderPool::add(
+ImplCOXFtdcTraderApi::InputOrder *ImplCOXFtdcTraderApi::OrderPool::add(
       CSecurityFtdcInputOrderField *pInputOrder) {
-  ImplTsFtdcTraderApi::InputOrder *input_order = new
-      ImplTsFtdcTraderApi::InputOrder(pInputOrder);
+  ImplCOXFtdcTraderApi::InputOrder *input_order = new
+      ImplCOXFtdcTraderApi::InputOrder(pInputOrder);
   int order_id = atoi(pInputOrder->OrderRef) / 100;
   if (order_id < 0 || order_id >= MAX_ORDER_SIZE) {
     printf("Invalid Order Ref:%s\n", pInputOrder->OrderRef);
@@ -202,7 +202,7 @@ ImplTsFtdcTraderApi::InputOrder *ImplTsFtdcTraderApi::OrderPool::add(
   return input_order;
 }
 
-void ImplTsFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
+void ImplCOXFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
   map<string, int>::iterator it = sys_to_local_.find(sys_id);
   if (it != sys_to_local_.end()) {
     printf("SysOrderID-%s already match for %d !\n", sys_id.c_str(),
@@ -212,7 +212,7 @@ void ImplTsFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
   }
 }
 
-ImplTsFtdcTraderApi::ImplTsFtdcTraderApi(const char *pszFlowPath) :
+ImplCOXFtdcTraderApi::ImplCOXFtdcTraderApi(const char *pszFlowPath) :
     front_addr_{0}, user_id_{0}, user_passwd_{0} {
   char log_file_name[128];
   if (strcmp(pszFlowPath, "") == 0) {
@@ -225,14 +225,14 @@ ImplTsFtdcTraderApi::ImplTsFtdcTraderApi(const char *pszFlowPath) :
 #endif
 }
 
-ImplTsFtdcTraderApi::~ImplTsFtdcTraderApi() {
+ImplCOXFtdcTraderApi::~ImplCOXFtdcTraderApi() {
   // TODO
 }
 
-void *ImplTsFtdcTraderApi::recv_thread(void *obj) {
+void *ImplCOXFtdcTraderApi::recv_thread(void *obj) {
   static const int BUF_SIZE = 2048;
   char buffer[BUF_SIZE];
-  ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
+  ImplCOXFtdcTraderApi *self = (ImplCOXFtdcTraderApi *)obj;
   int fd = self->server_fd_;
   int recv_len;
   char *total_buffer = NULL;
@@ -303,7 +303,7 @@ void *ImplTsFtdcTraderApi::recv_thread(void *obj) {
   return (void *)NULL;
 }
 
-void ImplTsFtdcTraderApi::handle_data(char *data, int len) {
+void ImplCOXFtdcTraderApi::handle_data(char *data, int len) {
   char *start = data;
   while (true) {
     char *p = strchr(start, '\0');
@@ -325,7 +325,7 @@ void ImplTsFtdcTraderApi::handle_data(char *data, int len) {
   }  // while
 }
 
-void ImplTsFtdcTraderApi::decode(const char *message) {
+void ImplCOXFtdcTraderApi::decode(const char *message) {
   vector<string> pairs;
   split(string(message), ";", pairs);
   if (pairs.size() < 1) {
@@ -443,14 +443,31 @@ void ImplTsFtdcTraderApi::decode(const char *message) {
         trader_spi_->OnRspOrderInsert(&order_field, &info_field, 0, true);
       }
     }
-  } // if type == "UPDATE"
+  } // if type == "UPDATE" 
+  else if (msg_type == "LOGIN") {
+    string error_code = properties["ERROR"];
+    if (error_code == "0") {
+      CSecurityFtdcRspUserLoginField login_field;
+      memset(&login_field, 0, sizeof(login_field));
+      trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);
+    } else {
+      string error_msg = properties["MESSAGE"];
+      CSecurityFtdcRspUserLoginField login_field;
+      memset(&login_field, 0, sizeof(login_field));
+      CSecurityFtdcRspInfoField info_field;
+      info_field.ErrorID = atoi(error_code.c_str());
+      snprintf(info_field.ErrorMsg, sizeof(info_field.ErrorMsg), "%s",
+               error_msg.c_str());
+      trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);
+    }
+  }
 }
 
-void ImplTsFtdcTraderApi::Release() {
+void ImplCOXFtdcTraderApi::Release() {
   // TODO
 }
 
-void ImplTsFtdcTraderApi::Init() {
+void ImplCOXFtdcTraderApi::Init() {
   // connect server
   if (strcmp(front_addr_, "") == 0) {
     printf("ERROR: Front Address is not registered!\n");
@@ -501,12 +518,12 @@ void ImplTsFtdcTraderApi::Init() {
   }
 }
 
-int ImplTsFtdcTraderApi::Join() {
+int ImplCOXFtdcTraderApi::Join() {
   // dummy function to adapt CTP API
   return 0;
 }
 
-const char * ImplTsFtdcTraderApi::GetTradingDay() {
+const char * ImplCOXFtdcTraderApi::GetTradingDay() {
   static char timestamp_str[32];
   time_t rawtime;
   struct tm *timeinfo;
@@ -520,37 +537,28 @@ const char * ImplTsFtdcTraderApi::GetTradingDay() {
   return timestamp_str;
 }
 
-void ImplTsFtdcTraderApi::RegisterFront(char *pszFrontAddress) {
+void ImplCOXFtdcTraderApi::RegisterFront(char *pszFrontAddress) {
   snprintf(front_addr_, sizeof(front_addr_), "%s", pszFrontAddress);
 }
 
 
-void ImplTsFtdcTraderApi::RegisterSpi(CTsSecurityFtdcTraderSpi *pSpi) {
+void ImplCOXFtdcTraderApi::RegisterSpi(COXFtdcTraderSpi *pSpi) {
   trader_spi_ = pSpi;
 }
 
-void ImplTsFtdcTraderApi::SubscribePrivateTopic(
+void ImplCOXFtdcTraderApi::SubscribePrivateTopic(
       SECURITY_TE_RESUME_TYPE nResumeType) {
   // dummy function to adapt LTS API
 }
 
-void ImplTsFtdcTraderApi::SubscribePublicTopic(
+void ImplCOXFtdcTraderApi::SubscribePublicTopic(
       SECURITY_TE_RESUME_TYPE nResumeType) {
   // dummy function to adapt LTS API
 }
 
-void *ImplTsFtdcTraderApi::callback_onlogin(void *obj) {
+void *ImplCOXFtdcTraderApi::callback_onlogout(void *obj) {
   sleep(1);
-  ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
-  CSecurityFtdcRspUserLoginField login_field;
-  memset(&login_field, 0, sizeof(login_field));
-  self->trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);  
-  return (void *)NULL;
-}
-
-void *ImplTsFtdcTraderApi::callback_onlogout(void *obj) {
-  sleep(1);
-  ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
+  ImplCOXFtdcTraderApi *self = (ImplCOXFtdcTraderApi *)obj;
   CSecurityFtdcUserLogoutField logout_field;
   memset(&logout_field, 0, sizeof(logout_field));
   CSecurityFtdcRspInfoField info_field;
@@ -559,9 +567,9 @@ void *ImplTsFtdcTraderApi::callback_onlogout(void *obj) {
   return (void *)NULL;
 }
 
-void *ImplTsFtdcTraderApi::callback_onrandcode(void *obj) {
+void *ImplCOXFtdcTraderApi::callback_onrandcode(void *obj) {
   sleep(1);
-  ImplTsFtdcTraderApi *self = (ImplTsFtdcTraderApi *)obj;
+  ImplCOXFtdcTraderApi *self = (ImplCOXFtdcTraderApi *)obj;
   CSecurityFtdcAuthRandCodeField code_field;
   memset(&code_field, 0, sizeof(code_field));
   snprintf(code_field.RandCode, sizeof(code_field.RandCode), "nonsense");
@@ -571,16 +579,23 @@ void *ImplTsFtdcTraderApi::callback_onrandcode(void *obj) {
   return (void *)NULL;
 }
 
-int ImplTsFtdcTraderApi::ReqUserLogin(
+int ImplCOXFtdcTraderApi::ReqUserLogin(
       CSecurityFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) {
   snprintf(user_id_, sizeof(user_id_), "%s", pReqUserLoginField->UserID);
   snprintf(user_passwd_, sizeof(user_passwd_), "%s", pReqUserLoginField->Password);
-  pthread_t callback_thread;
-  pthread_create(&callback_thread, NULL, callback_onlogin, (void *)this);
+
+  char message[1024];
+  snprintf(message, sizeof(message), "COMMAND=LOGIN;ACCOUNT=%s", user_id_);
+  int ret = send(server_fd_, message, strlen(message) + 1, 0);
+  log_file_ << time_now() << "- Send message:" << strlen(message) + 1 << ":" << message <<  endl;
+  if (ret < 0) {
+    printf("Failed to send message - %d\n", ret);
+    return 1;
+  }
   return 0;
 }
 
-int ImplTsFtdcTraderApi::ReqUserLogout(
+int ImplCOXFtdcTraderApi::ReqUserLogout(
       CSecurityFtdcUserLogoutField *pUserLogout, int nRequestID) {
   close(server_fd_);
   pthread_t callback_thread;
@@ -588,14 +603,14 @@ int ImplTsFtdcTraderApi::ReqUserLogout(
   return 0;
 }
 
-int ImplTsFtdcTraderApi::ReqFetchAuthRandCode(
+int ImplCOXFtdcTraderApi::ReqFetchAuthRandCode(
       CSecurityFtdcAuthRandCodeField *pAuthRandCode, int nRequestID) {
   pthread_t callback_thread;
   pthread_create(&callback_thread, NULL, callback_onrandcode, (void *)this);
   return 0;
 }
 
-int ImplTsFtdcTraderApi::ReqOrderInsert(
+int ImplCOXFtdcTraderApi::ReqOrderInsert(
       CSecurityFtdcInputOrderField *pInputOrder, int nRequestID) {
   InputOrder *input_order = order_pool_.add(pInputOrder);
 
@@ -673,7 +688,7 @@ int ImplTsFtdcTraderApi::ReqOrderInsert(
   return 0;
 }
 
-int ImplTsFtdcTraderApi::ReqOrderAction(
+int ImplCOXFtdcTraderApi::ReqOrderAction(
       CSecurityFtdcInputOrderActionField *pInputOrderAction, int nRequestID) {
   char message[1024];
 
@@ -681,8 +696,8 @@ int ImplTsFtdcTraderApi::ReqOrderAction(
   InputOrder *input_order = order_pool_.get(local_id);
   int ret = 1;
   if (input_order != NULL) {
-    snprintf(message, sizeof(message), "COMMAND=CANCELORDER;CLIENTID=%s",
-             input_order->client_id);
+    snprintf(message, sizeof(message), "COMMAND=CANCELORDER;CLIENTID=%s;EXCHANGE=%s",
+             input_order->client_id, input_order->basic_order.ExchangeID);
     ret = send(server_fd_, message, strlen(message) + 1, 0);
     // cout << "Send message:" << message << endl;
     log_file_ << time_now() << "- Send message:" << message << endl;
@@ -697,19 +712,19 @@ int ImplTsFtdcTraderApi::ReqOrderAction(
 }
 
 
-// int ImplTsFtdcTraderApi::ReqQryInvestorPosition(
+// int ImplCOXFtdcTraderApi::ReqQryInvestorPosition(
 //       CThostFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID) {
 //   // TODO
 //   return 0;
 // }
 
-// int ImplTsFtdcTraderApi::ReqQryTradingAccount(
+// int ImplCOXFtdcTraderApi::ReqQryTradingAccount(
 //       CThostFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) {
 //   // TODO
 //   return 0;
 // }
 
-CSecurityFtdcOrderField ImplTsFtdcTraderApi::ToOrderField(
+CSecurityFtdcOrderField ImplCOXFtdcTraderApi::ToOrderField(
       map<string, string>& properties) {
   CSecurityFtdcOrderField order_field;
   memset(&order_field, 0, sizeof(order_field));
@@ -809,7 +824,7 @@ CSecurityFtdcOrderField ImplTsFtdcTraderApi::ToOrderField(
   return order_field;
 }
 
-CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
+CSecurityFtdcTradeField ImplCOXFtdcTraderApi::ToTradeField(
       map<string, string>& properties, int &has_order) {
   CSecurityFtdcTradeField trade_field;
   memset(&trade_field, 0, sizeof(trade_field));
@@ -824,15 +839,7 @@ CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
   string direction = properties["DIRECTION"];
   string fill_qty = properties["FILLED_QUANTITY"];
   string fill_price = properties["AVG_FILLED_PRICE"];
-  string left_qty = properties["LEFT_QUANTITY"];
   string local_id = client_id;
-
-  if (atoi(fill_qty.c_str()) + atoi(left_qty.c_str()) != atoi(quantity.c_str())) {
-    log_file_ << time_now() << " - WARNING: TRADE QUANTITY NOT MATCH: " 
-              << status << " " << symbol << " " << client_id << " "
-              << sys_id << "-[TOTAL:" << quantity << "][FILLED:"
-              << fill_qty << "][LEFT:" << left_qty << "]" << endl;
-  }
 
   string cut_sys_id = sys_id;
   if (sys_id.size() > 25) {
@@ -916,25 +923,35 @@ CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
   if (input_order != NULL) {
     int total_qty = atoi(fill_qty.c_str());
     double total_turnover = atof(fill_price.c_str()) * (double)total_qty;
-    bool is_valid = true;
+    // bool is_valid = true;
+    int received_qty = 0;
     for (int i = 0; i < input_order->trade_size; i++) {
       if (input_order->trades[i] != NULL) {
         total_qty -= input_order->trades[i]->quantity;
+        received_qty += input_order->trades[i]->quantity;
         total_turnover -= input_order->trades[i]->price *
                           (double)input_order->trades[i]->quantity;
-        if (total_qty <= 0 || total_turnover <= 0.0) {
-          printf("Invalid total quantity[%d] or total turnover[%lf]\n", 
-                 total_qty, total_turnover);
-          // snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
-          // trade_field.Volume = atoi(fill_qty.c_str());
-          snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
-          trade_field.Volume = 0;
-          is_valid = false;
-          break;
-        }
       }
-    }  // for loop to 
-    if (is_valid) {
+    }  // for loop to
+    if (total_qty <= 0 || total_turnover <= 0.0) {
+      printf("Invalid total quantity[%d] or total turnover[%lf]\n", 
+             total_qty, total_turnover);
+      // snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
+      // trade_field.Volume = atoi(fill_qty.c_str());
+      int f_qty;
+      double f_prc;
+      if (status == "FILLED") {
+        f_qty = atoi(quantity.c_str()) - received_qty;
+        f_prc = atof(limit_price.c_str());
+        trade_field.Volume = f_qty;
+        snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", f_prc);
+        input_order->add_trade(trade_field.Volume, f_prc);
+        return trade_field;
+      } else {
+        snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
+        trade_field.Volume = 0;
+      }
+    } else {
       double trade_price = total_turnover / (double)total_qty;
       snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
       trade_field.Volume = total_qty;
@@ -951,7 +968,7 @@ CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
   return trade_field;
 }
 
-CSecurityFtdcInputOrderField ImplTsFtdcTraderApi::ToInputOrderField(
+CSecurityFtdcInputOrderField ImplCOXFtdcTraderApi::ToInputOrderField(
       map<string, string>& properties) {
   CSecurityFtdcInputOrderField order_field;
   memset(&order_field, 0, sizeof(order_field));
@@ -1031,7 +1048,7 @@ CSecurityFtdcInputOrderField ImplTsFtdcTraderApi::ToInputOrderField(
   return order_field;
 }
 
-CSecurityFtdcRspInfoField ImplTsFtdcTraderApi::ToRspField(
+CSecurityFtdcRspInfoField ImplCOXFtdcTraderApi::ToRspField(
       map<string, string>& properties) {
   CSecurityFtdcRspInfoField rsp_field;
   memset(&rsp_field, 0, sizeof(rsp_field));

@@ -37,6 +37,24 @@ int date_now() {
   return date;
 }
 
+
+const char* time_now_ms() {
+  static char timestamp_str[32];
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+  
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  
+  snprintf(timestamp_str, sizeof(timestamp_str), 
+           "%d%02d%02d-%02d:%02d:%02d.%06ld", 1900 + timeinfo->tm_year,
+           1 + timeinfo->tm_mon, timeinfo->tm_mday, timeinfo->tm_hour,
+           timeinfo->tm_min, timeinfo->tm_sec, tv.tv_usec);
+  return timestamp_str;
+}
+
 bool equal(double lh, double rh) {
   if (lh >= rh) {
     return lh - rh <= ALMOST_ZERO;

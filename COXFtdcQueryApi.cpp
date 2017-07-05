@@ -1,12 +1,12 @@
 ////////////////////////
 ///@author Kenny Chiu
 ///@date 20170120
-///@summary Implementation of CTsSecurityFtdcTraderApi and ImplTsFtdcQueryApi
+///@summary Implementation of COXFtdcTraderApi and ImplCOXFtdcQueryApi
 ///         
 ///
 ////////////////////////
 
-#include "TsSecurityFtdcQueryApi.h"
+#include "COXFtdcQueryApi.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -33,9 +33,9 @@ const char *second_now();
 const char *time_now();
 void split(const std::string& str, const std::string& del, std::vector<std::string>& v);
 
-class ImplTsFtdcQueryApi : public CTsSecurityFtdcQueryApi{
+class ImplCOXFtdcQueryApi : public COXFtdcQueryApi{
  public:
-  explicit ImplTsFtdcQueryApi(const char *configPath);
+  explicit ImplCOXFtdcQueryApi(const char *configPath);
 
   // interfaces of CTsSecurityFtdcTraderApi
   void Release();
@@ -43,7 +43,7 @@ class ImplTsFtdcQueryApi : public CTsSecurityFtdcQueryApi{
   int Join();
   const char *GetTradingDay();
   void RegisterFront(char *pszFrontAddress);
-  void RegisterSpi(CTsSecurityFtdcQuerySpi *pSpi);
+  void RegisterSpi(COXFtdcQuerySpi *pSpi);
   void SubscribePrivateTopic(SECURITY_TE_RESUME_TYPE nResumeType);
   void SubscribePublicTopic(SECURITY_TE_RESUME_TYPE nResumeType);
   int ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginField,
@@ -68,7 +68,7 @@ class ImplTsFtdcQueryApi : public CTsSecurityFtdcQueryApi{
                                   int nRequestID);
 
  protected:
-  virtual ~ImplTsFtdcQueryApi();
+  virtual ~ImplCOXFtdcQueryApi();
 
  private:
 
@@ -91,7 +91,7 @@ class ImplTsFtdcQueryApi : public CTsSecurityFtdcQueryApi{
   CSecurityFtdcRspInfoField ToRspField(
         std::map<std::string, std::string>& properties);
 
-  CTsSecurityFtdcQuerySpi *trader_spi_;
+  COXFtdcQuerySpi *trader_spi_;
   char front_addr_[64];
   char user_id_[64];
   char user_passwd_[64];
@@ -110,32 +110,32 @@ class ImplTsFtdcQueryApi : public CTsSecurityFtdcQueryApi{
 
 using namespace std;
 
-CTsSecurityFtdcQueryApi *CTsSecurityFtdcQueryApi::CreateFtdcQueryApi(const char *configPath) {
-  ImplTsFtdcQueryApi *api = new ImplTsFtdcQueryApi(configPath);
-  return (CTsSecurityFtdcQueryApi *)api;
+COXFtdcQueryApi *COXFtdcQueryApi::CreateFtdcQueryApi(const char *configPath) {
+  ImplCOXFtdcQueryApi *api = new ImplCOXFtdcQueryApi(configPath);
+  return (COXFtdcQueryApi *)api;
 }
 
-ImplTsFtdcQueryApi::ImplTsFtdcQueryApi(const char *pszFlowPath) :
+ImplCOXFtdcQueryApi::ImplCOXFtdcQueryApi(const char *pszFlowPath) :
     front_addr_{0}, user_id_{0}, user_passwd_{0} {
   char log_file_name[128];
   if (strcmp(pszFlowPath, "") == 0) {
-    snprintf(log_file_name, sizeof(log_file_name), "ts.qry.log");
+    snprintf(log_file_name, sizeof(log_file_name), "cox.qry.log");
   } else {
-    snprintf(log_file_name, sizeof(log_file_name), "%s.ts.qry.log", pszFlowPath);
+    snprintf(log_file_name, sizeof(log_file_name), "%s.cox.qry.log", pszFlowPath);
   }
 #ifndef __DEBUG__
   log_file_.open(log_file_name, fstream::out | fstream::app);
 #endif
 }
 
-ImplTsFtdcQueryApi::~ImplTsFtdcQueryApi() {
+ImplCOXFtdcQueryApi::~ImplCOXFtdcQueryApi() {
   // TODO
 }
 
-void *ImplTsFtdcQueryApi::recv_thread(void *obj) {
+void *ImplCOXFtdcQueryApi::recv_thread(void *obj) {
   static const int BUF_SIZE = 2048;
   char buffer[BUF_SIZE];
-  ImplTsFtdcQueryApi *self = (ImplTsFtdcQueryApi *)obj;
+  ImplCOXFtdcQueryApi *self = (ImplCOXFtdcQueryApi *)obj;
   int fd = self->server_fd_;
   int recv_len;
   char *total_buffer = NULL;
@@ -173,7 +173,7 @@ void *ImplTsFtdcQueryApi::recv_thread(void *obj) {
 }
 
 
-void ImplTsFtdcQueryApi::handle_data(char *data, int len) {
+void ImplCOXFtdcQueryApi::handle_data(char *data, int len) {
   char *start = data;
   while (true) {
     char *p = strchr(start, '\0');
@@ -195,7 +195,7 @@ void ImplTsFtdcQueryApi::handle_data(char *data, int len) {
   }  // while
 }
 
-void ImplTsFtdcQueryApi::decode(const char *message) {
+void ImplCOXFtdcQueryApi::decode(const char *message) {
   vector<string> pairs;
   split(string(message), ";", pairs);
   if (pairs.size() < 1) {
@@ -236,18 +236,34 @@ void ImplTsFtdcQueryApi::decode(const char *message) {
     CSecurityFtdcCreditStockAssignInfoField stock_field = ToMarginStockField(properties);
     CSecurityFtdcRspInfoField info_field;
     memset(&info_field, 0, sizeof(info_field));
-    bool isLast = (properties["CURRENT"] == properties["TOTAL"]);
+    bool isLast = (properties["IS_LAST"] == "1");
     if (strcmp(stock_field.InvestorID, user_id_) == 0) {
       trader_spi_->OnRspQryCreditStockAssignInfo(&stock_field, &info_field, 0, isLast);
     }
-  }
+  } else if (msg_type == "LOGIN") {
+      string error_code = properties["ERROR"];
+      if (error_code == "0") {
+        CSecurityFtdcRspUserLoginField login_field;
+        memset(&login_field, 0, sizeof(login_field));
+        trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);
+      } else {
+        string error_msg = properties["MESSAGE"];
+        CSecurityFtdcRspUserLoginField login_field;
+        memset(&login_field, 0, sizeof(login_field));
+        CSecurityFtdcRspInfoField info_field;
+        info_field.ErrorID = atoi(error_code.c_str());
+        snprintf(info_field.ErrorMsg, sizeof(info_field.ErrorMsg), "%s",
+                 error_msg.c_str());
+        trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);
+      }
+    }
 }
 
-void ImplTsFtdcQueryApi::Release() {
+void ImplCOXFtdcQueryApi::Release() {
   // TODO
 }
 
-void ImplTsFtdcQueryApi::Init() {
+void ImplCOXFtdcQueryApi::Init() {
   // connect server
   if (strcmp(front_addr_, "") == 0) {
     printf("ERROR: Front Address is not registered!\n");
@@ -298,12 +314,12 @@ void ImplTsFtdcQueryApi::Init() {
   }
 }
 
-int ImplTsFtdcQueryApi::Join() {
+int ImplCOXFtdcQueryApi::Join() {
   // dummy function to adapt CTP API
   return 0;
 }
 
-const char * ImplTsFtdcQueryApi::GetTradingDay() {
+const char * ImplCOXFtdcQueryApi::GetTradingDay() {
   static char timestamp_str[32];
   time_t rawtime;
   struct tm *timeinfo;
@@ -317,27 +333,27 @@ const char * ImplTsFtdcQueryApi::GetTradingDay() {
   return timestamp_str;
 }
 
-void ImplTsFtdcQueryApi::RegisterFront(char *pszFrontAddress) {
+void ImplCOXFtdcQueryApi::RegisterFront(char *pszFrontAddress) {
   snprintf(front_addr_, sizeof(front_addr_), "%s", pszFrontAddress);
 }
 
 
-void ImplTsFtdcQueryApi::RegisterSpi(CTsSecurityFtdcQuerySpi *pSpi) {
+void ImplCOXFtdcQueryApi::RegisterSpi(COXFtdcQuerySpi *pSpi) {
   trader_spi_ = pSpi;
 }
 
-void *ImplTsFtdcQueryApi::callback_onlogin(void *obj) {
+void *ImplCOXFtdcQueryApi::callback_onlogin(void *obj) {
   sleep(1);
-  ImplTsFtdcQueryApi *self = (ImplTsFtdcQueryApi *)obj;
+  ImplCOXFtdcQueryApi *self = (ImplCOXFtdcQueryApi *)obj;
   CSecurityFtdcRspUserLoginField login_field;
   memset(&login_field, 0, sizeof(login_field));
   self->trader_spi_->OnRspUserLogin(&login_field, NULL, 0, true);  
   return (void *)NULL;
 }
 
-void *ImplTsFtdcQueryApi::callback_onlogout(void *obj) {
+void *ImplCOXFtdcQueryApi::callback_onlogout(void *obj) {
   sleep(1);
-  ImplTsFtdcQueryApi *self = (ImplTsFtdcQueryApi *)obj;
+  ImplCOXFtdcQueryApi *self = (ImplCOXFtdcQueryApi *)obj;
   CSecurityFtdcUserLogoutField logout_field;
   memset(&logout_field, 0, sizeof(logout_field));
   CSecurityFtdcRspInfoField info_field;
@@ -346,9 +362,9 @@ void *ImplTsFtdcQueryApi::callback_onlogout(void *obj) {
   return (void *)NULL;
 }
 
-void *ImplTsFtdcQueryApi::callback_onrandcode(void *obj) {
+void *ImplCOXFtdcQueryApi::callback_onrandcode(void *obj) {
   sleep(1);
-  ImplTsFtdcQueryApi *self = (ImplTsFtdcQueryApi *)obj;
+  ImplCOXFtdcQueryApi *self = (ImplCOXFtdcQueryApi *)obj;
   CSecurityFtdcAuthRandCodeField code_field;
   memset(&code_field, 0, sizeof(code_field));
   snprintf(code_field.RandCode, sizeof(code_field.RandCode), "nonsense");
@@ -358,16 +374,23 @@ void *ImplTsFtdcQueryApi::callback_onrandcode(void *obj) {
   return (void *)NULL;
 }
 
-int ImplTsFtdcQueryApi::ReqUserLogin(
+int ImplCOXFtdcQueryApi::ReqUserLogin(
       CSecurityFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) {
   snprintf(user_id_, sizeof(user_id_), "%s", pReqUserLoginField->UserID);
   snprintf(user_passwd_, sizeof(user_passwd_), "%s", pReqUserLoginField->Password);
-  pthread_t callback_thread;
-  pthread_create(&callback_thread, NULL, callback_onlogin, (void *)this);
+
+  char message[1024];
+  snprintf(message, sizeof(message), "COMMAND=LOGIN;ACCOUNT=%s", user_id_);
+  int ret = send(server_fd_, message, strlen(message) + 1, 0);
+  log_file_ << time_now() << "- Send message:" << strlen(message) + 1 << ":" << message <<  endl;
+  if (ret < 0) {
+    printf("Failed to send message - %d\n", ret);
+    return 1;
+  }
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqUserLogout(
+int ImplCOXFtdcQueryApi::ReqUserLogout(
       CSecurityFtdcUserLogoutField *pUserLogout, int nRequestID) {
   close(server_fd_);
   pthread_t callback_thread;
@@ -375,14 +398,14 @@ int ImplTsFtdcQueryApi::ReqUserLogout(
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqFetchAuthRandCode(
+int ImplCOXFtdcQueryApi::ReqFetchAuthRandCode(
       CSecurityFtdcAuthRandCodeField *pAuthRandCode, int nRequestID) {
   pthread_t callback_thread;
   pthread_create(&callback_thread, NULL, callback_onrandcode, (void *)this);
   return 0;
 }
 
-CSecurityFtdcInvestorPositionField ImplTsFtdcQueryApi::ToPositionField(
+CSecurityFtdcInvestorPositionField ImplCOXFtdcQueryApi::ToPositionField(
       std::map<std::string, std::string>& properties) {
   CSecurityFtdcInvestorPositionField pos_field;
   memset(&pos_field, 0, sizeof(pos_field));
@@ -432,7 +455,7 @@ CSecurityFtdcInvestorPositionField ImplTsFtdcQueryApi::ToPositionField(
   return pos_field;
 }
 
-CSecurityFtdcTradingAccountField ImplTsFtdcQueryApi::ToAccountField(
+CSecurityFtdcTradingAccountField ImplCOXFtdcQueryApi::ToAccountField(
       std::map<std::string, std::string>& properties) {
   CSecurityFtdcTradingAccountField acc_field;
   memset(&acc_field, 0, sizeof(acc_field));
@@ -482,7 +505,7 @@ CSecurityFtdcTradingAccountField ImplTsFtdcQueryApi::ToAccountField(
   return acc_field;
 }
 
-CSecurityFtdcCreditStockAssignInfoField ImplTsFtdcQueryApi::ToMarginStockField(
+CSecurityFtdcCreditStockAssignInfoField ImplCOXFtdcQueryApi::ToMarginStockField(
       map<string, string>& properties) {
   CSecurityFtdcCreditStockAssignInfoField stock_field;
   memset(&stock_field, 0, sizeof(stock_field));
@@ -517,7 +540,7 @@ CSecurityFtdcCreditStockAssignInfoField ImplTsFtdcQueryApi::ToMarginStockField(
   return stock_field;
 }
 
-CSecurityFtdcRspInfoField ImplTsFtdcQueryApi::ToRspField(
+CSecurityFtdcRspInfoField ImplCOXFtdcQueryApi::ToRspField(
       map<string, string>& properties) {
   CSecurityFtdcRspInfoField rsp_field;
   memset(&rsp_field, 0, sizeof(rsp_field));
@@ -528,13 +551,13 @@ CSecurityFtdcRspInfoField ImplTsFtdcQueryApi::ToRspField(
   return rsp_field;
 }
 
-int ImplTsFtdcQueryApi::ReqQryInstrument(
+int ImplCOXFtdcQueryApi::ReqQryInstrument(
       CSecurityFtdcQryInstrumentField *pQryInstrument, int nRequestID) {
   // TODO
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqQryTradingAccount(
+int ImplCOXFtdcQueryApi::ReqQryTradingAccount(
       CSecurityFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) {
   char message[1024];
   snprintf(message, sizeof(message), "COMMAND=QUERYACCOUNT");
@@ -548,32 +571,32 @@ int ImplTsFtdcQueryApi::ReqQryTradingAccount(
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqQryOFInstrument(
+int ImplCOXFtdcQueryApi::ReqQryOFInstrument(
       CSecurityFtdcQryOFInstrumentField *pQryOFInstrument, int nRequestID) {
   // TODO
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqQryMarketDataStaticInfo(
+int ImplCOXFtdcQueryApi::ReqQryMarketDataStaticInfo(
       CSecurityFtdcQryMarketDataStaticInfoField *pQryMarketDataStaticInfo,
       int nRequestID) {
   // TODO
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqQryOrder(CSecurityFtdcQryOrderField *pQryOrder,
+int ImplCOXFtdcQueryApi::ReqQryOrder(CSecurityFtdcQryOrderField *pQryOrder,
       int nRequestID) {
   // TODO
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqQryTrade(CSecurityFtdcQryTradeField *pQryTrade,
+int ImplCOXFtdcQueryApi::ReqQryTrade(CSecurityFtdcQryTradeField *pQryTrade,
       int nRequestID) {
   // TODO
   return 0;
 }
 
-int ImplTsFtdcQueryApi::ReqQryInvestorPosition(
+int ImplCOXFtdcQueryApi::ReqQryInvestorPosition(
       CSecurityFtdcQryInvestorPositionField *pQryInvestorPosition, 
       int nRequestID) {
   char message[1024];
@@ -589,7 +612,7 @@ int ImplTsFtdcQueryApi::ReqQryInvestorPosition(
 }
 
 
-int ImplTsFtdcQueryApi::ReqQryCreditStockAssignInfo(
+int ImplCOXFtdcQueryApi::ReqQryCreditStockAssignInfo(
       CSecurityFtdcQryCreditStockAssignInfoField *pQryCreditStockAssignInfo, 
       int nRequestID) {
   char message[1024];

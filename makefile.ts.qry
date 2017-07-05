@@ -1,17 +1,21 @@
 
 CXX=g++
-SRC=TsSecurityFtdcQueryApi.cpp
+QRY_SRC=TsSecurityFtdcQueryApi.cpp
+TRD_SRC=TsSecurityFtdcTraderApi.cpp
 INCLUDE=-I../include
 CXXFLAGS=-Wall -shared -fpic --std=c++0x
-TARGET=libtssecurityqueryapi.so
+QRY_TARGET=libtssecurityqueryapi.so
+TRD_TARGET=libtssecuritytraderapi.so
 LD_FLAGS=-lpthread
 
-all:$(TARGET)
+all:$(QRY_TARGET) $(TRD_TARGET)
 
 clean:
-	rm libtssecurityqueryapi.so
+	rm libtssecurityqueryapi.so libtssecuritytraderapi.so
 
-$(TARGET):
-	$(CXX) $(SRC) $(INCLUDE) -o $(TARGET) $(CXXFLAGS) $(LD_FLAGS)
+$(QRY_TARGET):
+	$(CXX) $(QRY_SRC) $(INCLUDE) -o $(QRY_TARGET) $(CXXFLAGS) $(LD_FLAGS)
 	#scp -P 1022 libfixtraderapi.so root@192.168.91.100:/usr/local/lib/
     #cp libtstraderapi.so /home/amanoenko/root/usr/local/lib/
+$(TRD_TARGET):
+	$(CXX) $(TRD_SRC) $(INCLUDE) -o $(TRD_TARGET) $(CXXFLAGS) $(LD_FLAGS)
