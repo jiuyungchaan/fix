@@ -1683,6 +1683,13 @@ void ImplFixFtdcTraderApi::onMessage(
     break;
     case  FIX::ExecType_PARTIAL_FILL: {
       CThostFtdcTradeField trade_field = ToTradeField(report);
+      if (trade_field.Direction == THOST_FTDC_D_Buy) {
+        position_pool_.AddLongTrade(trade_field.InstrumentID,
+              trade_field.Volume, trade_field.Price);
+      } else {
+        position_pool_.AddShortTrade(trade_field.InstrumentID,
+              trade_field.Volume, trade_field.Price);
+      }
       LogAuditTrail(report);
       trader_spi_->OnRtnTrade(&trade_field);   // OnRtnTrade
     }
@@ -1690,6 +1697,13 @@ void ImplFixFtdcTraderApi::onMessage(
     case FIX::ExecType_FILL: {
       CThostFtdcTradeField trade_field = ToTradeField(report);
       CThostFtdcOrderField order_field = ToOrderField(report);
+      if (trade_field.Direction == THOST_FTDC_D_Buy) {
+        position_pool_.AddLongTrade(trade_field.InstrumentID,
+              trade_field.Volume, trade_field.Price);
+      } else {
+        position_pool_.AddShortTrade(trade_field.InstrumentID,
+              trade_field.Volume, trade_field.Price);
+      }
       LogAuditTrail(report);
       trader_spi_->OnRtnTrade(&trade_field);
       trader_spi_->OnRtnOrder(&order_field);
