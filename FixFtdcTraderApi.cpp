@@ -172,6 +172,15 @@ class SequenceSerialization {
   // pthread_mutex_t trans_lock_;
 };
 
+struct InputOrderRspField {
+  CFixFtdcTraderSpi *spi;
+  CThostFtdcInputOrderField input_order;
+  CThostFtdcRspInfoField rsp_info;
+
+  InputOrderRspField(CFixFtdcTraderSpi *s, CThostFtdcInputOrderField order,
+        CThostFtdcRspInfoField rsp) : spi(s), input_order(order), rsp_info(rsp) {}
+};
+
 class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
                              public FIX::MessageCracker {
  public:
@@ -227,6 +236,46 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
     std::map<std::string, int> sys_to_local_;
   };
 
+  class Position {
+   public:
+    std::string instrument_id_;
+    int long_yd_pos_, short_yd_pos_;
+    int long_trade_vol_, short_trade_vol_;
+    int max_position_limit_, max_order_size_;
+    double long_avg_price_, short_avg_price_;
+    double long_turnover_, short_turnover_;
+    Position(const std::string& instrument_id);
+    ~Position(){};
+    void SetYdLongPosition(int vol, double price);
+    void SetYdShortPosition(int vol, double price);
+    void SetPositionLimit(int limit);
+    void SetMaxOrderSize(int limit);
+    void AddLongTrade(int vol, double price);
+    void AddShortTrade(int vol, double price);
+  };
+
+  class PositionPool {
+   public:
+    PositionPool();
+    ~PositionPool() {};
+
+    void SetYdLongPosition(const std::string& instrument, int vol, double price);
+    void SetYdShortPosition(const std::string& instrument, int vol, double price);
+    void SetPositionLimit(const std::string& instrument, int limit);
+    void SetMaxOrderSize(const std::string& instrument, int limit);
+    void AddLongTrade(const std::string& instrument, int vol, double price);
+    void AddShortTrade(const std::string& instrument, int vol, double price);
+    int GetLongTradeVol(const std::string& instrument);
+    int GetShortTradeVol(const std::string& instrument);
+    int GetLongPos(const std::string& instrument);
+    int GetShortPos(const std::string& instrument);
+    int GetNetPos(const std::string& instrument);
+    int LimitTriggered(const std::string& instrument, int vol);
+   // private:
+    std::map<std::string, Position*> position_map_;
+    pthread_mutex_t mutex_;
+  };
+
   // interfaces of FIX::Application
   void onCreate(const FIX::SessionID& sessionID);
   void onLogon(const FIX::SessionID& sessionID);
@@ -264,6 +313,10 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
   void LogAuditTrail(const CME_FIX_NAMESPACE::Reject& reject);
   void LogAuditTrail(const CME_FIX_NAMESPACE::BusinessMessageReject& reject);
 
+  void LoadSettlementPosition(const std::string& position_file_name);
+  void LoadLimit(const std::string& limit_file_name);
+  void LoadAuditTrail(const std::string& audit_file_name);
+
   // void queryHeader(FIX::Header& header);
   void FillFixHeader(FIX::Message& message);
   void FillLogonRequest(FIX::Message& message);
@@ -285,6 +338,8 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
   CThostFtdcRspInfoField ToRspField(
         const CME_FIX_NAMESPACE::OrderCancelReject& report);
 
+  static void *rtn_input_error(void *rsp);
+
   CFixFtdcTraderSpi *trader_spi_;
   char fix_config_path_[64];
   int last_msg_seq_num_;
@@ -305,6 +360,7 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
   AuditTrail audit_trail_;
   SequenceSerialization seq_serial_;
   OrderPool order_pool_;
+  PositionPool position_pool_;
   std::fstream log_file_;
 };
 
@@ -768,6 +824,227 @@ void ImplFixFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
   }
 }
 
+ImplFixFtdcTraderApi::Position::Position(const string& instrument_id) :
+    instrument_id_(instrument_id), long_yd_pos_(0), short_yd_pos_(0), 
+    long_trade_vol_(0), short_trade_vol_(0), max_position_limit_(0),
+    max_order_size_(0), long_avg_price_(0.0), short_avg_price_(0.0),
+    long_turnover_(0.0), short_turnover_(0.0) {}
+
+void ImplFixFtdcTraderApi::Position::SetYdLongPosition(int vol, double price) {
+  long_yd_pos_ = vol;
+}
+
+void ImplFixFtdcTraderApi::Position::SetYdShortPosition(int vol, double price) {
+  short_yd_pos_ = vol;
+}
+
+void ImplFixFtdcTraderApi::Position::SetPositionLimit(int limit) {
+  max_position_limit_ = limit;
+}
+
+void ImplFixFtdcTraderApi::Position::SetMaxOrderSize(int limit) {
+  max_order_size_ = limit;
+}
+
+void ImplFixFtdcTraderApi::Position::AddLongTrade(int vol, double price) {
+  long_turnover_ += price * (double)vol;
+  long_trade_vol_ += vol;
+  long_avg_price_ = (long_trade_vol_ == 0)? 0.0 : long_turnover_/long_trade_vol_;
+}
+
+void ImplFixFtdcTraderApi::Position::AddShortTrade(int vol, double price) {
+  short_turnover_ += price * (double)vol;
+  short_trade_vol_ += vol;
+  short_avg_price_ = (short_trade_vol_ == 0)? 0.0 : short_turnover_/short_trade_vol_;
+}
+
+ImplFixFtdcTraderApi::PositionPool::PositionPool() {
+  pthread_mutex_init(&mutex_, NULL);
+}
+
+void ImplFixFtdcTraderApi::PositionPool::SetYdLongPosition(const string& instrument,
+      int vol, double price) {
+  pthread_mutex_lock(&mutex_);
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  if (it == position_map_.end()) {
+    Position *pos = new Position(instrument);
+    pos->SetYdLongPosition(vol, price);
+    position_map_.insert(pair<string, Position*>(instrument, pos));
+  } else {
+    Position *pos = it->second;
+    pos->SetYdLongPosition(vol, price);
+  }
+  pthread_mutex_unlock(&mutex_);
+}
+
+void ImplFixFtdcTraderApi::PositionPool::SetYdShortPosition(const string& instrument,
+      int vol, double price) {
+  pthread_mutex_lock(&mutex_);
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  if (it == position_map_.end()) {
+    Position *pos = new Position(instrument);
+    pos->SetYdShortPosition(vol, price);
+    position_map_.insert(pair<string, Position*>(instrument, pos));
+  } else {
+    Position *pos = it->second;
+    pos->SetYdShortPosition(vol, price);
+  }
+  pthread_mutex_unlock(&mutex_);
+}
+
+void ImplFixFtdcTraderApi::PositionPool::SetPositionLimit(const string& instrument,
+      int limit) {
+  pthread_mutex_lock(&mutex_);
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  if (it == position_map_.end()) {
+    Position *pos = new Position(instrument);
+    pos->SetPositionLimit(limit);
+    position_map_.insert(pair<string, Position*>(instrument, pos));
+  } else {
+    Position *pos = it->second;
+    pos->SetPositionLimit(limit);
+  }
+  pthread_mutex_unlock(&mutex_);
+}
+
+void ImplFixFtdcTraderApi::PositionPool::SetMaxOrderSize(const string& instrument,
+      int limit) {
+  pthread_mutex_lock(&mutex_);
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  if (it == position_map_.end()) {
+    Position *pos = new Position(instrument);
+    pos->SetMaxOrderSize(limit);
+    position_map_.insert(pair<string, Position*>(instrument, pos));
+  } else {
+    Position *pos = it->second;
+    pos->SetMaxOrderSize(limit);
+  }
+  pthread_mutex_unlock(&mutex_);
+}
+
+void ImplFixFtdcTraderApi::PositionPool::AddLongTrade(const string& instrument,
+      int vol, double price) {
+  pthread_mutex_lock(&mutex_);
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  if (it == position_map_.end()) {
+    Position *pos = new Position(instrument);
+    pos->AddLongTrade(vol, price);
+    position_map_.insert(pair<string, Position*>(instrument, pos));
+  } else {
+    Position *pos = it->second;
+    pos->AddLongTrade(vol, price);
+  }
+  pthread_mutex_unlock(&mutex_);
+}
+
+void ImplFixFtdcTraderApi::PositionPool::AddShortTrade(const string& instrument,
+      int vol, double price) {
+  pthread_mutex_lock(&mutex_);
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  if (it == position_map_.end()) {
+    Position *pos = new Position(instrument);
+    pos->AddShortTrade(vol, price);
+    position_map_.insert(pair<string, Position*>(instrument, pos));
+  } else {
+    Position *pos = it->second;
+    pos->AddShortTrade(vol, price);
+  }
+  pthread_mutex_unlock(&mutex_);
+}
+
+int ImplFixFtdcTraderApi::PositionPool::GetLongTradeVol(const string& instrument) {
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  int vol = 0;
+  if (it != position_map_.end()) {
+    pthread_mutex_lock(&mutex_);
+    Position *pos = it->second;
+    vol = pos->long_trade_vol_;
+    pthread_mutex_unlock(&mutex_);
+  }
+  return vol;
+}
+
+int ImplFixFtdcTraderApi::PositionPool::GetShortTradeVol(const string& instrument) {
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  int vol = 0;
+  if (it != position_map_.end()) {
+    pthread_mutex_lock(&mutex_);
+    Position *pos = it->second;
+    vol = pos->short_trade_vol_;
+    pthread_mutex_unlock(&mutex_);
+  }
+  return vol;
+}
+
+int ImplFixFtdcTraderApi::PositionPool::GetLongPos(const string& instrument) {
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  int vol = 0;
+  if (it != position_map_.end()) {
+    pthread_mutex_lock(&mutex_);
+    Position *pos = it->second;
+    int long_vol = pos->long_trade_vol_;
+    int short_vol = pos->short_trade_vol_;
+    vol = (long_vol > short_vol)? long_vol - short_vol : 0;
+    pthread_mutex_unlock(&mutex_);
+  }
+  return vol;
+}
+
+int ImplFixFtdcTraderApi::PositionPool::GetShortPos(const string& instrument) {
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  int vol = 0;
+  if (it != position_map_.end()) {
+    pthread_mutex_lock(&mutex_);
+    Position *pos = it->second;
+    int long_vol = pos->long_trade_vol_;
+    int short_vol = pos->short_trade_vol_;
+    vol = (short_vol > long_vol)? short_vol - long_vol : 0;
+    pthread_mutex_unlock(&mutex_);
+  }
+  return vol;
+}
+
+int ImplFixFtdcTraderApi::PositionPool::GetNetPos(const string& instrument) {
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  int vol = 0;
+  if (it != position_map_.end()) {
+    pthread_mutex_lock(&mutex_);
+    Position *pos = it->second;
+    int long_vol = pos->long_trade_vol_;
+    int short_vol = pos->short_trade_vol_;
+    vol = long_vol - short_vol;
+    pthread_mutex_unlock(&mutex_);
+  }
+  return vol;
+}
+
+int ImplFixFtdcTraderApi::PositionPool::LimitTriggered(const string& instrument,
+  int vol) {
+  map<string, Position*>::iterator it = position_map_.find(instrument);
+  int net_pos = 0;
+  int pos_limit = 0;
+  int size_limit = 0;
+  int triggered = 0;
+  if (it != position_map_.end()) {
+    pthread_mutex_lock(&mutex_);
+    Position *pos = it->second;
+    int long_vol = pos->long_trade_vol_;
+    int short_vol = pos->short_trade_vol_;
+    net_pos = long_vol - short_vol;
+    pos_limit = pos->max_position_limit_;
+    size_limit = pos->max_order_size_;
+    pthread_mutex_unlock(&mutex_);
+  }
+  if (vol > size_limit || vol < -1*size_limit) {
+    triggered = 1316;
+  }
+  if (net_pos + vol > pos_limit || net_pos + vol < -1*pos_limit) {
+    triggered = 1416;
+  }
+  return triggered;
+}
+
+
 ImplFixFtdcTraderApi::ImplFixFtdcTraderApi(const char *configPath) :
     last_msg_seq_num_(0), acc_session_id_{0}, firm_id_{0}, sender_sub_id_{0},
     target_sub_id_{0}, sender_loc_id_{0}, self_match_prev_id_{0} {
@@ -845,6 +1122,29 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   FIX::OrdType order_type = FIX::OrdType_LIMIT;
   if (pInputOrder->OrderPriceType == THOST_FTDC_OPT_AnyPrice) {
     order_type = FIX::OrdType_MARKET;
+  }
+  int op = 1;
+  if (pInputOrder->Direction == THOST_FTDC_D_Sell) {
+    op = -1;
+  }
+  int trig = position_pool_.LimitTriggered(string(pInputOrder->InstrumentID), 
+        op*pInputOrder->VolumeTotalOriginal);
+  if (trig != 0) {
+    CThostFtdcRspInfoField rsp;
+    memset(&rsp, 0, sizeof(rsp));
+    if (trig == 1316) {
+      snprintf(rsp.ErrorMsg, sizeof(rsp.ErrorMsg), "Order Volume Exceeds Max Order Size!");
+    } else if (trig == 1416) {
+      snprintf(rsp.ErrorMsg, sizeof(rsp.ErrorMsg), "Open Size Exceeds Max Open Position!");
+    }
+    rsp.ErrorID = trig;
+    InputOrderRspField *rsp_ptr = new InputOrderRspField(trader_spi_, *pInputOrder, rsp);
+    pthread_t input_error_thread;
+    int ret = pthread_create(&input_error_thread, NULL, rtn_input_error, (void *)rsp_ptr);
+    if (ret != 0) {
+      cout << "Failed to create input order error thread!" << endl;;
+    }
+    return 0;
   }
   FIX::HandlInst handl_inst('1');
   // FIX::ClOrdID cl_order_id(pInputOrder->UserOrderLocalID);
@@ -1079,6 +1379,13 @@ int ImplFixFtdcTraderApi::ReqQryTradingAccount(
   return 0;
 }
 
+void *ImplFixFtdcTraderApi::rtn_input_error(void *rsp) {
+  InputOrderRspField *order_rsp = (InputOrderRspField *)rsp;
+  usleep(20);
+  order_rsp->spi->OnRspOrderInsert(&(order_rsp->input_order), &(order_rsp->rsp_info), 0, true);
+  return (void *)NULL;
+}
+
 void ImplFixFtdcTraderApi::onCreate(const FIX::SessionID& sessionID) {
   session_id_ = sessionID;
   string str_sender_comp_id = sessionID.getSenderCompID().getValue();
@@ -1109,12 +1416,17 @@ void ImplFixFtdcTraderApi::onCreate(const FIX::SessionID& sessionID) {
             session_id.begin(), ::tolower);
   string client_name = dict.getString("CLIENTNAME");
   string add_detail = dict.getString("ADDITIONALOPTIONALDETAIL");
+  string settle_position_file_name = dict.getString("SETTLEPOSITIONFILE");
+  string limit_file_name = dict.getString("LIMITFILE");
 
   char audit_file_name[256];
   snprintf(audit_file_name, sizeof(audit_file_name), 
            "%d_%s_%s_%s_%s_%s_%s_audittrail.globex.csv",
            date, ec_id.c_str(), market_code.c_str(), platform_code.c_str(),
            session_id.c_str(), client_name.c_str(), add_detail.c_str());
+  LoadSettlementPosition(settle_position_file_name);
+  LoadLimit(limit_file_name);
+  LoadAuditTrail(audit_file_name);
 
   audit_trail_.Init(audit_file_name);
   seq_serial_.SetPrefix(str_sender_comp_id.c_str());
@@ -1139,11 +1451,15 @@ void ImplFixFtdcTraderApi::onLogon(const FIX::SessionID& sessionID) {
 
 void ImplFixFtdcTraderApi::onLogout(const FIX::SessionID& sessionID) {
   cout << "Logout - " << sessionID << endl;
-  CThostFtdcUserLogoutField logout_field;
-  memset(&logout_field, 0, sizeof(logout_field));
+  // CThostFtdcUserLogoutField logout_field;
+  CThostFtdcRspUserLoginField login_field;
+  memset(&login_field, 0, sizeof(login_field));
   CThostFtdcRspInfoField info_field;
   memset(&info_field, 0, sizeof(info_field));
-  trader_spi_->OnRspUserLogout(&logout_field, &info_field, 0, true);
+  info_field.ErrorID = 1001;
+  snprintf(info_field.ErrorMsg, sizeof(info_field.ErrorMsg), "%s", "Logout Forced");
+  trader_spi_->OnRspUserLogin(&login_field, &info_field, 0, true);
+  // trader_spi_->OnRspUserLogout(&logout_field, &info_field, 0, true);
   // trader_spi_->OnFrontDisconnected(1001);
 }
 
@@ -1781,6 +2097,103 @@ void ImplFixFtdcTraderApi::FillResendRequest(FIX::Message& message) {
 void ImplFixFtdcTraderApi::FillRejectRequest(FIX::Message& message) {
   // TODO
 }
+
+void ImplFixFtdcTraderApi::LoadSettlementPosition(
+      const string& settle_position_file_name) {
+  fstream position_file;
+  position_file.open(settle_position_file_name.c_str(), fstream::in);
+  vector<string> info_list;
+  if (position_file.good()) {
+    while(!position_file.eof()) {
+      char line[512];
+      info_list.clear();
+      position_file.getline(line, 512);
+      split(line, ",", info_list);
+      if (info_list.size() != 4) {
+        continue;
+      }
+      string instrument = info_list[0];
+      string direction = info_list[1];
+      int position = atoi(info_list[2].c_str());
+      double price = atof(info_list[3].c_str());
+      cout << "LoadSettlementPosition:" << direction << " " << instrument
+           << " " << position << " " << price << endl;
+      if (direction == "long") {
+        position_pool_.SetYdLongPosition(instrument, position, price);
+        position_pool_.AddLongTrade(instrument, position, price);
+      } else if (direction == "short") {
+        position_pool_.SetYdShortPosition(instrument, position, price);
+        position_pool_.AddShortTrade(instrument, position, price);
+      }
+    }
+  } // if file exists
+  position_file.close();
+}
+
+void ImplFixFtdcTraderApi::LoadLimit(
+      const string& limit_file_name) {
+  fstream limit_file;
+  limit_file.open(limit_file_name.c_str(), fstream::in);
+  vector<string> info_list;
+  if (limit_file.good()) {
+    while(!limit_file.eof()) {
+      char line[512];
+      info_list.clear();
+      limit_file.getline(line, 512);
+      split(line, ",", info_list);
+      if (info_list.size() != 3) {
+        continue;
+      }
+      string instrument = info_list[0];
+      int max_order_size = atoi(info_list[1].c_str());
+      int max_position = atoi(info_list[2].c_str());
+      cout << "LoadLimit:" << " " << instrument
+           << " " << max_order_size << " " << max_position << endl;
+      position_pool_.SetMaxOrderSize(instrument, max_order_size);
+      position_pool_.SetPositionLimit(instrument, max_position);
+    }
+  } // if file exists
+  limit_file.close();
+}
+
+void ImplFixFtdcTraderApi::LoadAuditTrail(const string& audit_file_name) {
+  fstream audit_file;
+  audit_file.open(audit_file_name.c_str(), fstream::in);
+  vector<string> info_list;
+  if (audit_file.good()) {
+    while(!audit_file.eof()) {
+      char line[512];
+      info_list.clear();
+      audit_file.getline(line, 512);
+      AuditLog audit_log(line);
+      string message_type = audit_log.elements["message_type"];
+      if (message_type == "") {
+        continue;
+      }
+      split(message_type, "/", info_list);
+      if (info_list.size() != 2) {
+        continue;
+      }
+      int msg_type = atoi(info_list[0].c_str());
+      int order_status = atoi(info_list[1].c_str());
+      if (msg_type == 8 && (order_status == 1 || order_status == 2)) {
+        int direction = atoi(audit_log.elements["buy_sell_indicator"].c_str());
+        string instrument = audit_log.elements["instrument_description"];
+        int vol = atoi(audit_log.elements["fill_quantity"].c_str());
+        double price = atof(audit_log.elements["fill_price"].c_str());
+        cout << "LoadAuditTrail:" << instrument << " " << direction
+             << " " << vol << " " << price << endl;
+        if (direction == 1) {
+          position_pool_.AddLongTrade(instrument, vol, price);
+        } else if (direction == 2) {
+          position_pool_.AddShortTrade(instrument, vol, price);
+        }
+      } // if message_type is FILL NOTICE
+    }
+  } // if file exists
+  audit_file.close(); 
+}
+
 
 CThostFtdcOrderField ImplFixFtdcTraderApi::ToOrderField(
       const CME_FIX_NAMESPACE::ExecutionReport& report) {
