@@ -1113,6 +1113,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   InputOrder *input_order = order_pool_.add(pInputOrder);
   // real order-ID equal OrderRef/MAX_STRATEGY_NUM(100)
   // int order_id = atoi(pInputOrder->OrderRef) / 100;
+  cout << "ReqOrderInsert:" << pInputOrder->InstrumentID << endl;
   int order_id = atoi(pInputOrder->OrderRef);
   seq_serial_.DumpOrderID(order_id);
   int no_stid = order_id / 100;
