@@ -1127,6 +1127,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   if (pInputOrder->Direction == THOST_FTDC_D_Sell) {
     op = -1;
   }
+  cout << "Check Limit : " << pInputOrder->InstrumentID << endl;
   int trig = position_pool_.LimitTriggered(string(pInputOrder->InstrumentID), 
         op*pInputOrder->VolumeTotalOriginal);
   if (trig != 0) {
@@ -1134,8 +1135,10 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
     memset(&rsp, 0, sizeof(rsp));
     if (trig == 1316) {
       snprintf(rsp.ErrorMsg, sizeof(rsp.ErrorMsg), "Order Volume Exceeds Max Order Size!");
+      cout << "Trigger Max Order Size Limit: " << pInputOrder->InstrumentID << endl;
     } else if (trig == 1416) {
       snprintf(rsp.ErrorMsg, sizeof(rsp.ErrorMsg), "Open Size Exceeds Max Open Position!");
+      cout << "Trigger Max Open Position Limit: " << pInputOrder->InstrumentID << endl;
     }
     rsp.ErrorID = trig;
     InputOrderRspField *rsp_ptr = new InputOrderRspField(trader_spi_, *pInputOrder, rsp);
