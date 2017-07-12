@@ -1113,7 +1113,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   InputOrder *input_order = order_pool_.add(pInputOrder);
   // real order-ID equal OrderRef/MAX_STRATEGY_NUM(100)
   // int order_id = atoi(pInputOrder->OrderRef) / 100;
-  cout << "ReqOrderInsert:" << pInputOrder->InstrumentID << endl;
+  // cout << "ReqOrderInsert:" << pInputOrder->InstrumentID << endl;
   int order_id = atoi(pInputOrder->OrderRef);
   seq_serial_.DumpOrderID(order_id);
   int no_stid = order_id / 100;
@@ -1128,7 +1128,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   if (pInputOrder->Direction == THOST_FTDC_D_Sell) {
     op = -1;
   }
-  cout << "Check Limit : " << pInputOrder->InstrumentID << endl;
+  // cout << "Check Limit : " << pInputOrder->InstrumentID << endl;
   int trig = position_pool_.LimitTriggered(string(pInputOrder->InstrumentID), 
         op*pInputOrder->VolumeTotalOriginal);
   if (trig != 0) {
@@ -1232,7 +1232,7 @@ int ImplFixFtdcTraderApi::ReqOrderInsert(
   audit_trail_.WriteLog(audit_log);
 
   // cout << "ReqOrderInsert" << pInputOrder->UserOrderLocalID << endl;
-  cout << "ReqOrderInsert" << pInputOrder->OrderRef << endl;
+  // cout << "ReqOrderInsert:" << pInputOrder->OrderRef << endl;
   FIX::Session::sendToTarget(new_order, session_id_);
 
   return 0;
