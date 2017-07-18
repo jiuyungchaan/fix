@@ -305,6 +305,7 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
 
 const char *time_now();
 int date_now();
+int date_gm();
 int date_yesterday();
 void split(const std::string& str, const std::string& del,
 					 std::vector<std::string>& v);
@@ -1950,6 +1951,19 @@ int date_now() {
 	struct tm *timeinfo;
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
+	
+	int date = (1900 + timeinfo->tm_year) * 10000 +
+						 (1 + timeinfo->tm_mon) * 100 +
+						 timeinfo->tm_mday;
+	return date;
+}
+
+int date_gm() {
+	// static char timestamp_str[32];
+	time_t rawtime;
+	struct tm *timeinfo;
+	time(&rawtime);
+	timeinfo = gmtime(&rawtime);
 	
 	int date = (1900 + timeinfo->tm_year) * 10000 +
 						 (1 + timeinfo->tm_mon) * 100 +

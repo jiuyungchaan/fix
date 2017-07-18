@@ -365,7 +365,9 @@ class ImplFixFtdcTraderApi : public CFixFtdcTraderApi, public FIX::Application,
 };
 
 const char *time_now();
+const char *time_gm();
 int date_now();
+int date_gm();
 int date_yesterday();
 void split(const std::string& str, const std::string& del,
            std::vector<std::string>& v);
@@ -663,7 +665,7 @@ void SequenceSerialization::SetPrefix(const char *prefix) {
 }
 
 int SequenceSerialization::Init() {
-  date_ = date_now();
+  date_ = date_gm();
   char dump_file_name[64];
   snprintf(dump_file_name, sizeof(dump_file_name), "%s_%d.seq", prefix_, date_);
   dump_file_.open(dump_file_name, fstream::in | fstream::out | fstream::app);
@@ -1411,7 +1413,7 @@ void ImplFixFtdcTraderApi::onCreate(const FIX::SessionID& sessionID) {
   snprintf(self_match_prev_id_, sizeof(self_match_prev_id_), "%s",
            self_match_prev_id.c_str());
 
-  int date = date_now();
+  int date = date_gm();
   string ec_id = dict.getString("ECID");
   string market_code = dict.getString("MARKETCODE");
   string platform_code = dict.getString("PLATFORMCODE");
@@ -2451,12 +2453,42 @@ const char* time_now() {
   return timestamp_str;
 }
 
+const char* time_gm() {
+  static char timestamp_str[32];
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = gmtime(&rawtime);
+  
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  
+  snprintf(timestamp_str, sizeof(timestamp_str), 
+           "%d%02d%02d-%02d:%02d:%02d.%03ld", 1900 + timeinfo->tm_year,
+           1 + timeinfo->tm_mon, timeinfo->tm_mday, timeinfo->tm_hour,
+           timeinfo->tm_min, timeinfo->tm_sec, tv.tv_usec / 1000);
+  return timestamp_str;
+}
+
 int date_now() {
   // static char timestamp_str[32];
   time_t rawtime;
   struct tm *timeinfo;
   time(&rawtime);
   timeinfo = localtime(&rawtime);
+  
+  int date = (1900 + timeinfo->tm_year) * 10000 +
+             (1 + timeinfo->tm_mon) * 100 +
+             timeinfo->tm_mday;
+  return date;
+}
+
+int date_gm() {
+  // static char timestamp_str[32];
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = gmtime(&rawtime);
   
   int date = (1900 + timeinfo->tm_year) * 10000 +
              (1 + timeinfo->tm_mon) * 100 +
