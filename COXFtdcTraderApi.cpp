@@ -933,7 +933,8 @@ CSecurityFtdcTradeField ImplCOXFtdcTraderApi::ToTradeField(
                           (double)input_order->trades[i]->quantity;
       }
     }  // for loop to
-    if (total_qty <= 0 || total_turnover <= 0.0) {
+    // if (total_qty <= 0 || total_turnover <= 0.0) {
+    if (total_qty <= 0) {
       printf("Invalid total quantity[%d] or total turnover[%lf]\n", 
              total_qty, total_turnover);
       // snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
@@ -951,7 +952,12 @@ CSecurityFtdcTradeField ImplCOXFtdcTraderApi::ToTradeField(
         snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
         trade_field.Volume = 0;
       }
-    } else {
+    } else if (total_turnover > -1.0 && total_turnover < 1.0) {
+      double trade_price = atof(limit_price.c_str());
+      snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", limit_price.c_str());
+      trade_field.Volume = total_qty;
+      input_order->add_trade(trade_field.Volume, trade_price);
+    } else if (total_turnover > 0.0) {
       double trade_price = total_turnover / (double)total_qty;
       snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
       trade_field.Volume = total_qty;
