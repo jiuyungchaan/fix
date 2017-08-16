@@ -1,0 +1,21 @@
+
+CXX=g++
+QRY_SRC=COXFtdcQueryApi.cpp
+TRD_SRC=COXFtdcTraderApi.cpp
+INCLUDE=-I../include
+CXXFLAGS=-Wall -shared -fpic --std=c++0x
+QRY_TARGET=libcoxqueryapi.so
+TRD_TARGET=libcoxtraderapi.so
+LD_FLAGS=-lpthread
+
+all:$(QRY_TARGET) $(TRD_TARGET)
+
+clean:
+	rm libcoxqueryapi.so libcoxtraderapi.so
+
+$(QRY_TARGET):
+	$(CXX) $(QRY_SRC) $(INCLUDE) -o $(QRY_TARGET) $(CXXFLAGS) $(LD_FLAGS)
+	#scp -P 1022 libfixtraderapi.so root@192.168.91.100:/usr/local/lib/
+    #cp libtstraderapi.so /home/amanoenko/root/usr/local/lib/
+$(TRD_TARGET):
+	$(CXX) $(TRD_SRC) $(INCLUDE) -o $(TRD_TARGET) $(CXXFLAGS) $(LD_FLAGS)
