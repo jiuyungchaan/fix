@@ -2,7 +2,7 @@
 CXX=g++
 QRY_SRC=TsSecurityFtdcQueryApi.cpp
 TRD_SRC=TsSecurityFtdcTraderApi.cpp
-INCLUDE=-I../include
+INCLUDE=-I../api/include
 CXXFLAGS=-Wall -shared -fpic --std=c++0x
 QRY_TARGET=libtssecurityqueryapi.so
 TRD_TARGET=libtssecuritytraderapi.so
