@@ -1,17 +1,21 @@
 
 CXX=g++
-SRC=BOFtdcTraderApi.cpp
+QRY_SRC=BOFtdcQueryApi.cpp
+TRD_SRC=BOFtdcTraderApi.cpp
 INCLUDE=-I../api/include
 CXXFLAGS=-Wall -shared -fpic --std=c++0x
-TARGET=libbotraderapi.so
+QRY_TARGET=libboqueryapi.so
+TRD_TARGET=libbotraderapi.so
 LD_FLAGS=-lpthread
 
-all:$(TARGET)
+all:$(QRY_TARGET) $(TRD_TARGET)
 
 clean:
-	rm libbotraderapi.so
+	rm libboqueryapi.so libbotraderapi.so
 
-$(TARGET):
-	$(CXX) $(SRC) $(INCLUDE) -o $(TARGET) $(CXXFLAGS) $(LD_FLAGS)
+$(QRY_TARGET):
+	$(CXX) $(QRY_SRC) $(INCLUDE) -o $(QRY_TARGET) $(CXXFLAGS) $(LD_FLAGS)
 	#scp -P 1022 libfixtraderapi.so root@192.168.91.100:/usr/local/lib/
     #cp libtstraderapi.so /home/amanoenko/root/usr/local/lib/
+$(TRD_TARGET):
+	$(CXX) $(TRD_SRC) $(INCLUDE) -o $(TRD_TARGET) $(CXXFLAGS) $(LD_FLAGS)
