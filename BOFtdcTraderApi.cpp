@@ -73,6 +73,7 @@ class ImplBOFtdcTraderApi : public BOFtdcTraderApi{
 
     CSecurityFtdcInputOrderField basic_order;
     char client_id[64];
+    char sys_id[64];
     SubTrade *trades[100];
     int trade_size;
 
@@ -139,13 +140,13 @@ BOFtdcTraderApi *BOFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) {
   return (BOFtdcTraderApi *)api;
 }
 
-ImplBOFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, trade_size(0) {
+ImplBOFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, sys_id{0}, trade_size(0) {
   memset(&basic_order, 0, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
 }
 
 ImplBOFtdcTraderApi::InputOrder::InputOrder(
-      CSecurityFtdcInputOrderField *pInputOrder) : client_id{0}, trade_size(0) {
+      CSecurityFtdcInputOrderField *pInputOrder) : client_id{0}, sys_id{0}, trade_size(0) {
   memcpy(&basic_order, pInputOrder, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
 }
@@ -209,6 +210,10 @@ void ImplBOFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
            it->second);
   } else {
     sys_to_local_.insert(std::pair<std::string, int>(sys_id, local_id));
+    if (order_pool_[local_id] != NULL) {
+      snprintf(order_pool_[local_id]->sys_id, sizeof(order_pool_[local_id]->sys_id), "%s",
+            sys_id.c_str()); 
+    }
   }
 }
 
@@ -370,22 +375,19 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
       }
     } else if (status == "PARTIALLYFILLED") {
       // OnRtnTrade
-      if (properties["AVG_FILLED_PRICE"] != "" && 
-          properties["AVG_FILLED_PRICE"] != "0.0") {
-        string account = properties["ACCOUNT"];
-        if (strcmp(account.c_str(), user_id_) == 0) {
-          int has_order;
-          CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
-          if (!has_order) {
-            CSecurityFtdcOrderField order_field = ToOrderField(properties);
-            order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
-            trader_spi_->OnRtnOrder(&order_field);
-          }
-          if (trade_field.Volume > 0) {
-            trader_spi_->OnRtnTrade(&trade_field);
-          }
+      string account = properties["ACCOUNT"];
+      if (strcmp(account.c_str(), user_id_) == 0) {
+        int has_order;
+        CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
+        if (!has_order) {
+          CSecurityFtdcOrderField order_field = ToOrderField(properties);
+          order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
+          trader_spi_->OnRtnOrder(&order_field);
         }
-      }  // if AVG_FILLED_PRICE == 0.0, it is a cancel request confirmation
+        if (trade_field.Volume > 0) {
+          trader_spi_->OnRtnTrade(&trade_field);
+        }
+      }
     } else if (status == "PARTIALLYFILLEDUROUT") {
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
@@ -696,8 +698,10 @@ int ImplBOFtdcTraderApi::ReqOrderAction(
   InputOrder *input_order = order_pool_.get(local_id);
   int ret = 1;
   if (input_order != NULL) {
-    snprintf(message, sizeof(message), "COMMAND=CANCELORDER;CLIENTID=%s;EXCHANGE=%s",
-             input_order->client_id, input_order->basic_order.ExchangeID);
+    snprintf(message, sizeof(message), "COMMAND=CANCELORDER;INSTRUMENT=%s.%s;"
+             "CLIENTID=%s;SYSID=%s;EXCHANGE=%s",
+             input_order->basic_order.InstrumentID, input_order->basic_order.ExchangeID,
+             input_order->client_id, input_order->sys_id, input_order->basic_order.ExchangeID);
     ret = send(server_fd_, message, strlen(message) + 1, 0);
     // cout << "Send message:" << message << endl;
     log_file_ << time_now() << "- Send message:" << message << endl;
@@ -740,9 +744,9 @@ CSecurityFtdcOrderField ImplBOFtdcTraderApi::ToOrderField(
   string local_id = client_id;
 
   string cut_sys_id = sys_id;
-  if (sys_id.size() > 25) {
-    cut_sys_id = sys_id.substr(24, 19);
-  }
+  // if (sys_id.size() > 25) {
+  //   cut_sys_id = sys_id.substr(24, 19);
+  // }
   vector<string> ids;
   split(client_id, "_", ids);
   if (ids.size() == 2) {
@@ -838,7 +842,7 @@ CSecurityFtdcTradeField ImplBOFtdcTraderApi::ToTradeField(
   string limit_price = properties["LIMIT_PRICE"];
   string direction = properties["DIRECTION"];
   string fill_qty = properties["FILLED_QUANTITY"];
-  string fill_price = properties["AVG_FILLED_PRICE"];
+  string fill_price = properties["FILLED_PRICE"];
   string local_id = client_id;
 
   string cut_sys_id = sys_id;
@@ -921,48 +925,10 @@ CSecurityFtdcTradeField ImplBOFtdcTraderApi::ToTradeField(
 
   InputOrder *input_order = order_pool_.get(cut_sys_id);
   if (input_order != NULL) {
-    int total_qty = atoi(fill_qty.c_str());
-    double total_turnover = atof(fill_price.c_str()) * (double)total_qty;
-    // bool is_valid = true;
-    int received_qty = 0;
-    for (int i = 0; i < input_order->trade_size; i++) {
-      if (input_order->trades[i] != NULL) {
-        total_qty -= input_order->trades[i]->quantity;
-        received_qty += input_order->trades[i]->quantity;
-        total_turnover -= input_order->trades[i]->price *
-                          (double)input_order->trades[i]->quantity;
-      }
-    }  // for loop to
-    // if (total_qty <= 0 || total_turnover <= 0.0) {
-    if (total_qty <= 0) {
-      printf("Invalid total quantity[%d] or total turnover[%lf]\n", 
-             total_qty, total_turnover);
-      // snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
-      // trade_field.Volume = atoi(fill_qty.c_str());
-      int f_qty;
-      double f_prc;
-      if (status == "FILLED") {
-        f_qty = atoi(quantity.c_str()) - received_qty;
-        f_prc = atof(limit_price.c_str());
-        trade_field.Volume = f_qty;
-        snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", f_prc);
-        input_order->add_trade(trade_field.Volume, f_prc);
-        return trade_field;
-      } else {
-        snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
-        trade_field.Volume = 0;
-      }
-    } else if (total_turnover > -1.0 && total_turnover < 1.0) {
-      double trade_price = atof(limit_price.c_str());
-      snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", limit_price.c_str());
-      trade_field.Volume = total_qty;
-      input_order->add_trade(trade_field.Volume, trade_price);
-    } else if (total_turnover > 0.0) {
-      double trade_price = total_turnover / (double)total_qty;
-      snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
-      trade_field.Volume = total_qty;
-      input_order->add_trade(trade_field.Volume, trade_price);
-    }
+    trade_field.Volume = atoi(fill_qty.c_str());
+    double f_prc = atof(fill_price.c_str());
+    snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", f_prc);
+    input_order->add_trade(trade_field.Volume, f_prc);
     return trade_field;
   } else {
     printf("InputOrder [SysID-%s] not found!\n", cut_sys_id.c_str());

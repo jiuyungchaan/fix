@@ -246,7 +246,7 @@ void FixTrader::ReqOrderInsert(Order *order) {
 
   cout << "ReqOrderInsert:" << time_now_ms() << "-" << req.OrderRef << endl;
   trader_api_->ReqOrderInsert(&req, 0);
-///*
+/*
   snprintf(req.InstrumentID, sizeof(req.InstrumentID),
            "%s", "002232");
   trader_api_->ReqOrderInsert(&req, 0);
@@ -255,7 +255,7 @@ void FixTrader::ReqOrderInsert(Order *order) {
   trader_api_->ReqOrderInsert(&req, 0);
   snprintf(req.InstrumentID, sizeof(req.InstrumentID),
            "%s", "000816");
-  trader_api_->ReqOrderInsert(&req, 0);//*/
+  trader_api_->ReqOrderInsert(&req, 0);// */
   cout << "After ReqOrderInsert:" << time_now_ms() << "-" << req.OrderRef << endl;
 }
 
