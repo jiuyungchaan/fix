@@ -2871,6 +2871,7 @@
   <field number='1604' name='TradingSystemVersion' type='STRING' />
   <field number='1605' name='ApplicationSystemVendor' type='STRING' />
   <field number='7928' name='SelfMatchPreventionID' type='STRING' />
+  <field number='37711' name='CMENewField' type='STRING' />
   <field number='1188' name='Volatility' type='STRING' />
   <field number='1031' name='CustOrderHandlingInst' type='STRING' />
   <field number='1300' name='MarketSegmentID' type='STRING' />
