@@ -257,6 +257,7 @@
    <field name='Urgency' required='N' />
    <field name='SelfMatchPreventionID' required='N' />
    <field name='SelfMatchPreventionInstruction' required='N' />
+   <field name='CMENewField' required='N' />
   </message>
   <message name='OrderCancelReject' msgcat='app' msgtype='9'>
    <field name='OrderID' required='Y' />
