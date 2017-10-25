@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #include "BOFtdcTraderApi.h"
-//#include "BOFtdcQueryApi.h"
+#include "BOFtdcQueryApi.h"
 #include "order.h"
 #include "utils.h"
 
@@ -47,8 +47,8 @@ class FixTrader : public BOFtdcTraderSpi {
   OrderPool order_pool_;
 };
 
-/*
-class FixQuery : public COXFtdcQuerySpi {
+///*
+class FixQuery : public BOFtdcQuerySpi {
  public:
   FixQuery();
   FixQuery(const std::string &account, const std::string &password, const std::string &front_addr);
@@ -77,13 +77,13 @@ class FixQuery : public COXFtdcQuerySpi {
   // virtual void OnRtnTrade(CSecurityFtdcTradeField *pTrade);
 
  private:
-  COXFtdcQueryApi *trader_api_;
+  BOFtdcQueryApi *trader_api_;
   std::string user_id_;
   std::string password_;
   std::string front_addr_;
   OrderPool order_pool_;
 };
-*/
+//*/
 
 using namespace std;
 
@@ -298,7 +298,7 @@ void FixTrader::ReqUserLogout() {
 }
 
 
-/*
+///*
 FixQuery::FixQuery() {
   // TODO
   user_id_ = "3T7004N";
@@ -321,7 +321,7 @@ FixQuery::~FixQuery() {
 
 void FixQuery::Init() {
   // string config_file = user_id_ + ".cfg";
-  trader_api_ = COXFtdcQueryApi::CreateFtdcQueryApi();
+  trader_api_ = BOFtdcQueryApi::CreateFtdcQueryApi();
   trader_api_->RegisterSpi(this);
   trader_api_->RegisterFront(const_cast<char*>(front_addr_.c_str()));
   trader_api_->Init();
@@ -365,6 +365,7 @@ void FixQuery::OnRspQryInvestorPosition(CSecurityFtdcInvestorPositionField *pInv
        << " " << pInvestorPosition->PosiDirection 
        << " " << pInvestorPosition->YdPosition
        << " " << pInvestorPosition->Position
+       << " " << pInvestorPosition->TodayPosition
        << " " << pInvestorPosition->TradingDay << endl;
 }
 
@@ -393,6 +394,7 @@ void FixQuery::ReqQryInvestorPosition() {
 void FixQuery::ReqQryTradingAccount() {
   CSecurityFtdcQryTradingAccountField req;
   memset(&req, 0, sizeof(req));
+  snprintf(req.InvestorID, sizeof(req.InvestorID), "%s", user_id_.c_str());
   trader_api_->ReqQryTradingAccount(&req, 0);
 }
 
@@ -405,7 +407,7 @@ void FixQuery::ReqQryCreditStockAssignInfo() {
 void FixQuery::ReqUserLogout() {
   trader_api_->ReqUserLogout(NULL, 0);
 }
-*/
+//*/
 
 char ParseToOrderType(string order_type) {
   char ret = kOrderTypeLimit;
@@ -500,9 +502,9 @@ int main(int argc, char **argv) {
   }
   // FixTrader fix_trader("410082065696", password, front_addr);
   FixTrader fix_trader(account, password, front_addr);
-  //FixQuery fix_query(account, password, front_addr);
+  FixQuery fix_query(account, password, front_addr);
   fix_trader.Init();
-  //fix_query.Init();
+  fix_query.Init();
 
   sleep(10);
 
@@ -568,9 +570,9 @@ int main(int argc, char **argv) {
           fix_trader.ReqOrderAction(order->orig_order_id);
         }
       } else if (strcasecmp(request.c_str(), "position") == 0) {
-        //fix_query.ReqQryInvestorPosition();
+        fix_query.ReqQryInvestorPosition();
       } else if (strcasecmp(request.c_str(), "account") == 0) {
-        //fix_query.ReqQryTradingAccount();
+        fix_query.ReqQryTradingAccount();
       } else if (strcasecmp(request.c_str(), "marginposition") == 0) {
         //fix_query.ReqQryCreditStockAssignInfo();
       }
@@ -625,7 +627,7 @@ int main(int argc, char **argv) {
   // sleep(5);
 
   fix_trader.ReqUserLogout();
-  //fix_query.ReqUserLogout();
+  fix_query.ReqUserLogout();
   sleep(5);
   return 0;
 }

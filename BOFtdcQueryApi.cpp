@@ -420,6 +420,7 @@ CSecurityFtdcInvestorPositionField ImplBOFtdcQueryApi::ToPositionField(
   // LONG_QTY = QUANTITY
   string long_qty = properties["LONG_QTY"];
   string short_qty = properties["SHORT_QTY"];
+  string today_position = properties["TODAY_POSITION"];
   string average_price = properties["AVERAGE_PRICE"];
   string total_cost = properties["TOTAL_COST"];
   string market_value = properties["MARKET_VALUE"];
@@ -446,6 +447,7 @@ CSecurityFtdcInvestorPositionField ImplBOFtdcQueryApi::ToPositionField(
            exchange.c_str());
   pos_field.PosiDirection = SECURITY_FTDC_PD_Long;
   pos_field.YdPosition = atof(quantity.c_str());
+  pos_field.TodayPosition = atof(today_position.c_str());
   pos_field.Position = atof(available.c_str());
   pos_field.PositionCost = atof(total_cost.c_str());
   pos_field.StockValue = atof(market_value.c_str());
@@ -560,7 +562,7 @@ int ImplBOFtdcQueryApi::ReqQryInstrument(
 int ImplBOFtdcQueryApi::ReqQryTradingAccount(
       CSecurityFtdcQryTradingAccountField *pQryTradingAccount, int nRequestID) {
   char message[1024];
-  snprintf(message, sizeof(message), "COMMAND=QUERYACCOUNT");
+  snprintf(message, sizeof(message), "COMMAND=QUERYACCOUNT;ACCOUNT=%s", pQryTradingAccount->InvestorID);
   int ret = send(server_fd_, message, strlen(message) + 1, 0);
   // printf("Send message:%s\n", message);
   log_file_ << time_now() << "- Send message:" << message << endl;
