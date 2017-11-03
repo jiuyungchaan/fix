@@ -4,8 +4,8 @@
 ///@
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __BO_FTDCTRADERAPI_H__
-#define __BO_FTDCTRADERAPI_H__
+#ifndef __COX_FTDCTRADERAPI_H__
+#define __COX_FTDCTRADERAPI_H__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -16,59 +16,59 @@
 class BOFtdcTraderSpi
 {
 public:
-	///当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
+	///碌卤驴脥禄搂露脣脫毛陆禄脪脳潞贸脤篓陆篓脕垄脝冒脥篓脨脜脕卢陆脫脢卤拢篓禄鹿脦麓碌脟脗录脟掳拢漏拢卢赂脙路陆路篓卤禄碌梅脫脙隆拢
 	virtual void OnFrontConnected(){};
 	
-	///当客户端与交易后台通信连接断开时，该方法被调用。当发生这个情况后，API会自动重新连接，客户端可不做处理。
-	///@param nReason 错误原因
-	///        0x1001 网络读失败
-	///        0x1002 网络写失败
-	///        0x2001 接收心跳超时
-	///        0x2002 发送心跳失败
-	///        0x2003 收到错误报文
+	///碌卤驴脥禄搂露脣脫毛陆禄脪脳潞贸脤篓脥篓脨脜脕卢陆脫露脧驴陋脢卤拢卢赂脙路陆路篓卤禄碌梅脫脙隆拢碌卤路垄脡煤脮芒赂枚脟茅驴枚潞贸拢卢API禄谩脳脭露炉脰脴脨脗脕卢陆脫拢卢驴脥禄搂露脣驴脡虏禄脳枚麓娄脌铆隆拢
+	///@param nReason 麓铆脦贸脭颅脪貌
+	///        0x1001 脥酶脗莽露脕脢搂掳脺
+	///        0x1002 脥酶脗莽脨麓脢搂掳脺
+	///        0x2001 陆脫脢脮脨脛脤酶鲁卢脢卤
+	///        0x2002 路垄脣脥脨脛脤酶脢搂掳脺
+	///        0x2003 脢脮碌陆麓铆脦贸卤篓脦脛
 	virtual void OnFrontDisconnected(int nReason){};
 		
-	///心跳超时警告。当长时间未收到报文时，该方法被调用。
-	///@param nTimeLapse 距离上次接收报文的时间
+	///脨脛脤酶鲁卢脢卤戮炉赂忙隆拢碌卤鲁陇脢卤录盲脦麓脢脮碌陆卤篓脦脛脢卤拢卢赂脙路陆路篓卤禄碌梅脫脙隆拢
+	///@param nTimeLapse 戮脿脌毛脡脧麓脦陆脫脢脮卤篓脦脛碌脛脢卤录盲
 	virtual void OnHeartBeatWarning(int nTimeLapse){};	
 
-	///错误应答
+	///麓铆脦贸脫娄麓冒
 	virtual void OnRspError(CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	///登录请求响应
+	///碌脟脗录脟毛脟贸脧矛脫娄
 	virtual void OnRspUserLogin(CSecurityFtdcRspUserLoginField *pRspUserLogin, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	///登出请求响应
+	///碌脟鲁枚脟毛脟贸脧矛脫娄
 	virtual void OnRspUserLogout(CSecurityFtdcUserLogoutField *pUserLogout, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	///获取认证随机码请求响应
+	///禄帽脠隆脠脧脰陇脣忙禄煤脗毛脟毛脟贸脧矛脫娄
 	virtual void OnRspFetchAuthRandCode(CSecurityFtdcAuthRandCodeField *pAuthRandCode, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	///报单录入请求响应
+	///卤篓碌楼脗录脠毛脟毛脟贸脧矛脫娄
 	virtual void OnRspOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	///报单操作请求响应
+	///卤篓碌楼虏脵脳梅脟毛脟贸脧矛脫娄
 	virtual void OnRspOrderAction(CSecurityFtdcInputOrderActionField *pInputOrderAction, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	// ///用户口令更新请求响应
+	// ///脫脙禄搂驴脷脕卯赂眉脨脗脟毛脟贸脧矛脫娄
 	// virtual void OnRspUserPasswordUpdate(CSecurityFtdcUserPasswordUpdateField *pUserPasswordUpdate, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	// ///资金账户口令更新请求响应
+	// ///脳脢陆冒脮脣禄搂驴脷脕卯赂眉脨脗脟毛脟贸脧矛脫娄
 	// virtual void OnRspTradingAccountPasswordUpdate(CSecurityFtdcTradingAccountPasswordUpdateField *pTradingAccountPasswordUpdate, CSecurityFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
-	///报单通知
+	///卤篓碌楼脥篓脰陋
 	virtual void OnRtnOrder(CSecurityFtdcOrderField *pOrder) {};
 
-	///成交通知
+	///鲁脡陆禄脥篓脰陋
 	virtual void OnRtnTrade(CSecurityFtdcTradeField *pTrade) {};
 
-	///报单录入错误回报
+	///卤篓碌楼脗录脠毛麓铆脦贸禄脴卤篓
 	virtual void OnErrRtnOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, CSecurityFtdcRspInfoField *pRspInfo) {};
 
-	///报单操作错误回报
+	///卤篓碌楼虏脵脳梅麓铆脦贸禄脴卤篓
 	virtual void OnErrRtnOrderAction(CSecurityFtdcOrderActionField *pOrderAction, CSecurityFtdcRspInfoField *pRspInfo) {};
 
-	// /平台状态信息通知
+	// /脝陆脤篓脳麓脤卢脨脜脧垄脥篓脰陋
 	// virtual void OnRtnPlatformStateInfo(CSecurityFtdcPlatformStateInfoField *pPlatformStateInfo) {};
 };
 
@@ -81,74 +81,74 @@ public:
 class BOFtdcTraderApi
 {
 public:
-	///创建TraderApi
-	///@param pszFlowPath 存贮订阅信息文件的目录，默认为当前目录
-	///@return 创建出的UserApi
+	///麓麓陆篓TraderApi
+	///@param pszFlowPath 麓忙脰眉露漏脭脛脨脜脧垄脦脛录镁碌脛脛驴脗录拢卢脛卢脠脧脦陋碌卤脟掳脛驴脗录
+	///@return 麓麓陆篓鲁枚碌脛UserApi
 	static BOFtdcTraderApi *CreateFtdcTraderApi(const char *pszFlowPath = "");
 	
-	///删除接口对象本身
-	///@remark 不再使用本接口对象时,调用该函数删除接口对象
+	///脡戮鲁媒陆脫驴脷露脭脧贸卤戮脡铆
+	///@remark 虏禄脭脵脢鹿脫脙卤戮陆脫驴脷露脭脧贸脢卤,碌梅脫脙赂脙潞炉脢媒脡戮鲁媒陆脫驴脷露脭脧贸
 	virtual void Release() = 0;
 	
-	///初始化
-	///@remark 初始化运行环境,只有调用后,接口才开始工作
+	///鲁玫脢录禄炉
+	///@remark 鲁玫脢录禄炉脭脣脨脨禄路戮鲁,脰禄脫脨碌梅脫脙潞贸,陆脫驴脷虏脜驴陋脢录鹿陇脳梅
 	virtual void Init() = 0;
 	
-	///等待接口线程结束运行
-	///@return 线程退出代码
+	///碌脠麓媒陆脫驴脷脧脽鲁脤陆谩脢酶脭脣脨脨
+	///@return 脧脽鲁脤脥脣鲁枚麓煤脗毛
 	virtual int Join() = 0;
 	
-	///获取当前交易日
-	///@retrun 获取到的交易日
-	///@remark 只有登录成功后,才能得到正确的交易日
+	///禄帽脠隆碌卤脟掳陆禄脪脳脠脮
+	///@retrun 禄帽脠隆碌陆碌脛陆禄脪脳脠脮
+	///@remark 脰禄脫脨碌脟脗录鲁脡鹿娄潞贸,虏脜脛脺碌脙碌陆脮媒脠路碌脛陆禄脪脳脠脮
 	virtual const char *GetTradingDay() = 0;
 	
-	///注册前置机网络地址
-	///@param pszFrontAddress：前置机网络地址。
-	///@remark 网络地址的格式为：“protocol://ipaddress:port”，如：”tcp://127.0.0.1:17001”。 
-	///@remark “tcp”代表传输协议，“127.0.0.1”代表服务器地址。”17001”代表服务器端口号。
+	///脳垄虏谩脟掳脰脙禄煤脥酶脗莽碌脴脰路
+	///@param pszFrontAddress拢潞脟掳脰脙禄煤脥酶脗莽碌脴脰路隆拢
+	///@remark 脥酶脗莽碌脴脰路碌脛赂帽脢陆脦陋拢潞隆掳protocol://ipaddress:port隆卤拢卢脠莽拢潞隆卤tcp://127.0.0.1:17001隆卤隆拢 
+	///@remark 隆掳tcp隆卤麓煤卤铆麓芦脢盲脨颅脪茅拢卢隆掳127.0.0.1隆卤麓煤卤铆路镁脦帽脝梅碌脴脰路隆拢隆卤17001隆卤麓煤卤铆路镁脦帽脝梅露脣驴脷潞脜隆拢
 	virtual void RegisterFront(char *pszFrontAddress) = 0;
 	
-	///注册回调接口
-	///@param pSpi 派生自回调接口类的实例
+	///脳垄虏谩禄脴碌梅陆脫驴脷
+	///@param pSpi 脜脡脡煤脳脭禄脴碌梅陆脫驴脷脌脿碌脛脢碌脌媒
 	virtual void RegisterSpi(BOFtdcTraderSpi *pSpi) = 0;
 	
-	///订阅私有流。
-	///@param nResumeType 私有流重传方式  
-	///        SECURITY_TERT_RESTART:从本交易日开始重传
-	///        SECURITY_TERT_RESUME:从上次收到的续传
-	///        SECURITY_TERT_QUICK:只传送登录后私有流的内容
-	///@remark 该方法要在Init方法前调用。若不调用则不会收到私有流的数据。
+	///露漏脭脛脣陆脫脨脕梅隆拢
+	///@param nResumeType 脣陆脫脨脕梅脰脴麓芦路陆脢陆  
+	///        SECURITY_TERT_RESTART:麓脫卤戮陆禄脪脳脠脮驴陋脢录脰脴麓芦
+	///        SECURITY_TERT_RESUME:麓脫脡脧麓脦脢脮碌陆碌脛脨酶麓芦
+	///        SECURITY_TERT_QUICK:脰禄麓芦脣脥碌脟脗录潞贸脣陆脫脨脕梅碌脛脛脷脠脻
+	///@remark 赂脙路陆路篓脪陋脭脷Init路陆路篓脟掳碌梅脫脙隆拢脠么虏禄碌梅脫脙脭貌虏禄禄谩脢脮碌陆脣陆脫脨脕梅碌脛脢媒戮脻隆拢
 	virtual void SubscribePrivateTopic(SECURITY_TE_RESUME_TYPE nResumeType) = 0;
 	
-	///订阅公共流。
-	///@param nResumeType 公共流重传方式  
-	///        SECURITY_TERT_RESTART:从本交易日开始重传
-	///        SECURITY_TERT_RESUME:从上次收到的续传
-	///        SECURITY_TERT_QUICK:只传送登录后公共流的内容
-	///@remark 该方法要在Init方法前调用。若不调用则不会收到公共流的数据。
+	///露漏脭脛鹿芦鹿虏脕梅隆拢
+	///@param nResumeType 鹿芦鹿虏脕梅脰脴麓芦路陆脢陆  
+	///        SECURITY_TERT_RESTART:麓脫卤戮陆禄脪脳脠脮驴陋脢录脰脴麓芦
+	///        SECURITY_TERT_RESUME:麓脫脡脧麓脦脢脮碌陆碌脛脨酶麓芦
+	///        SECURITY_TERT_QUICK:脰禄麓芦脣脥碌脟脗录潞贸鹿芦鹿虏脕梅碌脛脛脷脠脻
+	///@remark 赂脙路陆路篓脪陋脭脷Init路陆路篓脟掳碌梅脫脙隆拢脠么虏禄碌梅脫脙脭貌虏禄禄谩脢脮碌陆鹿芦鹿虏脕梅碌脛脢媒戮脻隆拢
 	virtual void SubscribePublicTopic(SECURITY_TE_RESUME_TYPE nResumeType) = 0;
 
-	///用户登录请求
+	///脫脙禄搂碌脟脗录脟毛脟贸
 	virtual int ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginField, int nRequestID) = 0;
 	
 
-	///登出请求
+	///碌脟鲁枚脟毛脟贸
 	virtual int ReqUserLogout(CSecurityFtdcUserLogoutField *pUserLogout, int nRequestID) = 0;
 
-	///获取认证随机码请求
+	///禄帽脠隆脠脧脰陇脣忙禄煤脗毛脟毛脟贸
 	virtual int ReqFetchAuthRandCode(CSecurityFtdcAuthRandCodeField *pAuthRandCode, int nRequestID) = 0;
 
-	///报单录入请求
+	///卤篓碌楼脗录脠毛脟毛脟贸
 	virtual int ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int nRequestID) = 0;
 
-	///报单操作请求
+	///卤篓碌楼虏脵脳梅脟毛脟贸
 	virtual int ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrderAction, int nRequestID) = 0;
 
-	// ///用户口令更新请求
+	// ///脫脙禄搂驴脷脕卯赂眉脨脗脟毛脟贸
 	// virtual int ReqUserPasswordUpdate(CSecurityFtdcUserPasswordUpdateField *pUserPasswordUpdate, int nRequestID) = 0;
 
-	// ///资金账户口令更新请求
+	// ///脳脢陆冒脮脣禄搂驴脷脕卯赂眉脨脗脟毛脟贸
 	// virtual int ReqTradingAccountPasswordUpdate(CSecurityFtdcTradingAccountPasswordUpdateField *pTradingAccountPasswordUpdate, int nRequestID) = 0;
 
 protected:

@@ -1,0 +1,13 @@
+1. Architecture.
+   1) Network Connectivity: Configuration of customer-side physical devices to interface with CME Group environments
+      I. Production Environment Connectivity
+      II.Certification Environment Connectivity
+   2) Certification(AutoCert+): Transactions of all client systems on CME Globex via iLink order routing or processing CME Group market data should be certified by AutoCert+, an automated testing tool for validating client system functionality.
+      I. Certification environment: Certify a client system for core functionality.
+      II.New Release environment: Certify testing on new functionality.
+   3) Market Data Platform(MDP 3.0): Disseminate event-based bid, ask, trade, and statistical data for CME Group markets and also provide revocery and support services for market data processing.
+   4) iLink Order Entry: Path by which client systems connect to and transact business on the CME Globex platform.
+
+2. Server List.
+
+3. Contacts

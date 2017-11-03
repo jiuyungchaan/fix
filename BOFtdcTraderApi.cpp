@@ -375,6 +375,7 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
       }
     } else if (status == "PARTIALLYFILLED") {
       // OnRtnTrade
+      /*
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
         int has_order;
@@ -388,6 +389,7 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
           trader_spi_->OnRtnTrade(&trade_field);
         }
       }
+      */
     } else if (status == "PARTIALLYFILLEDUROUT") {
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
@@ -412,7 +414,9 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
     } else if (status == "FILLED") {
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
+        CSecurityFtdcOrderField order_field = ToOrderField(properties);
         // OnRtnTrade and OnRtnOrder
+        /*
         int has_order;
         CSecurityFtdcOrderField order_field = ToOrderField(properties);
         CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
@@ -422,6 +426,7 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
           order_field.OrderStatus = SECURITY_FTDC_OST_AllTraded;
         }
         trader_spi_->OnRtnTrade(&trade_field);
+        */
         trader_spi_->OnRtnOrder(&order_field);
       }
     } else if (status == "CANCELED") {
@@ -446,6 +451,14 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
       }
     }
   } // if type == "UPDATE" 
+  else if (msg_type == "TRADE") {
+    string account = properties["ACCOUNT"];
+    if (strcmp(account.c_str(), user_id_) == 0) {
+      int has_order;
+      CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
+      trader_spi_->OnRtnTrade(&trade_field);
+    }
+  } // if type == "TRADE"
   else if (msg_type == "LOGIN") {
     string error_code = properties["ERROR"];
     if (error_code == "0") {
