@@ -12,5 +12,22 @@
    7) Front-End Audit Trail: The eletronic audit trail associated with any system that accesses the CME Globex platform through the CME iLin k Gateway should contain a complete and accurate record of all activity through that connection.
 
 2. Server List.
+   1) Server in Shanghai Guotou (SSH Login):
+      HostName: 220.248.84.82
+      Port: 47
+      User: cfi
+      Password: 123456
+      Password of root: 123456
+   2) Server in CME (SSH Login via Shanghai Guotou server):
+      HostName: 1.1.1.1
+      Port: 22
+      User: jinrui
+      Password: jrqh@123.com
+   3) Server in Huabao (SSH Login via VPN):
+      HostName: 10.200.66.91
+      Port: 2292
+      User: cfi
+      Password: 123456
+      Password of root: 123456
 
-3. Contacts
+3. Contacts.
