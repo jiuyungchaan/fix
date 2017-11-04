@@ -6,7 +6,10 @@
       I. Certification environment: Certify a client system for core functionality.
       II.New Release environment: Certify testing on new functionality.
    3) Market Data Platform(MDP 3.0): Disseminate event-based bid, ask, trade, and statistical data for CME Group markets and also provide revocery and support services for market data processing.
-   4) iLink Order Entry: Path by which client systems connect to and transact business on the CME Globex platform.
+   4) iLink Order Entry: Path by which client systems connect to and transact business on the CME Globex platform. Engineers should develop the basic functionality required for a client system to connect to and maintain a FIX session on CME Globex.
+   5) Drop Copy: Drop Copy service allows customers to receive real-time copies of CME Globex Execution Report and Acknowledgment messages as they are sent over iLink order entry system sessions on a seperate, dedicated path.
+   6) Firmsoft: A browser-based order management tool that provides real-time access to information on working and filled orders across multiple firms.
+   7) Front-End Audit Trail: The eletronic audit trail associated with any system that accesses the CME Globex platform through the CME iLin k Gateway should contain a complete and accurate record of all activity through that connection.
 
 2. Server List.
 
