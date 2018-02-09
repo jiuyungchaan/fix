@@ -111,7 +111,7 @@ class OrderPool {
   static const int MAX_ORDER_SIZE = 10240;
   
   OrderPool() : order_size_(0) {
-    memset(order_pool_, sizeof(order_pool_), 0);
+    memset(order_pool_, 0, sizeof(order_pool_));
   }
 
   void reset_sequence(int start_id) {

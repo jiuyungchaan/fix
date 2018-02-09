@@ -22,6 +22,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <iostream>
 #include <fstream>
 #include <cctype>
@@ -125,6 +126,7 @@ class ImplCOXFtdcTraderApi : public COXFtdcTraderApi{
   pthread_t socket_thread_;
 
   OrderPool order_pool_;
+  std::set<std::string> client_ids_;
   std::fstream log_file_;
 };
 
@@ -360,6 +362,13 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
         // OnRtnOrder
         // if RECEIVED is already received, this must be a cancel received confirmation.
         CSecurityFtdcOrderField order_field = ToOrderField(properties);
+        string client_id = properties["LOCAL_ORDER_ID"];
+        set<string>::iterator it = client_ids_.find(client_id);
+        if (it == client_ids_.end()) {
+          //cout << "local order id:" << client_id << " not found" << endl;
+          return; // if order not found in local, do not callback the function
+        }
+          
         if (!order_pool_.has_order(order_field.OrderSysID)) {
           // add LocalOrderID&SysOrderID in the OrderPool?
           int local_id = strtol(order_field.OrderRef, NULL, 10)/100;
@@ -376,6 +385,12 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
         if (strcmp(account.c_str(), user_id_) == 0) {
           int has_order;
           CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
+          string client_id = properties["LOCAL_ORDER_ID"];
+          set<string>::iterator it = client_ids_.find(client_id);
+          if (it == client_ids_.end()) {
+            //cout << "local order id:" << client_id << " not found" << endl;
+            return; // if order not found in local, do not callback the function 
+          }
           if (!has_order) {
             CSecurityFtdcOrderField order_field = ToOrderField(properties);
             order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
@@ -393,6 +408,12 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
         int has_order;
         CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
         CSecurityFtdcOrderField order_field = ToOrderField(properties);
+        string client_id = properties["LOCAL_ORDER_ID"];
+        set<string>::iterator it = client_ids_.find(client_id);
+        if (it == client_ids_.end()) {
+          //cout << "local order id:" << client_id << " not found" << endl;
+          return; // if order not found in local, do not callback the function
+        }
         if (!has_order) {
           order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
           trader_spi_->OnRtnOrder(&order_field);
@@ -414,6 +435,12 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
         int has_order;
         CSecurityFtdcOrderField order_field = ToOrderField(properties);
         CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
+        string client_id = properties["LOCAL_ORDER_ID"];
+        set<string>::iterator it = client_ids_.find(client_id);
+        if (it == client_ids_.end()) {
+          //cout << "local order id:" << client_id << " not found" << endl;
+          return; // if order not found in local, do not callback the function
+        }
         if (!has_order) {
           order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
           trader_spi_->OnRtnOrder(&order_field);
@@ -426,6 +453,12 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
         CSecurityFtdcOrderField order_field = ToOrderField(properties);
+        string client_id = properties["LOCAL_ORDER_ID"];
+        set<string>::iterator it = client_ids_.find(client_id);
+        if (it == client_ids_.end()) {
+          //cout << "local order id:" << client_id << " not found" << endl;
+          return; // if order not found in local, do not callback the function 
+        }
         trader_spi_->OnRtnOrder(&order_field);
       }
     } else if (status == "REJECTED") {
@@ -433,6 +466,12 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
       if (strcmp(account.c_str(), user_id_) == 0) {
         CSecurityFtdcInputOrderField order_field = ToInputOrderField(properties);
         CSecurityFtdcRspInfoField info_field = ToRspField(properties);
+        string client_id = properties["LOCAL_ORDER_ID"];
+        set<string>::iterator it = client_ids_.find(client_id);
+        if (it == client_ids_.end()) {
+          //cout << "local order id:" << client_id << " not found" << endl;
+          return; // if order not found in local, do not callback the function 
+        }
         trader_spi_->OnRspOrderInsert(&order_field, &info_field, 0, true);
       }
     } else if (status == "SENDFAILED") {
@@ -440,6 +479,10 @@ void ImplCOXFtdcTraderApi::decode(const char *message) {
       if (strcmp(account.c_str(), user_id_) == 0) {
         CSecurityFtdcInputOrderField order_field = ToInputOrderField(properties);
         CSecurityFtdcRspInfoField info_field = ToRspField(properties);
+        string client_id = properties["LOCAL_ORDER_ID"];
+        set<string>::iterator it = client_ids_.find(client_id);
+        if (it == client_ids_.end())
+          return; // if order not found in local, do not callback the function
         trader_spi_->OnRspOrderInsert(&order_field, &info_field, 0, true);
       }
     }
@@ -685,6 +728,8 @@ int ImplCOXFtdcTraderApi::ReqOrderInsert(
     printf("Failed to send message - %d\n", ret);
     return 1;
   }
+  client_ids_.insert(string(client_id));
+  cout << "insert client id:" << client_id << endl;
   return 0;
 }
 

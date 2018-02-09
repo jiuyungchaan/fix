@@ -775,7 +775,7 @@ ImplFixFtdcTraderApi::InputOrder::InputOrder(
 }
 
 ImplFixFtdcTraderApi::OrderPool::OrderPool() {
-  memset(order_pool_, sizeof(order_pool_), 0);
+  memset(order_pool_, 0, sizeof(order_pool_));
 }
 
 ImplFixFtdcTraderApi::InputOrder *ImplFixFtdcTraderApi::OrderPool::get(

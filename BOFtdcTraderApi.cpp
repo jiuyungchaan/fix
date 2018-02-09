@@ -157,7 +157,7 @@ void ImplBOFtdcTraderApi::InputOrder::add_trade(int volume, double price) {
 }
 
 ImplBOFtdcTraderApi::OrderPool::OrderPool() {
-  memset(order_pool_, sizeof(order_pool_), 0);
+  memset(order_pool_, 0, sizeof(order_pool_));
 }
 
 ImplBOFtdcTraderApi::InputOrder *ImplBOFtdcTraderApi::OrderPool::get(
@@ -375,10 +375,9 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
       }
     } else if (status == "PARTIALLYFILLED") {
       // OnRtnTrade
-      /*
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
-        int has_order;
+        /*int has_order;
         CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
         if (!has_order) {
           CSecurityFtdcOrderField order_field = ToOrderField(properties);
@@ -387,9 +386,17 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
         }
         if (trade_field.Volume > 0) {
           trader_spi_->OnRtnTrade(&trade_field);
+        }*/
+        CSecurityFtdcOrderField order_field = ToOrderField(properties);
+        if (!order_pool_.has_order(order_field.OrderSysID)) {
+          // add LocalOrderID&SysOrderID in the OrderPool?
+          int local_id = strtol(order_field.OrderRef, NULL, 10)/100;
+          // cout << "decode add_pair: " << order_field.OrderSysID << " localID:" << local_id << endl;
+          order_pool_.add_pair(order_field.OrderSysID, local_id);
+          trader_spi_->OnRtnOrder(&order_field);
         }
       }
-      */
+      
     } else if (status == "PARTIALLYFILLEDUROUT") {
       string account = properties["ACCOUNT"];
       if (strcmp(account.c_str(), user_id_) == 0) {
@@ -456,6 +463,12 @@ void ImplBOFtdcTraderApi::decode(const char *message) {
     if (strcmp(account.c_str(), user_id_) == 0) {
       int has_order;
       CSecurityFtdcTradeField trade_field = ToTradeField(properties, has_order);
+      if (!has_order) {
+        CSecurityFtdcOrderField order_field = ToOrderField(properties);
+        order_field.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
+        trader_spi_->OnRtnOrder(&order_field);
+      }
+      // printf("libbotraderapi: ON RTN TRADE %s \n", trade_field.InstrumentID);
       trader_spi_->OnRtnTrade(&trade_field);
     }
   } // if type == "TRADE"
@@ -710,11 +723,20 @@ int ImplBOFtdcTraderApi::ReqOrderAction(
   int local_id = strtol(pInputOrderAction->OrderRef, NULL, 10)/100;
   InputOrder *input_order = order_pool_.get(local_id);
   int ret = 1;
+  string exch;
+  if (strcmp(input_order->basic_order.ExchangeID, "SH") == 0 ||
+      strcmp(input_order->basic_order.ExchangeID, "SSE") == 0) {
+    exch  = "SH";
+  } else if (strcmp(input_order->basic_order.ExchangeID, "SZ") == 0 ||
+             strcmp(input_order->basic_order.ExchangeID, "SZE") == 0) {
+    exch = "SZ";
+  }
+
   if (input_order != NULL) {
     snprintf(message, sizeof(message), "COMMAND=CANCELORDER;INSTRUMENT=%s.%s;"
              "CLIENTID=%s;SYSID=%s;EXCHANGE=%s",
-             input_order->basic_order.InstrumentID, input_order->basic_order.ExchangeID,
-             input_order->client_id, input_order->sys_id, input_order->basic_order.ExchangeID);
+             input_order->basic_order.InstrumentID, exch.c_str(),
+             input_order->client_id, input_order->sys_id, exch.c_str());
     ret = send(server_fd_, message, strlen(message) + 1, 0);
     // cout << "Send message:" << message << endl;
     log_file_ << time_now() << "- Send message:" << message << endl;

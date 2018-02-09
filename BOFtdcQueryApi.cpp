@@ -221,7 +221,7 @@ void ImplBOFtdcQueryApi::decode(const char *message) {
     CSecurityFtdcInvestorPositionField pos_field = ToPositionField(properties);
     CSecurityFtdcRspInfoField info_field;
     memset(&info_field, 0, sizeof(info_field));
-    bool isLast = (properties["CURRENT"] == properties["TOTAL"]);
+    bool isLast = (properties["IS_LAST"] == "1");
     if (strcmp(pos_field.InvestorID, user_id_) == 0) {
       trader_spi_->OnRspQryInvestorPosition(&pos_field, &info_field, 0, isLast);
     }
@@ -417,7 +417,7 @@ CSecurityFtdcInvestorPositionField ImplBOFtdcQueryApi::ToPositionField(
   string quantity = properties["QUANTITY"];
   // AVAILABLE_QTY = yd_pos - sell_td
   string available = properties["AVAILABLE_QTY"];
-  // LONG_QTY = QUANTITY
+  // LONG_QTY = buy_td
   string long_qty = properties["LONG_QTY"];
   string short_qty = properties["SHORT_QTY"];
   string today_position = properties["TODAY_POSITION"];
@@ -446,13 +446,15 @@ CSecurityFtdcInvestorPositionField ImplBOFtdcQueryApi::ToPositionField(
   snprintf(pos_field.ExchangeID, sizeof(pos_field.ExchangeID), "%s",
            exchange.c_str());
   pos_field.PosiDirection = SECURITY_FTDC_PD_Long;
-  pos_field.YdPosition = atof(quantity.c_str());
-  pos_field.TodayPosition = atof(today_position.c_str());
-  pos_field.Position = atof(available.c_str());
+  // pos_field.YdPosition = atof(quantity.c_str());
+  pos_field.YdPosition = atof(available.c_str()) + atof(short_qty.c_str());
+  pos_field.TodayPosition = atof(long_qty.c_str());
+  pos_field.Position = atof(quantity.c_str());
   pos_field.PositionCost = atof(total_cost.c_str());
   pos_field.StockValue = atof(market_value.c_str());
   pos_field.OpenVolume = atof(long_qty.c_str());
   pos_field.CloseVolume = atof(short_qty.c_str());
+  // pos_field.Available = atof(available.c_str());
 
   return pos_field;
 }

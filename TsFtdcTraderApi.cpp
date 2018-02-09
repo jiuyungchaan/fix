@@ -154,7 +154,7 @@ void ImplTsFtdcTraderApi::InputOrder::add_trade(int volume, double price) {
 }
 
 ImplTsFtdcTraderApi::OrderPool::OrderPool() {
-  memset(order_pool_, sizeof(order_pool_), 0);
+  memset(order_pool_, 0, sizeof(order_pool_));
 }
 
 ImplTsFtdcTraderApi::InputOrder *ImplTsFtdcTraderApi::OrderPool::get(
