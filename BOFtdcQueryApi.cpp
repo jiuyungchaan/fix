@@ -518,6 +518,8 @@ CSecurityFtdcCreditStockAssignInfoField ImplBOFtdcQueryApi::ToMarginStockField(
   string instrument_id = properties["SYMBOL"];
   string total_margin = properties["TOTAL_MARGIN_QUOTA"];
   string avail_margin = properties["AVAILABLE_MARGIN_QUOTA"];
+  string ydvolume = properties["QUANTITY"];
+  string tdvolume = properties["TODAY_POSITION"];
 
   vector<string> ins_exch;
   string readable_symbol = instrument_id;
@@ -540,6 +542,8 @@ CSecurityFtdcCreditStockAssignInfoField ImplBOFtdcQueryApi::ToMarginStockField(
            "%s", exchange.c_str());
   stock_field.LimitVolume = atoi(total_margin.c_str());
   stock_field.LeftVolume = atoi(avail_margin.c_str());
+  stock_field.YDVolume = atoi(ydvolume.c_str());
+  stock_field.FrozenVolume = atoi(tdvolume.c_str());
 
   return stock_field;
 }
