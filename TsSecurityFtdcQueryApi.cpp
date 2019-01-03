@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -115,8 +116,8 @@ CTsSecurityFtdcQueryApi *CTsSecurityFtdcQueryApi::CreateFtdcQueryApi(const char 
   return (CTsSecurityFtdcQueryApi *)api;
 }
 
-ImplTsFtdcQueryApi::ImplTsFtdcQueryApi(const char *pszFlowPath) :
-    front_addr_{0}, user_id_{0}, user_passwd_{0} {
+ImplTsFtdcQueryApi::ImplTsFtdcQueryApi(const char *pszFlowPath) {
+    front_addr_[0] = user_id_[0] = user_passwd_[0] = '\0';
   char log_file_name[128];
   if (strcmp(pszFlowPath, "") == 0) {
     snprintf(log_file_name, sizeof(log_file_name), "ts.qry.log");

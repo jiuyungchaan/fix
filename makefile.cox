@@ -3,7 +3,7 @@ CXX=g++
 QRY_SRC=COXFtdcQueryApi.cpp
 TRD_SRC=COXFtdcTraderApi.cpp
 INCLUDE=-I../api/include
-CXXFLAGS=-Wall -shared -fpic --std=c++0x
+CXXFLAGS=-Wall -shared -fpic
 QRY_TARGET=libcoxqueryapi.so
 TRD_TARGET=libcoxtraderapi.so
 LD_FLAGS=-lpthread

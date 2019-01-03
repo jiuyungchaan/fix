@@ -3,7 +3,7 @@ CXX=g++
 QRY_SRC=BOFtdcQueryApi.cpp
 TRD_SRC=BOFtdcTraderApi.cpp
 INCLUDE=-I../api/include
-CXXFLAGS=-Wall -shared -fpic --std=c++0x
+CXXFLAGS=-Wall -shared -fpic
 QRY_TARGET=libboqueryapi.so
 TRD_TARGET=libbotraderapi.so
 LD_FLAGS=-lpthread

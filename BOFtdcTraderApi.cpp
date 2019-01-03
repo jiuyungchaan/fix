@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -67,8 +68,8 @@ class ImplBOFtdcTraderApi : public BOFtdcTraderApi{
       int quantity;
       double price;
       char time[32];
-      SubTrade() : quantity(0), price(0.0), time{0} {}
-      SubTrade(int vol, double prc) : quantity(vol), price(prc), time{0} {}
+      SubTrade() : quantity(0), price(0.0) {time[0] = '\0';}
+      SubTrade(int vol, double prc) : quantity(vol), price(prc) {time[0] = '\0';}
     };
 
     CSecurityFtdcInputOrderField basic_order;
@@ -140,15 +141,17 @@ BOFtdcTraderApi *BOFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) {
   return (BOFtdcTraderApi *)api;
 }
 
-ImplBOFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, sys_id{0}, trade_size(0) {
+ImplBOFtdcTraderApi::InputOrder::InputOrder() : trade_size(0) {
   memset(&basic_order, 0, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
+  client_id[0] = sys_id[0] = '\0';
 }
 
 ImplBOFtdcTraderApi::InputOrder::InputOrder(
-      CSecurityFtdcInputOrderField *pInputOrder) : client_id{0}, sys_id{0}, trade_size(0) {
+      CSecurityFtdcInputOrderField *pInputOrder) : trade_size(0) {
   memcpy(&basic_order, pInputOrder, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
+  client_id[0] = sys_id[0] = '\0';
 }
 
 void ImplBOFtdcTraderApi::InputOrder::add_trade(int volume, double price) {
@@ -217,8 +220,8 @@ void ImplBOFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
   }
 }
 
-ImplBOFtdcTraderApi::ImplBOFtdcTraderApi(const char *pszFlowPath) :
-    front_addr_{0}, user_id_{0}, user_passwd_{0} {
+ImplBOFtdcTraderApi::ImplBOFtdcTraderApi(const char *pszFlowPath) {
+  front_addr_[0] = user_id_[0] = user_passwd_[0] = '\0';
   char log_file_name[128];
   if (strcmp(pszFlowPath, "") == 0) {
     snprintf(log_file_name, sizeof(log_file_name), "ts.log");

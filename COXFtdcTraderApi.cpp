@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -68,8 +69,8 @@ class ImplCOXFtdcTraderApi : public COXFtdcTraderApi{
       int quantity;
       double price;
       char time[32];
-      SubTrade() : quantity(0), price(0.0), time{0} {}
-      SubTrade(int vol, double prc) : quantity(vol), price(prc), time{0} {}
+      SubTrade() : quantity(0), price(0.0) {time[0] = '\0';}
+      SubTrade(int vol, double prc) : quantity(vol), price(prc) {time[0] = '\0';}
     };
 
     CSecurityFtdcInputOrderField basic_order;
@@ -141,15 +142,17 @@ COXFtdcTraderApi *COXFtdcTraderApi::CreateFtdcTraderApi(const char *configPath) 
   return (COXFtdcTraderApi *)api;
 }
 
-ImplCOXFtdcTraderApi::InputOrder::InputOrder() : client_id{0}, trade_size(0) {
+ImplCOXFtdcTraderApi::InputOrder::InputOrder() : trade_size(0) {
   memset(&basic_order, 0, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
+  client_id[0] = '\0';
 }
 
 ImplCOXFtdcTraderApi::InputOrder::InputOrder(
-      CSecurityFtdcInputOrderField *pInputOrder) : client_id{0}, trade_size(0) {
+      CSecurityFtdcInputOrderField *pInputOrder) : trade_size(0) {
   memcpy(&basic_order, pInputOrder, sizeof(basic_order));
   memset(trades, 0, sizeof(trades));
+  client_id[0] = '\0';
 }
 
 void ImplCOXFtdcTraderApi::InputOrder::add_trade(int volume, double price) {
@@ -214,8 +217,8 @@ void ImplCOXFtdcTraderApi::OrderPool::add_pair(string sys_id, int local_id) {
   }
 }
 
-ImplCOXFtdcTraderApi::ImplCOXFtdcTraderApi(const char *pszFlowPath) :
-    front_addr_{0}, user_id_{0}, user_passwd_{0} {
+ImplCOXFtdcTraderApi::ImplCOXFtdcTraderApi(const char *pszFlowPath) {
+  front_addr_[0] = user_id_[0] = user_passwd_[0] = '\0';
   char log_file_name[128];
   if (strcmp(pszFlowPath, "") == 0) {
     snprintf(log_file_name, sizeof(log_file_name), "ts.log");
@@ -722,13 +725,14 @@ int ImplCOXFtdcTraderApi::ReqOrderInsert(
            user_id_, action, symbol, pInputOrder->VolumeTotalOriginal,
            order_type, price_op.c_str(), pInputOrder->LimitPrice, duration,
            client_id);
+  client_ids_.insert(string(client_id));
   int ret = send(server_fd_, message, strlen(message) + 1, 0);
   log_file_ << time_now() << "- Send message:" << strlen(message) + 1 << ":" << message <<  endl;
   if (ret < 0) {
     printf("Failed to send message - %d\n", ret);
     return 1;
   }
-  client_ids_.insert(string(client_id));
+  //client_ids_.insert(string(client_id));
   cout << "insert client id:" << client_id << endl;
   return 0;
 }

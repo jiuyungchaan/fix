@@ -2,7 +2,7 @@
 CXX=g++
 SRC=TsSecurityFtdcTraderApi.cpp
 INCLUDE=-I../include
-CXXFLAGS=-Wall -shared -fpic --std=c++0x
+CXXFLAGS=-Wall -shared -fpic
 TARGET=libtssecuritytraderapi.so
 LD_FLAGS=-lpthread
 
