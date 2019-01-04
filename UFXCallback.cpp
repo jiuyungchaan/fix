@@ -89,10 +89,14 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                             lpUnPacker_key->Release();
                             if (lpUnPacker) {
                                 lpUnPacker->AddRef();
-                                if (lpUnPacker->GetChar("real_type") == '0') { // rtn order
+                                char real_type = lpUnPacker->GetChar("real_type");
+                                char real_status = lpUnPacker->GetChar("real_status");
+                                if (real_type == '0' && real_status == '0') { // rtn trade
                                     OnRtn_TRADE(lpUnPacker, nRequestID);
-                                } else { // rtn action
+                                } else if (real_type == '2' && real_status == '2') { // 撤单失败
                                     OnResponse_ORDERACTION(lpUnPacker, nRequestID);
+                                } else { // rtn order, 废单，撤单，
+                                    OnRtn_ORDER(lpUnPacker, nRequestID);
                                 }
                                 lpUnPacker->Release();
                             }
@@ -109,12 +113,14 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
 #ifndef NDEBUG
                     ShowPacket(lpUnPacker);
 #endif
+                    OnRsp_QRY_TRADING_ACCOUNT(lpUnPacker, nRequestID);
                     break;
                 }
                 case QRY_POSITION: {
 #ifndef NDEBUG
                     ShowPacket(lpUnPacker);
 #endif
+                    OnRsp_QRY_POSITION(lpUnPacker, nRequestID);
                     break;
                 }
                 default:
@@ -172,39 +178,61 @@ void Callback::OnResponse_ORDERACTION(IF2UnPacker *lpUnPacker, int nRequestID) {
     ShowPacket(lpUnPacker);
 #endif
     CSecurityFtdcOrderActionField orderActionField;
+    CSecurityFtdcRspInfoField rspInfo{0};
 //    orderActionField.Or
 //                    orderActionField.OrderRef
+    _spi->OnRspOrderAction(&orderActionField, &rspInfo, nRequestID, true);
 }
 
 void Callback::OnRtn_ORDER(IF2UnPacker *lpUnPacker, int nRequestID) {
-    CSecurityFtdcOrderField orderField;
-    orderField.SessionID = lpUnPacker->GetInt("session_no");
-    sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("order_id"));
-    orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
 #ifndef NDEBUG
     ShowPacket(lpUnPacker);
 #endif
+    CSecurityFtdcOrderField orderField;
+    orderField.SessionID = lpUnPacker->GetInt("session_no");
+    sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("order_id"));
     sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
-    _spi->OnRtnOrder(&orderField);
+    if (lpUnPacker->GetInt("issue_type") == ISSUE_TYPE_REALTIME_SECU) { //rtn trade, 撤单 or 废单
+        orderField.OrderStatus = SECURITY_FTDC_OST_Canceled;
+        _spi->OnRtnOrder(&orderField);
+
+    } else { // rtn order insert
+        char entrust_type = lpUnPacker->GetChar("entrust_type");
+        if (entrust_type == '0') { // 买卖委托回报
+            orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
+            _spi->OnRtnOrder(&orderField);
+
+        } else if (entrust_type == '2') { // 撤单委托回报
+            // no response
+        }
+    }
 }
 
 void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
-    CSecurityFtdcTradeField tradeField;
+#ifndef NDEBUG
+    ShowPacket(lpUnPacker);
+#endif
 
+    CSecurityFtdcTradeField tradeField;
     strcpy(tradeField.OrderSysID, lpUnPacker->GetStr("order_id"));
+    sprintf(tradeField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
     strcpy(tradeField.InstrumentID, lpUnPacker->GetStr("stock_code"));
     tradeField.Direction = (lpUnPacker->GetChar("entrust_bs") == '1') ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
     tradeField.Volume = lpUnPacker->GetDouble("business_amount");
     sprintf(tradeField.Price, "%lf", lpUnPacker->GetDouble("business_price"));
-    sprintf(tradeField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
-    if(lpUnPacker->GetChar("real_status") == '0'){ // trade
-        tradeField.
-    }else{ // revoke
-
-    }
-
     _spi->OnRtnTrade(&tradeField);
-#ifndef NDEBUG
-    ShowPacket(lpUnPacker);
-#endif
+}
+
+void Callback::OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID) {
+    CSecurityFtdcTradingAccountField result;
+    result.Balance = lpUnPacker->GetDouble("current_balance");
+    // todo other info
+    CSecurityFtdcRspInfoField rspInfo{0};
+    _spi->OnRspQryTradingAccount(&result, &rspInfo, nRequestID, true);
+}
+
+void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
+    CSecurityFtdcQryInvestorPositionField result;
+    CSecurityFtdcRspInfoField rspInfo{0};
+    _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, true);
 }

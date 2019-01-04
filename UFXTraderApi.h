@@ -62,7 +62,7 @@ public:
 
     ///报单操作请求响应
     virtual void
-    OnRspOrderAction(CSecurityFtdcInputOrderActionField *pInputOrderAction, CSecurityFtdcRspInfoField *pRspInfo,
+    OnRspOrderAction(CSecurityFtdcOrderActionField *pOrderAction, CSecurityFtdcRspInfoField *pRspInfo,
                      int nRequestID, bool bIsLast) {};
 
     ///报单通知
@@ -76,6 +76,12 @@ public:
                            int nRequestID, bool bIsLast) {
         std::cout << pTradingAccount->Balance << std::endl;
 
+    }
+
+    virtual void
+    OnRspQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *positionField, CSecurityFtdcRspInfoField *pRspInfo,
+                             int nRequestID, bool bIsLast) {
+        std::cout << positionField->InstrumentID << std::endl;
     }
 };
 
@@ -179,8 +185,6 @@ public:
 ///请求查询投资者持仓
     virtual int ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID);
 };
-
-
 
 
 #endif //UFXADAPTER_UFXTRADERAPI_H
