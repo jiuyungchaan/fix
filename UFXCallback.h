@@ -94,7 +94,9 @@ private:
     void OnRtn_ORDER(IF2UnPacker *lpUnPacker, int nRequestID);
 
     void OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID);
+
     void OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID);
+
     void OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID);
 };
 
