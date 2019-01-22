@@ -200,6 +200,7 @@ void Callback::OnRtn_ORDER(IF2UnPacker *lpUnPacker, int nRequestID) {
         char entrust_type = lpUnPacker->GetChar("entrust_type");
         if (entrust_type == '0') { // 买卖委托回报
             orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
+            sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
             _spi->OnRtnOrder(&orderField);
 
         } else if (entrust_type == '2') { // 撤单委托回报
