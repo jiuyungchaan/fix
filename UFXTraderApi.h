@@ -134,7 +134,7 @@ public:
         return new UFXTraderApi();
     }
 
-    UFXTraderApi() : _spi(nullptr), _lpConn(nullptr), _lpCallback(nullptr), _entrustWay('Z') {
+    UFXTraderApi() : _spi(NULL), _lpConn(NULL), _lpCallback(NULL), _entrustWay('Z') {
         //todo init op_station
 //        char mac[64];
 //        char ip[40];
@@ -167,7 +167,7 @@ public:
 
     ///初始化
     ///@remark 初始化运行环境,只有调用后,接口才开始工作
-    void Init(const char *licPath = nullptr);
+    void Init(const char *licPath = NULL);
 
     ///等待接口线程结束运行
     ///@return 线程退出代码
