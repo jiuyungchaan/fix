@@ -30,9 +30,9 @@ void UFXTraderApi::Init(const char *licPath) {
         lpConfig->Load(licPath);
     else
         lpConfig->Load("t2sdk.ini");
-    if (_lpConn != nullptr) {
+    if (_lpConn != NULL) {
         _lpConn->Release();
-        _lpConn = nullptr;
+        _lpConn = NULL;
     }
     _lpConn = NewConnection(lpConfig);
     _lpConn->AddRef();
@@ -112,7 +112,7 @@ int UFXTraderApi::ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginFiel
 }
 
 const char *UFXTraderApi::GetTradingDay() {
-    return nullptr;
+    return NULL;
 }
 
 
@@ -134,7 +134,7 @@ int UFXTraderApi::ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int 
     lpBizMessage->AddRef();
 
     ///应答业务消息
-    IBizMessage *lpBizMessageRecv = nullptr;
+    IBizMessage *lpBizMessageRecv = NULL;
     //功能号
     lpBizMessage->SetFunction(REQ_ORDER_INSERT);
     lpBizMessage->SetSenderId(_requestID);
@@ -142,7 +142,7 @@ int UFXTraderApi::ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int 
     lpBizMessage->SetPacketType(REQUEST_PACKET);
     //lpBizMessage->SetSystemNo(iSystemNo);
     ///其他的应答信息
-    LPRET_DATA pRetData = nullptr;
+    LPRET_DATA pRetData = NULL;
     ///开始打包
     pPacker->BeginPack();
 
@@ -221,14 +221,14 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     IBizMessage *lpBizMessage = NewBizMessage();
     lpBizMessage->AddRef();
     ///应答业务消息
-    IBizMessage *lpBizMessageRecv = nullptr;
+    IBizMessage *lpBizMessageRecv = NULL;
     //功能号
     lpBizMessage->SetFunction(REQ_ORDER_ACTION);
     //请求类型
     lpBizMessage->SetPacketType(REQUEST_PACKET);
     lpBizMessage->SetSystemNo(_sysnode_id);
     ///其他的应答信息
-    LPRET_DATA pRetData = nullptr;
+    LPRET_DATA pRetData = NULL;
     ///开始打包
     pPacker->BeginPack();
     ///加入字段名
@@ -403,14 +403,14 @@ int UFXTraderApi::ReqQryTradingAccount(CSecurityFtdcQryTradingAccountField *pQry
     IBizMessage *lpBizMessage = NewBizMessage();
     lpBizMessage->AddRef();
     ///应答业务消息
-    IBizMessage *lpBizMessageRecv = nullptr;
+    IBizMessage *lpBizMessageRecv = NULL;
     //功能号
     lpBizMessage->SetFunction(QRY_MONEY);
     //请求类型
     lpBizMessage->SetPacketType(REQUEST_PACKET);
     lpBizMessage->SetSystemNo(_sysnode_id);
     ///其他的应答信息
-    LPRET_DATA pRetData = nullptr;
+    LPRET_DATA pRetData = NULL;
     ///开始打包
     pPacker->BeginPack();
     ///加入字段名
@@ -446,7 +446,7 @@ int UFXTraderApi::ReqQryTradingAccount(CSecurityFtdcQryTradingAccountField *pQry
 int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *pQryInvestorPosition, int nRequestID) {
     IBizMessage *lpBizMessage = NewBizMessage();
     lpBizMessage->AddRef();
-    IBizMessage *lpBizMessageRecv = nullptr;
+    IBizMessage *lpBizMessageRecv = NULL;
     //功能号
     lpBizMessage->SetFunction(QRY_POSITION);
     //请求类型

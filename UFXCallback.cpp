@@ -5,7 +5,7 @@
 #include "UFXCallback.h"
 
 void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, IBizMessage *lpMsg) {
-    if (lpMsg != nullptr) {
+    if (lpMsg != NULL) {
         int nRequestID = lpMsg->GetSenderId();
         //成功,应用程序不能释放lpBizMessageRecv消息
         if (lpMsg->GetReturnCode() == 0) {
@@ -44,7 +44,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                 case MSGCENTER_FUNC_HEART: {
                     if (lpMsg->GetPacketType() == REQUEST_PACKET) {
                         lpMsg->ChangeReq2AnsMessage();
-                        if (lpConnection != nullptr)
+                        if (lpConnection != NULL)
                             lpConnection->SendBizMsg(lpMsg, 1);
 #ifndef NDEBUG
                         cout << "heartBeat.." << endl;
@@ -130,7 +130,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             int iLen = 0;
             const void *lpBuffer = lpMsg->GetContent(iLen);
             IF2UnPacker *lpUnPacker = NewUnPacker((void *) lpBuffer, iLen);
-            if (lpUnPacker != nullptr) {
+            if (lpUnPacker != NULL) {
                 lpUnPacker->AddRef();//添加释放内存引用
 #ifndef NDEBUG
                 ShowPacket(lpUnPacker);
