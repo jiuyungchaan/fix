@@ -4,6 +4,7 @@
 
 #include "UFXTraderApi.h"
 #include "UFXCallback.h"
+#include "ufx_utils.h"
 
 UFXTraderApi *UFXTraderApi::CreateFtdcTraderApi() {
     return new UFXTraderApi();

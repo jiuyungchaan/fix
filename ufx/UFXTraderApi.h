@@ -10,7 +10,7 @@
 #include <iostream>
 #include <NHUserApiStruct.h>
 #include <SecurityFtdcTraderApi.h>
-#include "ufx_utils.h"
+//#include "ufx_utils.h"
 
 #ifdef UFX
 

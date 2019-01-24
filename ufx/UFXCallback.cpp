@@ -3,7 +3,7 @@
 //
 
 #include "UFXCallback.h"
-
+#include "ufx_utils.h"
 void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, IBizMessage *lpMsg) {
     if (lpMsg != NULL) {
         int nRequestID = lpMsg->GetSenderId();
