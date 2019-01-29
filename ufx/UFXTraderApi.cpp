@@ -24,7 +24,7 @@ void UFXTraderApi::Init(const char *licPath) {
 //    {
 //        return;
 //    }
-    auto lpConfig = NewConfig();
+    CConfigInterface* lpConfig = NewConfig();
     lpConfig->AddRef();
 
     if (licPath)

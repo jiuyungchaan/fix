@@ -160,7 +160,7 @@ public:
         strcpy(_fund_account, fund_account);
     }
 
-    std::map<int, std::pair<int, std::string>> request2OrderInsert;
+    std::map<int, std::pair<int, std::string> > request2OrderInsert;
     std::map<int, std::string> request2OrderAction;
 
     ///创建TraderApi

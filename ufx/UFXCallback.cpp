@@ -133,7 +133,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             int senderID = lpMsg->GetSenderId();
             const void *lpBuffer = lpMsg->GetContent(iLen);
             IF2UnPacker *lpUnPacker = NewUnPacker((void *) lpBuffer, iLen);
-            CSecurityFtdcRspInfoField rspInfo{0};
+            CSecurityFtdcRspInfoField rspInfo;
             if (lpUnPacker != NULL) {
                 lpUnPacker->AddRef();//添加释放内存引用
 #ifndef NDEBUG
@@ -154,7 +154,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             switch (lpMsg->GetFunction()) {
                 case REQ_ORDER_INSERT: {
                     CSecurityFtdcInputOrderField fInsert;
-                    auto &orderInfo = _api->request2OrderInsert.at(senderID);
+                    std::pair<int,string> &orderInfo = _api->request2OrderInsert.at(senderID);
                     sprintf(fInsert.OrderRef,"%d", orderInfo.first);
                     strncpy(fInsert.InstrumentID, orderInfo.second.c_str(), sizeof(fInsert.InstrumentID));
                     _spi->OnRspOrderInsert(&fInsert, &rspInfo, nRequestID, true);
@@ -174,7 +174,8 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
 
 void Callback::OnResponse_LOGIN(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcRspUserLoginField field;
-    CSecurityFtdcRspInfoField rspInfo{0};
+    CSecurityFtdcRspInfoField rspInfo;
+    rspInfo.ErrorID=0;
     sprintf(field.LoginTime, "%d", lpUnPacker->GetInt("init_date"));
     strcpy(field.UserID, lpUnPacker->GetStr("account_content"));
     field.SessionID = lpUnPacker->GetInt("session_no");
@@ -209,7 +210,8 @@ void Callback::OnResponse_ORDERACTION(IF2UnPacker *lpUnPacker, int nRequestID) {
     ShowPacket(lpUnPacker);
 #endif
     CSecurityFtdcOrderActionField orderActionField;
-    CSecurityFtdcRspInfoField rspInfo{0};
+    CSecurityFtdcRspInfoField rspInfo;
+    rspInfo.ErrorID=0;
 //    orderActionField.Or
 //                    orderActionField.OrderRef
     _spi->OnRspOrderAction(&orderActionField, &rspInfo, nRequestID, true);
@@ -259,12 +261,14 @@ void Callback::OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID
     CSecurityFtdcTradingAccountField result;
     result.Balance = lpUnPacker->GetDouble("current_balance");
     // todo other info
-    CSecurityFtdcRspInfoField rspInfo{0};
+    CSecurityFtdcRspInfoField rspInfo;
+    rspInfo.ErrorID=0;
     _spi->OnRspQryTradingAccount(&result, &rspInfo, nRequestID, true);
 }
 
 void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcQryInvestorPositionField result;
-    CSecurityFtdcRspInfoField rspInfo{0};
+    CSecurityFtdcRspInfoField rspInfo;
+    rspInfo.ErrorID=0;
     _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, true);
 }
