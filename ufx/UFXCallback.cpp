@@ -4,6 +4,7 @@
 
 #include "UFXCallback.h"
 #include "ufx_utils.h"
+
 void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, IBizMessage *lpMsg) {
     if (lpMsg != NULL) {
         int nRequestID = lpMsg->GetSenderId();
@@ -36,7 +37,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                 case REQ_ORDER_ACTION: {
                     if (lpUnPacker) {
                         lpUnPacker->AddRef();
-                        OnResponse_ORDERACTION(lpUnPacker, nRequestID);
+//                        OnResponse_ORDERACTION(lpUnPacker, nRequestID);
                         lpUnPacker->Release();
                     }
                     break;
@@ -127,21 +128,46 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                     break;
             }
         } else {
+            printf("function %d, id %d\n", lpMsg->GetFunction(), lpMsg->GetPacketId());
             int iLen = 0;
+            int senderID = lpMsg->GetSenderId();
             const void *lpBuffer = lpMsg->GetContent(iLen);
             IF2UnPacker *lpUnPacker = NewUnPacker((void *) lpBuffer, iLen);
+            CSecurityFtdcRspInfoField rspInfo{0};
             if (lpUnPacker != NULL) {
                 lpUnPacker->AddRef();//添加释放内存引用
 #ifndef NDEBUG
                 ShowPacket(lpUnPacker);
+                rspInfo.ErrorID = lpUnPacker->GetInt("error_no");
+                const char *msg = lpUnPacker->GetStr("error_info");
+                g2u(msg, strlen(msg), rspInfo.ErrorMsg, sizeof(rspInfo.ErrorMsg));
 #endif
                 lpUnPacker->Release();
             } else {
-                char buff[128];
+                rspInfo.ErrorID = lpMsg->GetErrorNo();
+//                char buff[128];
                 const char *msg = lpMsg->GetErrorInfo();
-                g2u(msg, strlen(msg), buff, sizeof(buff));
-                printf("业务包是空包，错误代码：%d，错误信息:%s\n", lpMsg->GetErrorNo(), buff);
+                g2u(msg, strlen(msg), rspInfo.ErrorMsg, sizeof(rspInfo.ErrorMsg));
+                printf("业务包是空包，错误代码：%d，错误信息:%s\n", lpMsg->GetErrorNo(), rspInfo.ErrorMsg);
             }
+            // invoke callback
+            switch (lpMsg->GetFunction()) {
+                case REQ_ORDER_INSERT: {
+                    CSecurityFtdcInputOrderField fInsert;
+//                    auto &orderInfo = _api->request2OrderInsert.at(senderID);
+//                    strcpy(fInsert.OrderRef, orderInfo.first.c_str());
+//                    strcpy(fInsert.InstrumentID, orderInfo.second.c_str());
+                    _spi->OnRspOrderInsert(&fInsert, &rspInfo, nRequestID, true);
+                    break;
+                }
+                case REQ_ORDER_ACTION: {
+                    CSecurityFtdcOrderActionField fAction;
+//                    strcpy(fAction.OrderRef, _api->request2OrderAction.at(senderID).c_str());
+                    _spi->OnRspOrderAction(&fAction, &rspInfo, nRequestID, true);
+                    break;
+                }
+            }
+
         }
     }
 }
@@ -153,6 +179,7 @@ void Callback::OnResponse_LOGIN(IF2UnPacker *lpUnPacker, int nRequestID) {
     strcpy(field.UserID, lpUnPacker->GetStr("account_content"));
     field.SessionID = lpUnPacker->GetInt("session_no");
     strcpy(field.BrokerID, lpUnPacker->GetStr("company_name"));
+    this->_session_no = lpUnPacker->GetInt("session_no");
     _api->LoginSetup(
             lpUnPacker->GetInt("branch_no"),
             lpUnPacker->GetInt("sysnode_id"),
@@ -165,11 +192,15 @@ void Callback::OnResponse_LOGIN(IF2UnPacker *lpUnPacker, int nRequestID) {
 }
 
 void Callback::OnResponse_ORDERINSERT(IF2UnPacker *lpUnPacker, int nRequestID) {
-    CSecurityFtdcInputOrderField inputOrderField;
-    CSecurityFtdcRspInfoField rspInfo{0};
-//    ShowPacket(lpUnPacker);
-    sprintf(inputOrderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
-    _spi->OnRspOrderInsert(&inputOrderField, &rspInfo, nRequestID, true);
+#ifndef NDEBUG
+    ShowPacket(lpUnPacker);
+#endif
+    CSecurityFtdcOrderField orderField;
+    orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeNotQueueing;
+    orderField.SessionID = _session_no;
+    sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("order_id"));
+    sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
+    _spi->OnRtnOrder(&orderField);
 }
 
 void Callback::OnResponse_ORDERACTION(IF2UnPacker *lpUnPacker, int nRequestID) {

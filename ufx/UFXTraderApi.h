@@ -8,6 +8,8 @@
 #include <t2sdk_interface.h>
 #include <SecurityFtdcUserApiStruct.h>
 #include <iostream>
+#include <map>
+#include <string>
 #include <NHUserApiStruct.h>
 #include <SecurityFtdcTraderApi.h>
 //#include "ufx_utils.h"
@@ -134,7 +136,7 @@ public:
         return new UFXTraderApi();
     }
 
-    UFXTraderApi() : _spi(NULL), _lpConn(NULL), _lpCallback(NULL), _entrustWay('Z') {
+    UFXTraderApi() : _spi(NULL), _lpConn(NULL), _lpCallback(NULL), _entrustWay('Z'), _requestID(1) {
         //todo init op_station
 //        char mac[64];
 //        char ip[40];
@@ -149,7 +151,8 @@ public:
     }
 
     void
-    LoginSetup(int branch_no, int sysnode_id, const char *client_id, const char *user_token, const char *fund_account) {
+    LoginSetup(int branch_no, int sysnode_id, const char *client_id, const char *user_token,
+               const char *fund_account) {
         _branch_no = branch_no;
         _sysnode_id = sysnode_id;
         strcpy(_client_id, client_id);
@@ -157,6 +160,8 @@ public:
         strcpy(_fund_account, fund_account);
     }
 
+    std::map<int, std::pair<int, std::string>> request2OrderInsert;
+    std::map<int, std::string>request2OrderAction;
     ///创建TraderApi
     ///@return 创建出的UserApi
     static UFXTraderApi *CreateFtdcTraderApi();

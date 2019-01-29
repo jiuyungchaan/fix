@@ -10,6 +10,8 @@
 #include "UFXTraderApi.h"
 
 class Callback : public CCallbackInterface {
+private:
+    int _session_no;
 public:
     explicit Callback(UFXTraderSpi *spi, UFXTraderApi *api) : _spi(spi), _api(api) {
     };

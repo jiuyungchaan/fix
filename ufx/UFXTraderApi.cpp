@@ -70,8 +70,8 @@ int UFXTraderApi::ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginFiel
     pPacker->AddField("op_branch_no", 'I');
     pPacker->AddField("op_entrust_way", 'C');
     pPacker->AddField("op_station", 'S', 255);
-    pPacker->AddField("branch_no", 'I');
-    pPacker->AddField("operator_no", 'S', 15);          //added helin
+//    pPacker->AddField("branch_no", 'I');
+    pPacker->AddField("operator_no", 'S', 15);
     pPacker->AddField("password", 'S', 15);
     pPacker->AddField("password_type", 'C');
     pPacker->AddField("input_content", 'C');
@@ -81,7 +81,7 @@ int UFXTraderApi::ReqUserLogin(CSecurityFtdcReqUserLoginField *pReqUserLoginFiel
     pPacker->AddInt(0);//op branch no
     pPacker->AddChar(_entrustWay);
     pPacker->AddStr("op station");
-    pPacker->AddInt(_branch_no);//branch_no
+//    pPacker->AddInt(_branch_no);//branch_no
     pPacker->AddStr("");
     pPacker->AddStr(pReqUserLoginField->Password);
     pPacker->AddChar('2');
@@ -138,7 +138,7 @@ int UFXTraderApi::ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int 
     IBizMessage *lpBizMessageRecv = NULL;
     //功能号
     lpBizMessage->SetFunction(REQ_ORDER_INSERT);
-    lpBizMessage->SetSenderId(_requestID);
+    lpBizMessage->SetSenderId(++_requestID);
     //请求类型
     lpBizMessage->SetPacketType(REQUEST_PACKET);
     //lpBizMessage->SetSystemNo(iSystemNo);
@@ -194,12 +194,16 @@ int UFXTraderApi::ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int 
 
     pPacker->EndPack();
     lpBizMessage->SetContent(pPacker->GetPackBuf(), pPacker->GetPackLen());
+#ifndef NDEBUG
     //打印入参信息
     IF2UnPacker *lpUnPacker = NewUnPacker(pPacker->GetPackBuf(), pPacker->GetPackLen());
     lpUnPacker->AddRef();
     printf("Order Packet:\n");
     ShowPacket(lpUnPacker);
     lpUnPacker->Release();
+#endif
+//    printf("%s %s\n", pInputOrder->OrderRef, pInputOrder->InstrumentID);
+//    this->request2OrderInsert[_requestID] = std::make_pair(atoi(pInputOrder->OrderRef), pInputOrder->InstrumentID);
     iRet = _lpConn->SendBizMsg(lpBizMessage, 1);
     printf("返回代码：%d\n", iRet);
     pPacker->FreeMem(pPacker->GetPackBuf());
@@ -228,6 +232,7 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     //请求类型
     lpBizMessage->SetPacketType(REQUEST_PACKET);
     lpBizMessage->SetSystemNo(_sysnode_id);
+    lpBizMessage->SetSenderId(++_requestID);
     ///其他的应答信息
     LPRET_DATA pRetData = NULL;
     ///开始打包
@@ -266,6 +271,7 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     pPacker->FreeMem(pPacker->GetPackBuf());
     pPacker->Release();
     lpBizMessage->Release();
+//    request2OrderAction[_requestID] = pInputOrderAction->OrderRef;
     return 0;
 }
 
