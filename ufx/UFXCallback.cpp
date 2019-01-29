@@ -154,15 +154,15 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             switch (lpMsg->GetFunction()) {
                 case REQ_ORDER_INSERT: {
                     CSecurityFtdcInputOrderField fInsert;
-//                    auto &orderInfo = _api->request2OrderInsert.at(senderID);
-//                    strcpy(fInsert.OrderRef, orderInfo.first.c_str());
-//                    strcpy(fInsert.InstrumentID, orderInfo.second.c_str());
+                    auto &orderInfo = _api->request2OrderInsert.at(senderID);
+                    sprintf(fInsert.OrderRef,"%d", orderInfo.first);
+                    strncpy(fInsert.InstrumentID, orderInfo.second.c_str(), sizeof(fInsert.InstrumentID));
                     _spi->OnRspOrderInsert(&fInsert, &rspInfo, nRequestID, true);
                     break;
                 }
                 case REQ_ORDER_ACTION: {
                     CSecurityFtdcOrderActionField fAction;
-//                    strcpy(fAction.OrderRef, _api->request2OrderAction.at(senderID).c_str());
+                    strncpy(fAction.OrderRef, _api->request2OrderAction.at(senderID).c_str(), sizeof(fAction.OrderRef));
                     _spi->OnRspOrderAction(&fAction, &rspInfo, nRequestID, true);
                     break;
                 }
@@ -178,7 +178,7 @@ void Callback::OnResponse_LOGIN(IF2UnPacker *lpUnPacker, int nRequestID) {
     sprintf(field.LoginTime, "%d", lpUnPacker->GetInt("init_date"));
     strcpy(field.UserID, lpUnPacker->GetStr("account_content"));
     field.SessionID = lpUnPacker->GetInt("session_no");
-    strcpy(field.BrokerID, lpUnPacker->GetStr("company_name"));
+    strncpy(field.BrokerID, lpUnPacker->GetStr("company_name"), sizeof(field.BrokerID));
     this->_session_no = lpUnPacker->GetInt("session_no");
     _api->LoginSetup(
             lpUnPacker->GetInt("branch_no"),

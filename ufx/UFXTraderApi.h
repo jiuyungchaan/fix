@@ -136,7 +136,7 @@ public:
         return new UFXTraderApi();
     }
 
-    UFXTraderApi() : _spi(NULL), _lpConn(NULL), _lpCallback(NULL), _entrustWay('Z'), _requestID(1) {
+    UFXTraderApi() : _spi(NULL), _lpConn(NULL), _lpCallback(NULL), _requestID(1), _entrustWay('Z') {
         //todo init op_station
 //        char mac[64];
 //        char ip[40];
@@ -161,7 +161,8 @@ public:
     }
 
     std::map<int, std::pair<int, std::string>> request2OrderInsert;
-    std::map<int, std::string>request2OrderAction;
+    std::map<int, std::string> request2OrderAction;
+
     ///创建TraderApi
     ///@return 创建出的UserApi
     static UFXTraderApi *CreateFtdcTraderApi();

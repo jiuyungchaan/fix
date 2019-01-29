@@ -203,7 +203,8 @@ int UFXTraderApi::ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int 
     lpUnPacker->Release();
 #endif
 //    printf("%s %s\n", pInputOrder->OrderRef, pInputOrder->InstrumentID);
-//    this->request2OrderInsert[_requestID] = std::make_pair(atoi(pInputOrder->OrderRef), pInputOrder->InstrumentID);
+    this->request2OrderInsert[_requestID] = std::pair<int, std::string>(atoi(pInputOrder->OrderRef),
+                                                                        pInputOrder->InstrumentID);
     iRet = _lpConn->SendBizMsg(lpBizMessage, 1);
     printf("返回代码：%d\n", iRet);
     pPacker->FreeMem(pPacker->GetPackBuf());
@@ -271,7 +272,7 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     pPacker->FreeMem(pPacker->GetPackBuf());
     pPacker->Release();
     lpBizMessage->Release();
-//    request2OrderAction[_requestID] = pInputOrderAction->OrderRef;
+    request2OrderAction[_requestID] = pInputOrderAction->OrderRef;
     return 0;
 }
 
