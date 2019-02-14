@@ -154,8 +154,8 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             switch (lpMsg->GetFunction()) {
                 case REQ_ORDER_INSERT: {
                     CSecurityFtdcInputOrderField fInsert;
-                    std::pair<int,string> &orderInfo = _api->request2OrderInsert.at(senderID);
-                    sprintf(fInsert.OrderRef,"%d", orderInfo.first);
+                    std::pair<int, string> &orderInfo = _api->request2OrderInsert.at(senderID);
+                    sprintf(fInsert.OrderRef, "%d", orderInfo.first);
                     strncpy(fInsert.InstrumentID, orderInfo.second.c_str(), sizeof(fInsert.InstrumentID));
                     _spi->OnRspOrderInsert(&fInsert, &rspInfo, nRequestID, true);
                     break;
@@ -175,7 +175,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
 void Callback::OnResponse_LOGIN(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcRspUserLoginField field;
     CSecurityFtdcRspInfoField rspInfo;
-    rspInfo.ErrorID=0;
+    rspInfo.ErrorID = 0;
     sprintf(field.LoginTime, "%d", lpUnPacker->GetInt("init_date"));
     strcpy(field.UserID, lpUnPacker->GetStr("account_content"));
     field.SessionID = lpUnPacker->GetInt("session_no");
@@ -211,7 +211,7 @@ void Callback::OnResponse_ORDERACTION(IF2UnPacker *lpUnPacker, int nRequestID) {
 #endif
     CSecurityFtdcOrderActionField orderActionField;
     CSecurityFtdcRspInfoField rspInfo;
-    rspInfo.ErrorID=0;
+    rspInfo.ErrorID = 0;
 //    orderActionField.Or
 //                    orderActionField.OrderRef
     _spi->OnRspOrderAction(&orderActionField, &rspInfo, nRequestID, true);
@@ -260,15 +260,21 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
 void Callback::OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcTradingAccountField result;
     result.Balance = lpUnPacker->GetDouble("current_balance");
+    result.Mortgage = lpUnPacker->GetDouble("mortgage_balance");
+    result.Available = lpUnPacker->GetDouble("enable_balance");
+    result.StockValue = lpUnPacker->GetDouble("market_value");
+    result.Interest = lpUnPacker->GetDouble("interest");
+    result.FrozenCash = lpUnPacker->GetDouble("frozen_balance");
+
     // todo other info
     CSecurityFtdcRspInfoField rspInfo;
-    rspInfo.ErrorID=0;
+    rspInfo.ErrorID = 0;
     _spi->OnRspQryTradingAccount(&result, &rspInfo, nRequestID, true);
 }
 
 void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcQryInvestorPositionField result;
     CSecurityFtdcRspInfoField rspInfo;
-    rspInfo.ErrorID=0;
+    rspInfo.ErrorID = 0;
     _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, true);
 }
