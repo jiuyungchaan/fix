@@ -174,6 +174,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
 
 void Callback::OnResponse_LOGIN(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcRspUserLoginField field;
+    memset(&field, 0, sizeof(field));
     CSecurityFtdcRspInfoField rspInfo;
     rspInfo.ErrorID = 0;
     sprintf(field.LoginTime, "%d", lpUnPacker->GetInt("init_date"));
@@ -197,6 +198,7 @@ void Callback::OnResponse_ORDERINSERT(IF2UnPacker *lpUnPacker, int nRequestID) {
     ShowPacket(lpUnPacker);
 #endif
     CSecurityFtdcOrderField orderField;
+    memset(&orderField, 0, sizeof(orderField));
     orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeNotQueueing;
     orderField.SessionID = _session_no;
     sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("order_id"));
@@ -210,6 +212,7 @@ void Callback::OnResponse_ORDERACTION(IF2UnPacker *lpUnPacker, int nRequestID) {
     ShowPacket(lpUnPacker);
 #endif
     CSecurityFtdcOrderActionField orderActionField;
+    memset(&orderActionField, 0, sizeof(orderActionField));
     CSecurityFtdcRspInfoField rspInfo;
     rspInfo.ErrorID = 0;
 //    orderActionField.Or
@@ -222,6 +225,7 @@ void Callback::OnRtn_ORDER(IF2UnPacker *lpUnPacker, int nRequestID) {
     ShowPacket(lpUnPacker);
 #endif
     CSecurityFtdcOrderField orderField;
+    memset(&orderField, 0, sizeof(orderField));
     orderField.SessionID = lpUnPacker->GetInt("session_no");
     sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("order_id"));
     sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
@@ -248,6 +252,7 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
 #endif
 
     CSecurityFtdcTradeField tradeField;
+    memset(&tradeField, 0, sizeof(tradeField));
     strcpy(tradeField.OrderSysID, lpUnPacker->GetStr("order_id"));
     sprintf(tradeField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
     strcpy(tradeField.InstrumentID, lpUnPacker->GetStr("stock_code"));
@@ -259,6 +264,8 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
 
 void Callback::OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcTradingAccountField result;
+    memset(&result, 0, sizeof(result));
+    strncpy(result.AccountID, _api->_fund_account, sizeof(result.AccountID));
     result.Balance = lpUnPacker->GetDouble("current_balance");
     result.Mortgage = lpUnPacker->GetDouble("mortgage_balance");
     result.Available = lpUnPacker->GetDouble("enable_balance");
@@ -274,6 +281,7 @@ void Callback::OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID
 
 void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcQryInvestorPositionField result;
+    memset(&result, 0, sizeof(result));
     CSecurityFtdcRspInfoField rspInfo;
     rspInfo.ErrorID = 0;
     _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, true);
