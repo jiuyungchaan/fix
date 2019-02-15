@@ -134,6 +134,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             const void *lpBuffer = lpMsg->GetContent(iLen);
             IF2UnPacker *lpUnPacker = NewUnPacker((void *) lpBuffer, iLen);
             CSecurityFtdcRspInfoField rspInfo;
+            rspInfo.ErrorID = 0;
             if (lpUnPacker != NULL) {
                 lpUnPacker->AddRef();//添加释放内存引用
 #ifndef NDEBUG
@@ -154,6 +155,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             switch (lpMsg->GetFunction()) {
                 case REQ_ORDER_INSERT: {
                     CSecurityFtdcInputOrderField fInsert;
+                    memset(&fInsert, 0, sizeof(fInsert));
                     std::pair<int, string> &orderInfo = _api->request2OrderInsert.at(senderID);
                     sprintf(fInsert.OrderRef, "%d", orderInfo.first);
                     strncpy(fInsert.InstrumentID, orderInfo.second.c_str(), sizeof(fInsert.InstrumentID));
@@ -162,6 +164,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                 }
                 case REQ_ORDER_ACTION: {
                     CSecurityFtdcOrderActionField fAction;
+                    memset(&fAction, 0, sizeof(fAction));
                     strncpy(fAction.OrderRef, _api->request2OrderAction.at(senderID).c_str(), sizeof(fAction.OrderRef));
                     _spi->OnRspOrderAction(&fAction, &rspInfo, nRequestID, true);
                     break;
