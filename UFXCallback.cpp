@@ -16,7 +16,9 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
             int iLen_key = 0;
             const void *lpBuffer_key = lpMsg->GetKeyInfo(iLen_key);
             IF2UnPacker *lpUnPacker_key = NewUnPacker((void *) lpBuffer_key, iLen_key);
+#ifndef NDEBUG
             printf("function %d\n", lpMsg->GetFunction());
+#endif
             switch (lpMsg->GetFunction()) {
                 case REQ_CLIENT_LOGIN: {
                     if (lpUnPacker) {
@@ -47,9 +49,7 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                         lpMsg->ChangeReq2AnsMessage();
                         if (lpConnection != NULL)
                             lpConnection->SendBizMsg(lpMsg, 1);
-#ifndef NDEBUG
                         cout << "heartBeat.." << endl;
-#endif
                         _spi->OnHeartBeatWarning(0);
                     }
                     break;

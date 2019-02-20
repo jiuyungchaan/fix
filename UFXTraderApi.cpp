@@ -46,10 +46,10 @@ void UFXTraderApi::Init(const char *licPath) {
         std::cout << "InitConn lpConnection->Create2BizMsg(lpCallback) returns " << iRet
                   << ", error. errorMsg=" << _lpConn->GetErrorMsg(iRet) << std::endl;
     }
+#endif
     if (0 != (iRet = _lpConn->Connect(3000))) {
         std::cerr << "连接.iRet=" << iRet << " msg:" << _lpConn->GetErrorMsg(iRet) << std::endl;
     }
-#endif
     lpConfig->Release();
 }
 
