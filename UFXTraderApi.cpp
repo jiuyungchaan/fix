@@ -505,12 +505,12 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
     pPacker->AddChar('2');                //	password_type
     pPacker->AddStr(_user_token);    //user_token
     pPacker->AddStr("2");
-    if (pQryInvestorPosition) {
-        if (strncmp(&pQryInvestorPosition->InstrumentID[7], "SHE", 2) == 0 ||
-            strncmp(&pQryInvestorPosition->InstrumentID[7], "she", 2) == 0) {
+    if (strcmp(pQryInvestorPosition->InstrumentID, "")) {
+        if (strncmp(&pQryInvestorPosition->InstrumentID[7], "SSE", 3) == 0 ||
+            strncmp(&pQryInvestorPosition->InstrumentID[7], "sse", 3) == 0) {
             pPacker->AddStr("1");
-        } else if (strncmp(&pQryInvestorPosition->InstrumentID[7], "SZE", 2) == 0 ||
-                   strncmp(&pQryInvestorPosition->InstrumentID[7], "sze", 2) == 0) {
+        } else if (strncmp(&pQryInvestorPosition->InstrumentID[7], "SZE", 3) == 0 ||
+                   strncmp(&pQryInvestorPosition->InstrumentID[7], "sze", 3) == 0) {
             pPacker->AddStr("2");
         }
         char contractCode[8];
@@ -518,7 +518,7 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
         pPacker->AddStr(contractCode);
     }
     pPacker->AddStr(" ");
-    pPacker->AddInt(_requestID++);
+    pPacker->AddInt(nRequestID);
     ///结束打包
     pPacker->EndPack();
 

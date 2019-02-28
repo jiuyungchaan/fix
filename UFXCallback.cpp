@@ -288,10 +288,12 @@ void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcRspInfoField rspInfo;
     rspInfo.ErrorID = 0;
     int i;
-    for (i = 0; i < lpUnPacker->GetDatasetCount(); ++i) {
+    int dataCnt = lpUnPacker->GetDatasetCount();
+    for (i = 0; i < dataCnt; ++i) {
         // 设置当前结果集
 //        printf("记录集：%d/%d\r\n", i + 1, lpUnPacker->GetDatasetCount());
         lpUnPacker->SetCurrentDatasetByIndex(i);
+        strcpy(result.InstrumentID, lpUnPacker->GetStr("stock_code"));
         strncpy(result.AccountID, lpUnPacker->GetStr("fund_account"), sizeof(result.AccountID));
         strncpy(result.InvestorID, lpUnPacker->GetStr("fund_account"), sizeof(result.InvestorID));
         if (strcmp(lpUnPacker->GetStr("exchange_type"), "1") == 0)
@@ -303,6 +305,6 @@ void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
         result.TodayPosition = lpUnPacker->GetDouble("current_amount") - lpUnPacker->GetDouble("enable_amount");
         result.Position = lpUnPacker->GetDouble("current_amount");
         result.PositionCost = lpUnPacker->GetDouble("cost_balance");
-        _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, true);
+        _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, i == dataCnt - 1);
     }
 }
