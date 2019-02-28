@@ -485,8 +485,8 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
     pPacker->AddField("user_token", 'S', 512);
     pPacker->AddField("query_mode", 'C', 1);
 //    pQryInvestorPosition = new CSecurityFtdcQryInvestorPositionField();
-//    strcpy(pQryInvestorPosition->InstrumentID, "000605.SZE");
-    if (pQryInvestorPosition) {
+//    strcpy(pQryInvestorPosition->InstrumentID, "");
+    if (strcmp(pQryInvestorPosition->InstrumentID, "")) {
         pPacker->AddField("exchange_type", 'S', 4);
         pPacker->AddField("stock_code", 'S', 11);
     }
