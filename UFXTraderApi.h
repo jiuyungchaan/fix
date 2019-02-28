@@ -100,9 +100,9 @@ public:
     }
 
     virtual void
-    OnRspQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *positionField, CSecurityFtdcRspInfoField *pRspInfo,
+    OnRspQryInvestorPosition(CSecurityFtdcInvestorPositionField *positionField, CSecurityFtdcRspInfoField *pRspInfo,
                              int nRequestID, bool bIsLast) {
-        std::cout << positionField->InstrumentID << std::endl;
+//        std::cout << "qry position "<<positionField->InstrumentID << std::endl;
     }
 };
 

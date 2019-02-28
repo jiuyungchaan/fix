@@ -283,9 +283,21 @@ void Callback::OnRsp_QRY_TRADING_ACCOUNT(IF2UnPacker *lpUnPacker, int nRequestID
 }
 
 void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
-    CSecurityFtdcQryInvestorPositionField result;
+    CSecurityFtdcInvestorPositionField result;
     memset(&result, 0, sizeof(result));
     CSecurityFtdcRspInfoField rspInfo;
     rspInfo.ErrorID = 0;
+
+    strncpy(result.AccountID, lpUnPacker->GetStr("fund_account"), sizeof(result.AccountID));
+    strncpy(result.InvestorID, lpUnPacker->GetStr("fund_account"), sizeof(result.InvestorID));
+    if (strcmp(lpUnPacker->GetStr("exchange_type"), "1") == 0)
+        strcpy(result.ExchangeID, "SSE");
+    else if (strcmp(lpUnPacker->GetStr("exchange_type"), "2") == 0)
+        strcpy(result.ExchangeID, "SZE");
+//    result.PosiDirection;
+    result.YdPosition=lpUnPacker->GetDouble("hold_amount");
+    result.TodayPosition = lpUnPacker->GetDouble("current_amount")-lpUnPacker->GetDouble("enable_amount");
+    result.Position = lpUnPacker->GetDouble("current_amount");
+    result.PositionCost = lpUnPacker->GetDouble("cost_balance");
     _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, true);
 }

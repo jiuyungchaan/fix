@@ -24,7 +24,7 @@ void UFXTraderApi::Init(const char *licPath) {
 //    {
 //        return;
 //    }
-    CConfigInterface* lpConfig = NewConfig();
+    CConfigInterface *lpConfig = NewConfig();
     lpConfig->AddRef();
 
     if (licPath)
@@ -483,11 +483,13 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
     pPacker->AddField("password", 'S', 10);
     pPacker->AddField("password_type", 'C', 1);
     pPacker->AddField("user_token", 'S', 512);
-
-    pPacker->AddField("exchange_type", 'S', 4);
-    pPacker->AddField("stock_code", 'S', 11);
     pPacker->AddField("query_mode", 'C', 1);
-
+//    pQryInvestorPosition = new CSecurityFtdcQryInvestorPositionField();
+//    strcpy(pQryInvestorPosition->InstrumentID, "000605.SZE");
+    if (pQryInvestorPosition) {
+        pPacker->AddField("exchange_type", 'S', 4);
+        pPacker->AddField("stock_code", 'S', 11);
+    }
 
     pPacker->AddField("position_str", 'S', 100);
     pPacker->AddField("request_num", 'N', 10);
@@ -500,18 +502,23 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
     pPacker->AddStr(_client_id);    //		client_id
     pPacker->AddStr(_fund_account);    //	fund_account
     pPacker->AddStr(_password);        //	password
-    pPacker->AddChar('1');                //	password_type
+    pPacker->AddChar('2');                //	password_type
     pPacker->AddStr(_user_token);    //user_token
-
     pPacker->AddStr("2");
-    pPacker->AddStr("000605");
-    pPacker->AddChar('0');
-
-
+    if (pQryInvestorPosition) {
+        if (strncmp(&pQryInvestorPosition->InstrumentID[7], "SHE", 2) == 0 ||
+            strncmp(&pQryInvestorPosition->InstrumentID[7], "she", 2) == 0) {
+            pPacker->AddStr("1");
+        } else if (strncmp(&pQryInvestorPosition->InstrumentID[7], "SZE", 2) == 0 ||
+                   strncmp(&pQryInvestorPosition->InstrumentID[7], "sze", 2) == 0) {
+            pPacker->AddStr("2");
+        }
+        char contractCode[8];
+        strncpy(contractCode, pQryInvestorPosition->InstrumentID, 6);
+        pPacker->AddStr(contractCode);
+    }
     pPacker->AddStr(" ");
-    pPacker->AddInt(3);
-
-
+    pPacker->AddInt(_requestID++);
     ///结束打包
     pPacker->EndPack();
 
@@ -520,4 +527,5 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
     pPacker->FreeMem(pPacker->GetPackBuf());
     pPacker->Release();
     lpBizMessage->Release();
+    return 0;
 }
