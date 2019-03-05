@@ -245,12 +245,12 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     pPacker->AddField("branch_no", 'I', 5);
     pPacker->AddField("client_id", 'S', 18);//客户ID
     pPacker->AddField("fund_account", 'S', 18);//资金账号
-    pPacker->AddField("password", 'S', 10);
+    pPacker->AddField("password", 'S', 15);
     pPacker->AddField("password_type", 'C', 1);
     pPacker->AddField("user_token", 'S', 40);
-    pPacker->AddField("batch_flag", 'S', 15);
+    pPacker->AddField("batch_flag", 'C', 1);
     pPacker->AddField("exchange_type", 'S', 4);
-    pPacker->AddField("entrust_no", 'S', 6);
+    pPacker->AddField("entrust_no", 'I', 10);
     ///加入对应的字段值
     pPacker->AddInt(0);
     pPacker->AddChar(_entrustWay);
@@ -261,7 +261,7 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     pPacker->AddStr(_password);
     pPacker->AddChar('2');
     pPacker->AddStr(_user_token);
-    pPacker->AddStr("0");
+    pPacker->AddChar('0');
     pPacker->AddStr(pInputOrderAction->ExchangeID);
     pPacker->AddStr(pInputOrderAction->OrderRef); //SysID passed in OrderRef
 //    pPacker->AddStr("0");
