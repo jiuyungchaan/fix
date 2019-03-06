@@ -238,12 +238,17 @@ void Callback::OnRtn_ORDER(IF2UnPacker *lpUnPacker, int nRequestID) {
     sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
     if (lpUnPacker->GetInt("issue_type") == ISSUE_TYPE_REALTIME_SECU) { //rtn trade, 撤单 or 废单
         orderField.OrderStatus = SECURITY_FTDC_OST_Canceled;
+        orderField.Direction = lpUnPacker->GetChar("entrust_bs") == '1' ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
+        strcpy(orderField.InstrumentID, lpUnPacker->GetStr("stock_code"));
         _spi->OnRtnOrder(&orderField);
 
     } else { // rtn order insert
         char entrust_type = lpUnPacker->GetChar("entrust_type");
         if (entrust_type == '0') { // 买卖委托回报
             orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeQueueing;
+            strcpy(orderField.InstrumentID, lpUnPacker->GetStr("stock_code"));
+            orderField.Direction =
+                    lpUnPacker->GetChar("entrust_bs") == '1' ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
             sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
             _spi->OnRtnOrder(&orderField);
 
@@ -274,7 +279,10 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
         sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("entrust_no"));
         sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
         orderField.OrderStatus = SECURITY_FTDC_OST_AllTraded;
+        strcpy(orderField.InstrumentID, lpUnPacker->GetStr("stock_code"));
+        orderField.Direction = lpUnPacker->GetChar("entrust_bs") == '1' ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
         _spi->OnRtnOrder(&orderField);
+        printf("all traded\n");
     }
 }
 
