@@ -143,10 +143,10 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                 lpUnPacker->AddRef();//添加释放内存引用
 #ifndef NDEBUG
                 ShowPacket(lpUnPacker);
+#endif
                 rspInfo.ErrorID = lpUnPacker->GetInt("error_no");
                 const char *msg = lpUnPacker->GetStr("error_info");
                 g2u(msg, strlen(msg), rspInfo.ErrorMsg, sizeof(rspInfo.ErrorMsg));
-#endif
                 lpUnPacker->Release();
             } else {
                 rspInfo.ErrorID = lpMsg->GetErrorNo();
