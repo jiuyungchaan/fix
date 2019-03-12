@@ -316,7 +316,7 @@ void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
         lpUnPacker->SetCurrentDatasetByIndex(i);
         // 打印所有记录
         int rowCnt = lpUnPacker->GetRowCount();
-//        printf("poss cnt: %d\n", rowCnt);
+//        printf("pos cnt: %d\n", rowCnt);
         for (j = 0; j < rowCnt; ++j) {
             strcpy(result.InstrumentID, lpUnPacker->GetStr("stock_code"));
             strncpy(result.AccountID, lpUnPacker->GetStr("fund_account"), sizeof(result.AccountID));
@@ -332,6 +332,7 @@ void Callback::OnRsp_QRY_POSITION(IF2UnPacker *lpUnPacker, int nRequestID) {
             result.PositionCost = lpUnPacker->GetDouble("cost_balance");
             _spi->OnRspQryInvestorPosition(&result, &rspInfo, nRequestID, j == (rowCnt - 1));
 //            printf("%d %d\n", j, j == (rowCnt - 1));
+            lpUnPacker->Next();
         }
     }
 }
