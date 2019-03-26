@@ -262,7 +262,10 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
 #ifndef NDEBUG
     ShowPacket(lpUnPacker);
 #endif
-
+    if (lpUnPacker->GetInt("session_no") != _session_no) {
+        printf("received OnRtnTrade from other session.\n");
+        return;
+    }
     CSecurityFtdcTradeField tradeField;
     memset(&tradeField, 0, sizeof(tradeField));
     sprintf(tradeField.OrderSysID, "%d", lpUnPacker->GetInt("entrust_no"));
