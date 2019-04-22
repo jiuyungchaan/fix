@@ -233,7 +233,8 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     //请求类型
     lpBizMessage->SetPacketType(REQUEST_PACKET);
     lpBizMessage->SetSystemNo(_sysnode_id);
-    lpBizMessage->SetSenderId(++_requestID);
+    int actionID_ = ++_requestID;
+    lpBizMessage->SetSenderId(actionID_);
     ///其他的应答信息
     LPRET_DATA pRetData = NULL;
     ///开始打包
@@ -272,7 +273,7 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     pPacker->FreeMem(pPacker->GetPackBuf());
     pPacker->Release();
     lpBizMessage->Release();
-    request2OrderAction[_requestID] = pInputOrderAction->OrderRef;
+    request2OrderAction[actionID_] = pInputOrderAction->OrderRef;
     return 0;
 }
 
