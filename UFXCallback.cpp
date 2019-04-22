@@ -167,9 +167,13 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                     break;
                 }
                 case REQ_ORDER_ACTION: {
+                    if (senderID >= MAX_ORDER_NUM) {
+                        printf("senderID greater than max ID num\n");
+                        break;
+                    }
                     CSecurityFtdcOrderActionField fAction;
                     memset(&fAction, 0, sizeof(fAction));
-                    strncpy(fAction.OrderRef, _api->request2OrderAction.at(senderID).c_str(), sizeof(fAction.OrderRef));
+                    strncpy(fAction.OrderRef, _api->request2OrderAction[senderID].c_str(), sizeof(fAction.OrderRef));
                     _spi->OnRspOrderAction(&fAction, &rspInfo, nRequestID, true);
                     break;
                 }

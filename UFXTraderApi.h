@@ -9,11 +9,12 @@
 #include <SecurityFtdcUserApiStruct.h>
 #include <iostream>
 #include <map>
+#include <vector>
 #include <string>
 #include <NHUserApiStruct.h>
 #include <SecurityFtdcTraderApi.h>
 //#include "ufx_utils.h"
-
+const int MAX_ORDER_NUM = 100000;
 #ifdef UFX
 
 enum {
@@ -161,7 +162,7 @@ public:
     }
 
     std::map<int, std::pair<int, std::string> > request2OrderInsert;
-    std::map<int, std::string> request2OrderAction;
+    std::string request2OrderAction[MAX_ORDER_NUM];
 
     ///创建TraderApi
     ///@return 创建出的UserApi
