@@ -273,7 +273,7 @@ int UFXTraderApi::ReqOrderAction(CSecurityFtdcInputOrderActionField *pInputOrder
     pPacker->FreeMem(pPacker->GetPackBuf());
     pPacker->Release();
     lpBizMessage->Release();
-    request2OrderAction[actionID_] = pInputOrderAction->OrderRef;
+    strncpy(request2OrderAction[actionID_], pInputOrderAction->OrderRef, sizeof(pInputOrderAction->OrderRef));
     return 0;
 }
 

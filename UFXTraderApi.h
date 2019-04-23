@@ -13,6 +13,7 @@
 #include <string>
 #include <NHUserApiStruct.h>
 #include <SecurityFtdcTraderApi.h>
+
 //#include "ufx_utils.h"
 const int MAX_ORDER_NUM = 100000;
 #ifdef UFX
@@ -118,7 +119,7 @@ private:
     CConnectionInterface *_lpConn;
     CCallbackInterface *_lpCallback;
 
-    int _requestID;
+    unsigned int _requestID;
     // login returned info
     const char _entrustWay;
     char _op_station[256];
@@ -144,6 +145,9 @@ public:
 //        char* remote="192.168.0.1:22";
 //        GetLocalMACIP(mac,ip, remote);
         strcpy(_op_station, "PC;IIP:183.54.42.114;MAC:4cedfb65b36b;HD:50026B77824E95AE;@Octopus|V1.0.0");
+        int i;
+        for (i = 0; i < MAX_ORDER_NUM; ++i)
+            request2OrderAction[i][0] = '\0';
     }
 
     ~UFXTraderApi() {
@@ -162,7 +166,7 @@ public:
     }
 
     std::map<int, std::pair<int, std::string> > request2OrderInsert;
-    std::string request2OrderAction[MAX_ORDER_NUM];
+    char request2OrderAction[MAX_ORDER_NUM][15];
 
     ///创建TraderApi
     ///@return 创建出的UserApi
