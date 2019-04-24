@@ -66,14 +66,13 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                         lpUnPacker_key->AddRef();
                         if (lpUnPacker_key->GetInt("error_no") != 0) {
                             puts(lpUnPacker_key->GetStr("error_info"));
-                            lpUnPacker_key->Release();
                         } else {
 #ifndef NDEBUG
                             puts("订阅成功...");
                             ShowPacket(lpUnPacker_key);
 #endif
-                            lpUnPacker_key->Release();
                         }
+                        lpUnPacker_key->Release();
                     }
                     break;
                 }
@@ -89,7 +88,6 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
                             printf("Trade！\n");
 #endif
 //                            ShowPacket(lpUnPacker_key);
-                            lpUnPacker_key->Release();
                             if (lpUnPacker) {
                                 lpUnPacker->AddRef();
                                 char real_type = lpUnPacker->GetChar("real_type");
@@ -108,9 +106,13 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
 #ifndef NDEBUG
                             printf("Order Insert！\n");
 #endif
-                            OnRtn_ORDER(lpUnPacker, nRequestID);
-                            lpUnPacker_key->Release();
+                            if (lpUnPacker) {
+                                lpUnPacker->AddRef();
+                                OnRtn_ORDER(lpUnPacker, nRequestID);
+                                lpUnPacker->Release();
+                            }
                         }
+                        lpUnPacker_key->Release();
                     }
                     break;
                 }
@@ -118,14 +120,22 @@ void Callback::OnReceivedBizMsg(CConnectionInterface *lpConnection, int hSend, I
 #ifndef NDEBUG
                     ShowPacket(lpUnPacker);
 #endif
-                    OnRsp_QRY_TRADING_ACCOUNT(lpUnPacker, nRequestID);
+                    if (lpUnPacker) {
+                        lpUnPacker->AddRef();
+                        OnRsp_QRY_TRADING_ACCOUNT(lpUnPacker, nRequestID);
+                        lpUnPacker->Release();
+                    }
                     break;
                 }
                 case QRY_POSITION: {
 #ifndef NDEBUG
                     ShowPacket(lpUnPacker);
 #endif
-                    OnRsp_QRY_POSITION(lpUnPacker, nRequestID);
+                    if (lpUnPacker) {
+                        lpUnPacker->AddRef();
+                        OnRsp_QRY_POSITION(lpUnPacker, nRequestID);
+                        lpUnPacker->Release();
+                    }
                     break;
                 }
                 default:
@@ -213,7 +223,9 @@ void Callback::OnResponse_ORDERINSERT(IF2UnPacker *lpUnPacker, int nRequestID) {
     orderField.OrderStatus = SECURITY_FTDC_OST_NoTradeNotQueueing;
     orderField.SessionID = _session_no;
     sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("entrust_no"));
-    sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
+    int batchNo = lpUnPacker->GetInt("batch_no");
+    sprintf(orderField.OrderRef, "%d", batchNo);
+    _totalBusinessAmount[batchNo] = 0;
     _spi->OnRtnOrder(&orderField);
 }
 
@@ -239,11 +251,13 @@ void Callback::OnRtn_ORDER(IF2UnPacker *lpUnPacker, int nRequestID) {
     memset(&orderField, 0, sizeof(orderField));
     orderField.SessionID = lpUnPacker->GetInt("session_no");
     sprintf(orderField.OrderSysID, "%d", lpUnPacker->GetInt("entrust_no"));
-    sprintf(orderField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
+    int batchNo_ = lpUnPacker->GetInt("batch_no");
+    sprintf(orderField.OrderRef, "%d", batchNo_);
     if (lpUnPacker->GetInt("issue_type") == ISSUE_TYPE_REALTIME_SECU) { //rtn trade, 撤单 or 废单
         orderField.OrderStatus = SECURITY_FTDC_OST_Canceled;
         orderField.Direction = lpUnPacker->GetChar("entrust_bs") == '1' ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
         strcpy(orderField.InstrumentID, lpUnPacker->GetStr("stock_code"));
+        _totalBusinessAmount[batchNo_] = 0;
         _spi->OnRtnOrder(&orderField);
 
     } else { // rtn order insert
@@ -273,13 +287,16 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
     CSecurityFtdcTradeField tradeField;
     memset(&tradeField, 0, sizeof(tradeField));
     sprintf(tradeField.OrderSysID, "%d", lpUnPacker->GetInt("entrust_no"));
-    sprintf(tradeField.OrderRef, "%d", lpUnPacker->GetInt("batch_no"));
+    int batchNo_ = lpUnPacker->GetInt("batch_no");
+    sprintf(tradeField.OrderRef, "%d", batchNo_);
     strcpy(tradeField.InstrumentID, lpUnPacker->GetStr("stock_code"));
     tradeField.Direction = (lpUnPacker->GetChar("entrust_bs") == '1') ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
     tradeField.Volume = lpUnPacker->GetDouble("business_amount");
     sprintf(tradeField.Price, "%lf", lpUnPacker->GetDouble("business_price"));
     _spi->OnRtnTrade(&tradeField);
-    if (lpUnPacker->GetDouble("entrust_amount") - lpUnPacker->GetDouble("business_amount") < 0.01) {
+    _totalBusinessAmount[batchNo_] += lpUnPacker->GetDouble("business_amount");
+    if (lpUnPacker->GetDouble("entrust_amount") - _totalBusinessAmount[batchNo_] < 0.01) {
+        _totalBusinessAmount[batchNo_] = 0;
         CSecurityFtdcOrderField orderField;
         memset(&orderField, 0, sizeof(orderField));
         orderField.SessionID = lpUnPacker->GetInt("session_no");

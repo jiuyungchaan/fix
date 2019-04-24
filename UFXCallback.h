@@ -12,6 +12,7 @@
 class Callback : public CCallbackInterface {
 private:
     int _session_no;
+    std::map<int,double>_totalBusinessAmount;
 public:
     explicit Callback(UFXTraderSpi *spi, UFXTraderApi *api) : _spi(spi), _api(api) {
     };
