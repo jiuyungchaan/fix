@@ -292,7 +292,7 @@ void Callback::OnRtn_TRADE(IF2UnPacker *lpUnPacker, int nRequestID) {
     strcpy(tradeField.InstrumentID, lpUnPacker->GetStr("stock_code"));
     tradeField.Direction = (lpUnPacker->GetChar("entrust_bs") == '1') ? SECURITY_FTDC_D_Buy : SECURITY_FTDC_D_Sell;
     tradeField.Volume = lpUnPacker->GetDouble("business_amount");
-    sprintf(tradeField.Price, "%lf", lpUnPacker->GetDouble("business_price"));
+    tradeField.Price=lpUnPacker->GetDouble("business_price");
     _spi->OnRtnTrade(&tradeField);
     _totalBusinessAmount[batchNo_] += lpUnPacker->GetDouble("business_amount");
     if (lpUnPacker->GetDouble("entrust_amount") - _totalBusinessAmount[batchNo_] < 0.01) {

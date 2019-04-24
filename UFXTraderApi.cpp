@@ -180,9 +180,7 @@ int UFXTraderApi::ReqOrderInsert(CSecurityFtdcInputOrderField *pInputOrder, int 
 //    pPacker->AddStr("");
     pPacker->AddStr(pInputOrder->InstrumentID);
     pPacker->AddDouble(pInputOrder->VolumeTotalOriginal);
-    double price;
-    sscanf(pInputOrder->LimitPrice, "%lf", &price);
-    pPacker->AddDouble(price);
+    pPacker->AddDouble(pInputOrder->LimitPrice);
     if (pInputOrder->Direction == SECURITY_FTDC_D_Buy)
         pPacker->AddChar('1');
     else if (pInputOrder->Direction == SECURITY_FTDC_D_Sell)
