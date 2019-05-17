@@ -721,7 +721,7 @@ int ImplCOXFtdcTraderApi::ReqOrderInsert(
     price_op = "PAYBYCASHAMOUNT";
   }
   snprintf(message, sizeof(message), "COMMAND=SENDORDER;ACCOUNT=%s;ACTION=%s;" \
-           "SYMBOL=%s;QUANTITY=%d;TYPE=%s;%s=%s;DURATION=%s;CLIENTID=%s",
+           "SYMBOL=%s;QUANTITY=%d;TYPE=%s;%s=%lf;DURATION=%s;CLIENTID=%s",
            user_id_, action, symbol, pInputOrder->VolumeTotalOriginal,
            order_type, price_op.c_str(), pInputOrder->LimitPrice, duration,
            client_id);
@@ -822,8 +822,8 @@ CSecurityFtdcOrderField ImplCOXFtdcTraderApi::ToOrderField(
   snprintf(order_field.ExchangeID, sizeof(order_field.ExchangeID), "%s",
            exchange.c_str());
   order_field.VolumeTotalOriginal = atoi(quantity.c_str());
-  snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
-           limit_price.c_str());
+  //snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
+  order_field.LimitPrice = atof(limit_price.c_str());
   if (direction == "BUY") {
     order_field.Direction = SECURITY_FTDC_D_Buy;
     order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
@@ -989,34 +989,34 @@ CSecurityFtdcTradeField ImplCOXFtdcTraderApi::ToTradeField(
       // snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
       // trade_field.Volume = atoi(fill_qty.c_str());
       int f_qty;
-      double f_prc;
       if (status == "FILLED") {
         f_qty = atoi(quantity.c_str()) - received_qty;
-        f_prc = atof(limit_price.c_str());
+        trade_field.Price = atof(limit_price.c_str());
         trade_field.Volume = f_qty;
-        snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", f_prc);
-        input_order->add_trade(trade_field.Volume, f_prc);
+        //snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", f_prc);
+        input_order->add_trade(trade_field.Volume, trade_field.Price);
         return trade_field;
       } else {
-        snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
+        //snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
+        trade_field.Price = 0.0;
         trade_field.Volume = 0;
       }
     } else if (total_turnover > -1.0 && total_turnover < 1.0) {
-      double trade_price = atof(limit_price.c_str());
-      snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", limit_price.c_str());
+      trade_field.Price = atof(limit_price.c_str());
+      //snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", limit_price.c_str());
       trade_field.Volume = total_qty;
-      input_order->add_trade(trade_field.Volume, trade_price);
+      input_order->add_trade(trade_field.Volume, trade_field.Price);
     } else if (total_turnover > 0.0) {
-      double trade_price = total_turnover / (double)total_qty;
-      snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
+      trade_field.Price = total_turnover / (double)total_qty;
+      //snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
       trade_field.Volume = total_qty;
-      input_order->add_trade(trade_field.Volume, trade_price);
+      input_order->add_trade(trade_field.Volume, trade_field.Price);
     }
     return trade_field;
   } else {
     printf("InputOrder [SysID-%s] not found!\n", cut_sys_id.c_str());
-    snprintf(trade_field.Price, sizeof(trade_field.Price), "%s",
-             fill_price.c_str());
+    //snprintf(trade_field.Price, sizeof(trade_field.Price), "%s",
+    trade_field.Price = atof(fill_price.c_str());
     trade_field.Volume = atoi(fill_qty.c_str());
   }
 
@@ -1066,8 +1066,8 @@ CSecurityFtdcInputOrderField ImplCOXFtdcTraderApi::ToInputOrderField(
   snprintf(order_field.ExchangeID, sizeof(order_field.ExchangeID), "%s",
            readable_symbol.c_str());
   order_field.VolumeTotalOriginal = atoi(quantity.c_str());
-  snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
-           limit_price.c_str());
+  //snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
+  order_field.LimitPrice = atof(limit_price.c_str());
   if (direction == "BUY") {
     order_field.Direction = SECURITY_FTDC_D_Buy;
     order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;

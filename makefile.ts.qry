@@ -14,8 +14,8 @@ clean:
 	rm libtssecurityqueryapi.so libtssecuritytraderapi.so
 
 $(QRY_TARGET):
-	$(CXX) $(QRY_SRC) $(INCLUDE) -o $(QRY_TARGET) $(CXXFLAGS) $(LD_FLAGS)
+	$(CXX) $(QRY_SRC) -o $(QRY_TARGET) $(CXXFLAGS) $(LD_FLAGS)
 	#scp -P 1022 libfixtraderapi.so root@192.168.91.100:/usr/local/lib/
     #cp libtstraderapi.so /home/amanoenko/root/usr/local/lib/
 $(TRD_TARGET):
-	$(CXX) $(TRD_SRC) $(INCLUDE) -o $(TRD_TARGET) $(CXXFLAGS) $(LD_FLAGS)
+	$(CXX) $(TRD_SRC) -o $(TRD_TARGET) $(CXXFLAGS) $(LD_FLAGS)

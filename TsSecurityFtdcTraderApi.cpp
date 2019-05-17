@@ -663,7 +663,7 @@ int ImplTsFtdcTraderApi::ReqOrderInsert(
     price_op = "PAYBYCASHAMOUNT";
   }
   snprintf(message, sizeof(message), "COMMAND=SENDORDER;ACCOUNT=%s;ACTION=%s;" \
-           "SYMBOL=%s;QUANTITY=%d;TYPE=%s;%s=%s;DURATION=%s;CLIENTID=%s",
+           "SYMBOL=%s;QUANTITY=%d;TYPE=%s;%s=%lf;DURATION=%s;CLIENTID=%s",
            user_id_, action, symbol, pInputOrder->VolumeTotalOriginal,
            order_type, price_op.c_str(), pInputOrder->LimitPrice, duration,
            client_id);
@@ -761,8 +761,8 @@ CSecurityFtdcOrderField ImplTsFtdcTraderApi::ToOrderField(
   snprintf(order_field.ExchangeID, sizeof(order_field.ExchangeID), "%s",
            exchange.c_str());
   order_field.VolumeTotalOriginal = atoi(quantity.c_str());
-  snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
-           limit_price.c_str());
+  //snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
+  order_field.LimitPrice = atof(limit_price.c_str());
   if (direction == "BUY") {
     order_field.Direction = SECURITY_FTDC_D_Buy;
     order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
@@ -930,7 +930,8 @@ CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
                  total_qty, total_turnover);
           // snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", fill_price.c_str());
           // trade_field.Volume = atoi(fill_qty.c_str());
-          snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
+          //snprintf(trade_field.Price, sizeof(trade_field.Price), "%s", "0.0");
+          trade_field.Price = 0.0;
           trade_field.Volume = 0;
           is_valid = false;
           break;
@@ -939,15 +940,16 @@ CSecurityFtdcTradeField ImplTsFtdcTraderApi::ToTradeField(
     }  // for loop to 
     if (is_valid) {
       double trade_price = total_turnover / (double)total_qty;
-      snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
+      //snprintf(trade_field.Price, sizeof(trade_field.Price), "%lf", trade_price);
+      trade_field.Price = trade_price;
       trade_field.Volume = total_qty;
       input_order->add_trade(trade_field.Volume, trade_price);
     }
     return trade_field;
   } else {
     printf("InputOrder [SysID-%s] not found!\n", cut_sys_id.c_str());
-    snprintf(trade_field.Price, sizeof(trade_field.Price), "%s",
-             fill_price.c_str());
+    //snprintf(trade_field.Price, sizeof(trade_field.Price), "%s",
+    trade_field.Price = atof(fill_price.c_str());
     trade_field.Volume = atoi(fill_qty.c_str());
   }
 
@@ -997,8 +999,8 @@ CSecurityFtdcInputOrderField ImplTsFtdcTraderApi::ToInputOrderField(
   snprintf(order_field.ExchangeID, sizeof(order_field.ExchangeID), "%s",
            readable_symbol.c_str());
   order_field.VolumeTotalOriginal = atoi(quantity.c_str());
-  snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
-           limit_price.c_str());
+  //snprintf(order_field.LimitPrice, sizeof(order_field.LimitPrice), "%s",
+  order_field.LimitPrice = atof(limit_price.c_str());
   if (direction == "BUY") {
     order_field.Direction = SECURITY_FTDC_D_Buy;
     order_field.CombOffsetFlag[0] = SECURITY_FTDC_OF_Open;
