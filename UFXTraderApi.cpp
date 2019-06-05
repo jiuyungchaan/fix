@@ -517,7 +517,7 @@ int UFXTraderApi::ReqQryInvestorPosition(CSecurityFtdcQryInvestorPositionField *
         pPacker->AddStr(contractCode);
     }
     pPacker->AddStr(" ");
-    pPacker->AddInt(nRequestID);
+    pPacker->AddInt(1000);
     ///结束打包
     pPacker->EndPack();
 
